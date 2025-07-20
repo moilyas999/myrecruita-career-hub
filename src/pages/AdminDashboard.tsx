@@ -3,10 +3,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { LogOut, Users, Briefcase, FileText, Star, MessageSquare } from 'lucide-react';
+import { LogOut, Users, Briefcase, FileText, Star, MessageSquare, BarChart3 } from 'lucide-react';
 import JobsManagement from '@/components/admin/JobsManagement';
 import SubmissionsManagement from '@/components/admin/SubmissionsManagement';
 import TalentManagement from '@/components/admin/TalentManagement';
+import StatsDashboard from '@/components/admin/StatsDashboard';
 
 export default function AdminDashboard() {
   const { user, isAdmin, loading, signOut } = useAuth();
@@ -33,44 +34,59 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary">MyRecruita Admin Dashboard</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">Welcome, {user.email}</span>
-            <Button variant="outline" onClick={signOut}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
-            </Button>
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <h1 className="text-xl sm:text-2xl font-bold text-primary">MyRecruita Admin Dashboard</h1>
+            <div className="flex items-center gap-4">
+              <span className="text-xs sm:text-sm text-muted-foreground hidden sm:inline">
+                Welcome, {user.email}
+              </span>
+              <Button variant="outline" onClick={signOut} size="sm">
+                <LogOut className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Sign Out</span>
+                <span className="sm:hidden">Exit</span>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="jobs" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:grid-cols-3">
-            <TabsTrigger value="jobs" className="flex items-center gap-2">
-              <Briefcase className="w-4 h-4" />
+      <main className="container mx-auto px-4 py-4 sm:py-8">
+        <Tabs defaultValue="stats" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 gap-1">
+            <TabsTrigger value="stats" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+              <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Statistics</span>
+              <span className="sm:hidden">Stats</span>
+            </TabsTrigger>
+            <TabsTrigger value="jobs" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+              <Briefcase className="w-3 h-3 sm:w-4 sm:h-4" />
               Jobs
             </TabsTrigger>
-            <TabsTrigger value="submissions" className="flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              Submissions
+            <TabsTrigger value="submissions" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+              <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Submissions</span>
+              <span className="sm:hidden">Forms</span>
             </TabsTrigger>
-            <TabsTrigger value="talent" className="flex items-center gap-2">
-              <Star className="w-4 h-4" />
+            <TabsTrigger value="talent" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+              <Star className="w-3 h-3 sm:w-4 sm:h-4" />
               Talent
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="jobs" className="space-y-6">
+          <TabsContent value="stats" className="space-y-4 sm:space-y-6">
+            <StatsDashboard />
+          </TabsContent>
+
+          <TabsContent value="jobs" className="space-y-4 sm:space-y-6">
             <JobsManagement />
           </TabsContent>
 
-          <TabsContent value="submissions" className="space-y-6">
+          <TabsContent value="submissions" className="space-y-4 sm:space-y-6">
             <SubmissionsManagement />
           </TabsContent>
 
-          <TabsContent value="talent" className="space-y-6">
+          <TabsContent value="talent" className="space-y-4 sm:space-y-6">
             <TalentManagement />
           </TabsContent>
         </Tabs>

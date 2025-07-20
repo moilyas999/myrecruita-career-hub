@@ -129,18 +129,26 @@ export default function SubmissionsManagement() {
       </div>
 
       <Tabs defaultValue="job-applications" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="job-applications">
-            Job Applications ({jobApplications.length})
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 gap-1">
+          <TabsTrigger value="job-applications" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Job Applications</span>
+            <span className="sm:hidden">Jobs</span>
+            <span className="ml-1">({jobApplications.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="cv-submissions">
-            CV Submissions ({cvSubmissions.length})
+          <TabsTrigger value="cv-submissions" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">CV Submissions</span>
+            <span className="sm:hidden">CVs</span>
+            <span className="ml-1">({cvSubmissions.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="career-requests">
-            Career Requests ({careerRequests.length})
+          <TabsTrigger value="career-requests" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Career Requests</span>
+            <span className="sm:hidden">Career</span>
+            <span className="ml-1">({careerRequests.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="talent-requests">
-            Talent Requests ({talentRequests.length})
+          <TabsTrigger value="talent-requests" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Talent Requests</span>
+            <span className="sm:hidden">Talent</span>
+            <span className="ml-1">({talentRequests.length})</span>
           </TabsTrigger>
         </TabsList>
 
@@ -154,35 +162,52 @@ export default function SubmissionsManagement() {
           ) : (
             jobApplications.map((app) => (
               <Card key={app.id}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Briefcase className="w-5 h-5" />
-                    {app.name}
-                    <Badge variant="secondary">{app.jobs.reference_id}</Badge>
-                  </CardTitle>
-                  <CardDescription>Applied for: {app.jobs.title}</CardDescription>
+                <CardHeader className="pb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                      <span className="break-words">{app.name}</span>
+                    </CardTitle>
+                    <Badge variant="secondary" className="self-start sm:self-auto">
+                      {app.jobs.reference_id}
+                    </Badge>
+                  </div>
+                  <CardDescription className="break-words">
+                    Applied for: {app.jobs.title}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="w-4 h-4" />
-                    <a href={`mailto:${app.email}`} className="text-primary hover:underline">
-                      {app.email}
-                    </a>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="flex items-start gap-2 text-sm">
+                      <Mail className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-muted-foreground mb-1">Email:</p>
+                        <a href={`mailto:${app.email}`} className="text-primary hover:underline break-all">
+                          {app.email}
+                        </a>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2 text-sm">
+                      <Phone className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-muted-foreground mb-1">Phone:</p>
+                        <a href={`tel:${app.phone}`} className="text-primary hover:underline break-all">
+                          {app.phone}
+                        </a>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone className="w-4 h-4" />
-                    <a href={`tel:${app.phone}`} className="text-primary hover:underline">
-                      {app.phone}
-                    </a>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="w-4 h-4" />
-                    {new Date(app.created_at).toLocaleString()}
+                  <div className="flex items-start gap-2 text-sm">
+                    <Calendar className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-muted-foreground mb-1">Submitted:</p>
+                      <p>{new Date(app.created_at).toLocaleString()}</p>
+                    </div>
                   </div>
                   {app.message && (
-                    <div className="pt-2">
-                      <p className="text-sm text-muted-foreground">Message:</p>
-                      <p className="text-sm mt-1">{app.message}</p>
+                    <div className="pt-2 border-t">
+                      <p className="text-sm text-muted-foreground mb-2">Message:</p>
+                      <p className="text-sm break-words bg-muted/50 p-3 rounded-md">{app.message}</p>
                     </div>
                   )}
                 </CardContent>
@@ -201,42 +226,56 @@ export default function SubmissionsManagement() {
           ) : (
             cvSubmissions.map((submission) => (
               <Card key={submission.id}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="w-5 h-5" />
-                    {submission.name}
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <FileText className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                    <span className="break-words">{submission.name}</span>
                   </CardTitle>
                   <CardDescription>CV Submission</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="w-4 h-4" />
-                    <a href={`mailto:${submission.email}`} className="text-primary hover:underline">
-                      {submission.email}
-                    </a>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="flex items-start gap-2 text-sm">
+                      <Mail className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-muted-foreground mb-1">Email:</p>
+                        <a href={`mailto:${submission.email}`} className="text-primary hover:underline break-all">
+                          {submission.email}
+                        </a>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2 text-sm">
+                      <Phone className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-muted-foreground mb-1">Phone:</p>
+                        <a href={`tel:${submission.phone}`} className="text-primary hover:underline break-all">
+                          {submission.phone}
+                        </a>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone className="w-4 h-4" />
-                    <a href={`tel:${submission.phone}`} className="text-primary hover:underline">
-                      {submission.phone}
-                    </a>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="w-4 h-4" />
-                    {new Date(submission.created_at).toLocaleString()}
+                  <div className="flex items-start gap-2 text-sm">
+                    <Calendar className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-muted-foreground mb-1">Submitted:</p>
+                      <p>{new Date(submission.created_at).toLocaleString()}</p>
+                    </div>
                   </div>
                   {submission.cv_file_url && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <FileText className="w-4 h-4" />
-                      <a href={submission.cv_file_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                        View CV File
-                      </a>
+                    <div className="flex items-start gap-2 text-sm">
+                      <FileText className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-muted-foreground mb-1">CV File:</p>
+                        <a href={submission.cv_file_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline break-all">
+                          View CV File
+                        </a>
+                      </div>
                     </div>
                   )}
                   {submission.message && (
-                    <div className="pt-2">
-                      <p className="text-sm text-muted-foreground">Message:</p>
-                      <p className="text-sm mt-1">{submission.message}</p>
+                    <div className="pt-2 border-t">
+                      <p className="text-sm text-muted-foreground mb-2">Message:</p>
+                      <p className="text-sm break-words bg-muted/50 p-3 rounded-md">{submission.message}</p>
                     </div>
                   )}
                 </CardContent>
@@ -255,37 +294,52 @@ export default function SubmissionsManagement() {
           ) : (
             careerRequests.map((request) => (
               <Card key={request.id}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="w-5 h-5" />
-                    {request.name}
-                    <Badge variant="outline">{request.service_type}</Badge>
-                  </CardTitle>
+                <CardHeader className="pb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <User className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                      <span className="break-words">{request.name}</span>
+                    </CardTitle>
+                    <Badge variant="outline" className="self-start sm:self-auto">
+                      {request.service_type}
+                    </Badge>
+                  </div>
                   <CardDescription>Career Partner Request</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="w-4 h-4" />
-                    <a href={`mailto:${request.email}`} className="text-primary hover:underline">
-                      {request.email}
-                    </a>
-                  </div>
-                  {request.phone && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Phone className="w-4 h-4" />
-                      <a href={`tel:${request.phone}`} className="text-primary hover:underline">
-                        {request.phone}
-                      </a>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="flex items-start gap-2 text-sm">
+                      <Mail className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-muted-foreground mb-1">Email:</p>
+                        <a href={`mailto:${request.email}`} className="text-primary hover:underline break-all">
+                          {request.email}
+                        </a>
+                      </div>
                     </div>
-                  )}
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="w-4 h-4" />
-                    {new Date(request.created_at).toLocaleString()}
+                    {request.phone && (
+                      <div className="flex items-start gap-2 text-sm">
+                        <Phone className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs text-muted-foreground mb-1">Phone:</p>
+                          <a href={`tel:${request.phone}`} className="text-primary hover:underline break-all">
+                            {request.phone}
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-start gap-2 text-sm">
+                    <Calendar className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-muted-foreground mb-1">Submitted:</p>
+                      <p>{new Date(request.created_at).toLocaleString()}</p>
+                    </div>
                   </div>
                   {request.message && (
-                    <div className="pt-2">
-                      <p className="text-sm text-muted-foreground">Message:</p>
-                      <p className="text-sm mt-1">{request.message}</p>
+                    <div className="pt-2 border-t">
+                      <p className="text-sm text-muted-foreground mb-2">Message:</p>
+                      <p className="text-sm break-words bg-muted/50 p-3 rounded-md">{request.message}</p>
                     </div>
                   )}
                 </CardContent>
@@ -304,31 +358,46 @@ export default function SubmissionsManagement() {
           ) : (
             talentRequests.map((request) => (
               <Card key={request.id}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Briefcase className="w-5 h-5" />
-                    {request.contact_name} ({request.company_name})
-                    <Badge variant="secondary">{request.talent_profiles.reference_id}</Badge>
-                  </CardTitle>
-                  <CardDescription>
+                <CardHeader className="pb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                      <div className="break-words">
+                        <span className="font-semibold">{request.contact_name}</span>
+                        <span className="text-muted-foreground"> ({request.company_name})</span>
+                      </div>
+                    </CardTitle>
+                    <Badge variant="secondary" className="self-start sm:self-auto">
+                      {request.talent_profiles.reference_id}
+                    </Badge>
+                  </div>
+                  <CardDescription className="break-words">
                     Interested in: {request.talent_profiles.role}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="w-4 h-4" />
-                    <a href={`mailto:${request.email}`} className="text-primary hover:underline">
-                      {request.email}
-                    </a>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="w-4 h-4" />
-                    {new Date(request.created_at).toLocaleString()}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="flex items-start gap-2 text-sm">
+                      <Mail className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-muted-foreground mb-1">Email:</p>
+                        <a href={`mailto:${request.email}`} className="text-primary hover:underline break-all">
+                          {request.email}
+                        </a>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2 text-sm">
+                      <Calendar className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-muted-foreground mb-1">Submitted:</p>
+                        <p>{new Date(request.created_at).toLocaleString()}</p>
+                      </div>
+                    </div>
                   </div>
                   {request.message && (
-                    <div className="pt-2">
-                      <p className="text-sm text-muted-foreground">Message:</p>
-                      <p className="text-sm mt-1">{request.message}</p>
+                    <div className="pt-2 border-t">
+                      <p className="text-sm text-muted-foreground mb-2">Message:</p>
+                      <p className="text-sm break-words bg-muted/50 p-3 rounded-md">{request.message}</p>
                     </div>
                   )}
                 </CardContent>
