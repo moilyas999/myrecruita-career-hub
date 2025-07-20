@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Mail, Phone, Calendar, FileText, User, Briefcase, Download, ExternalLink } from 'lucide-react';
+import { Mail, Phone, Calendar, FileText, User, Briefcase, Download, ExternalLink, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface JobApplication {
@@ -69,6 +69,9 @@ export default function SubmissionsManagement() {
 
   const fetchAllSubmissions = async () => {
     try {
+      setLoading(true);
+      console.log('Fetching submissions...');
+      
       // Fetch job applications
       const { data: jobApps, error: jobError } = await supabase
         .from('job_applications')
@@ -78,7 +81,10 @@ export default function SubmissionsManagement() {
         `)
         .order('created_at', { ascending: false });
 
-      if (jobError) throw jobError;
+      if (jobError) {
+        console.error('Job applications error:', jobError);
+        throw jobError;
+      }
 
       // Fetch CV submissions
       const { data: cvSubs, error: cvError } = await supabase
@@ -86,7 +92,10 @@ export default function SubmissionsManagement() {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (cvError) throw cvError;
+      if (cvError) {
+        console.error('CV submissions error:', cvError);
+        throw cvError;
+      }
 
       // Fetch career partner requests
       const { data: careerReqs, error: careerError } = await supabase
@@ -94,7 +103,10 @@ export default function SubmissionsManagement() {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (careerError) throw careerError;
+      if (careerError) {
+        console.error('Career requests error:', careerError);
+        throw careerError;
+      }
 
       // Fetch talent requests
       const { data: talentReqs, error: talentError } = await supabase
@@ -105,13 +117,24 @@ export default function SubmissionsManagement() {
         `)
         .order('created_at', { ascending: false });
 
-      if (talentError) throw talentError;
+      if (talentError) {
+        console.error('Talent requests error:', talentError);
+        throw talentError;
+      }
+
+      console.log('Fetched data:', {
+        jobApplications: jobApps?.length || 0,
+        cvSubmissions: cvSubs?.length || 0,
+        careerRequests: careerReqs?.length || 0,
+        talentRequests: talentReqs?.length || 0
+      });
 
       setJobApplications(jobApps || []);
       setCvSubmissions(cvSubs || []);
       setCareerRequests(careerReqs || []);
       setTalentRequests(talentReqs || []);
     } catch (error: any) {
+      console.error('Failed to fetch submissions:', error);
       toast.error('Failed to fetch submissions: ' + error.message);
     } finally {
       setLoading(false);
@@ -151,9 +174,15 @@ export default function SubmissionsManagement() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">Submissions Management</h2>
-        <p className="text-muted-foreground">View and manage all form submissions</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold">Submissions Management</h2>
+          <p className="text-muted-foreground">View and manage all form submissions</p>
+        </div>
+        <Button onClick={fetchAllSubmissions} variant="outline" size="sm">
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Refresh
+        </Button>
       </div>
 
       <Tabs defaultValue="job-applications" className="space-y-6">
