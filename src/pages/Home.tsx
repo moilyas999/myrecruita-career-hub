@@ -95,7 +95,7 @@ const Home = () => {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-primary text-lg px-8 py-3">
+              <Button asChild variant="outline" size="lg" className="border-white text-primary hover:bg-white hover:text-primary text-lg px-8 py-3">
                 <Link to="/submit-cv">
                   Submit Your CV
                 </Link>
@@ -160,7 +160,7 @@ const Home = () => {
                   <span>Personalized Career Coaching</span>
                 </li>
               </ul>
-              <Button asChild className="bg-accent hover:bg-accent/90">
+              <Button asChild className="bg-accent hover:bg-accent/90 text-white">
                 <Link to="/career-partner">
                   Learn More About Our Services
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -233,7 +233,7 @@ const Home = () => {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-primary">
+            <Button asChild variant="outline" size="lg" className="border-white text-primary hover:bg-white hover:text-primary">
               <Link to="/contact">
                 Contact Us
               </Link>
