@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,13 +7,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, MapPin, Clock, Building2, Phone, Mail, CheckCircle } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, Building2, Phone, Mail, CheckCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const JobDetail = () => {
-  const { jobId } = useParams();
+  const { referenceId, jobId } = useParams();
   const { toast } = useToast();
   const [isApplying, setIsApplying] = useState(false);
+  const [job, setJob] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -21,42 +25,51 @@ const JobDetail = () => {
     message: ""
   });
 
-  // Mock job data - in real app, this would be fetched based on jobId
-  const job = {
-    id: jobId || "MR-2025-001",
-    title: "Senior Software Engineer",
-    company: "TechCorp Solutions",
-    location: "London, UK",
-    sector: "Technology",
-    type: "Full-time",
-    salary: "£70,000 - £90,000",
-    posted: "2 days ago",
-    description: "We are seeking an experienced Senior Software Engineer to join our innovative development team. You'll be responsible for designing and implementing scalable solutions using modern technologies.",
-    requirements: [
-      "5+ years of experience in software development",
-      "Strong proficiency in React, Node.js, and TypeScript",
-      "Experience with cloud platforms (AWS/Azure)",
-      "Knowledge of microservices architecture",
-      "Excellent problem-solving and communication skills",
-      "Bachelor's degree in Computer Science or related field"
-    ],
-    responsibilities: [
-      "Lead the development of complex web applications",
-      "Collaborate with cross-functional teams to define project requirements",
-      "Mentor junior developers and conduct code reviews",
-      "Architect scalable and maintainable software solutions",
-      "Stay current with emerging technologies and best practices",
-      "Participate in agile development processes"
-    ],
-    benefits: [
-      "Competitive salary package",
-      "25 days holiday plus bank holidays",
-      "Flexible working arrangements",
-      "Professional development budget",
-      "Health and dental insurance",
-      "Company pension scheme",
-      "Modern office with excellent facilities"
-    ]
+  useEffect(() => {
+    fetchJob();
+  }, [referenceId, jobId]);
+
+  const fetchJob = async () => {
+    try {
+      setLoading(true);
+      const jobRef = referenceId || jobId;
+      
+      if (!jobRef) {
+        setNotFound(true);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('reference_id', jobRef)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load job details. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!data) {
+        setNotFound(true);
+        return;
+      }
+
+      setJob(data);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load job details. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -66,17 +79,44 @@ const JobDetail = () => {
     });
   };
 
-  const handleApply = () => {
+  const handleApply = async () => {
+    if (!job) return;
+    
     setIsApplying(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsApplying(false);
+    try {
+      const { error } = await supabase
+        .from('job_applications')
+        .insert({
+          job_id: job.id,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          message: formData.message
+        });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to submit application. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       toast({
         title: "Application Submitted!",
         description: "We'll be in touch within 24 hours to discuss your application.",
       });
       setFormData({ name: "", email: "", phone: "", message: "" });
-    }, 1000);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit application. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsApplying(false);
+    }
   };
 
   const handleCallRequest = () => {
@@ -86,13 +126,54 @@ const JobDetail = () => {
     });
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-2 text-muted-foreground">Loading job details...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (notFound || !job) {
+    return (
+      <div className="min-h-screen bg-background py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-6">
+            <Button asChild variant="ghost" className="mb-4">
+              <Link to="/explore-roles">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Jobs
+              </Link>
+            </Button>
+          </div>
+          <Card className="text-center p-8">
+            <CardContent>
+              <h3 className="text-xl font-semibold mb-2">Job Not Found</h3>
+              <p className="text-muted-foreground mb-4">
+                This job posting is no longer available or does not exist.
+              </p>
+              <Button asChild>
+                <Link to="/explore-roles">Browse All Jobs</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Button */}
         <div className="mb-6">
           <Button asChild variant="ghost" className="mb-4">
-            <Link to="/jobs">
+            <Link to="/explore-roles">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Jobs
             </Link>
@@ -107,26 +188,20 @@ const JobDetail = () => {
                 <CardTitle className="text-3xl mb-4">{job.title}</CardTitle>
                 <div className="flex items-center space-x-4 text-muted-foreground mb-4">
                   <div className="flex items-center space-x-1">
-                    <Building2 className="h-4 w-4" />
-                    <span>{job.company}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
                     <MapPin className="h-4 w-4" />
                     <span>{job.location}</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Clock className="h-4 w-4" />
-                    <span>Posted {job.posted}</span>
+                    <span>Posted {new Date(job.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2 mb-6">
                   <Badge variant="secondary">{job.sector}</Badge>
-                  <Badge variant="outline">{job.type}</Badge>
-                  <Badge className="bg-accent text-accent-foreground">{job.salary}</Badge>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-sm text-muted-foreground">Ref: {job.id}</p>
+                <p className="text-sm text-muted-foreground">Ref: {job.reference_id}</p>
               </div>
             </div>
           </CardHeader>
@@ -209,58 +284,31 @@ const JobDetail = () => {
         </div>
 
         {/* Job Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div className="grid grid-cols-1 gap-8 mb-8">
           {/* Requirements */}
-          <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle>Requirements</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {job.requirements.map((req, index) => (
-                  <li key={index} className="flex items-start space-x-2">
-                    <CheckCircle className="h-4 w-4 text-accent mt-1 flex-shrink-0" />
-                    <span className="text-sm">{req}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+          {job.requirements && (
+            <Card className="shadow-card">
+              <CardHeader>
+                <CardTitle>Requirements</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="whitespace-pre-wrap text-sm">{job.requirements}</div>
+              </CardContent>
+            </Card>
+          )}
 
-          {/* Responsibilities */}
-          <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle>Key Responsibilities</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {job.responsibilities.map((resp, index) => (
-                  <li key={index} className="flex items-start space-x-2">
-                    <CheckCircle className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
-                    <span className="text-sm">{resp}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+          {/* Benefits */}
+          {job.benefits && (
+            <Card className="shadow-card">
+              <CardHeader>
+                <CardTitle>Benefits & Perks</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="whitespace-pre-wrap text-sm">{job.benefits}</div>
+              </CardContent>
+            </Card>
+          )}
         </div>
-
-        {/* Benefits */}
-        <Card className="mb-8 shadow-card">
-          <CardHeader>
-            <CardTitle>Benefits & Perks</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {job.benefits.map((benefit, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4 text-accent" />
-                  <span className="text-sm">{benefit}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Similar Jobs CTA */}
         <Card className="bg-secondary/50">
@@ -271,7 +319,7 @@ const JobDetail = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild>
-                <Link to="/jobs">Browse More Jobs</Link>
+                <Link to="/explore-roles">Browse More Jobs</Link>
               </Button>
               <Button asChild variant="outline">
                 <Link to="/submit-cv">Submit Your CV</Link>

@@ -1,92 +1,67 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Clock, Building2 } from "lucide-react";
+import { Search, MapPin, Clock, Building2, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Jobs = () => {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSector, setSelectedSector] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState("all");
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sectors, setSectors] = useState<string[]>([]);
+  const [locations, setLocations] = useState<string[]>([]);
 
-  const jobs = [
-    {
-      id: "MR-2025-001",
-      title: "Senior Software Engineer",
-      company: "TechCorp Solutions",
-      location: "London, UK",
-      sector: "Technology",
-      type: "Full-time",
-      salary: "£70,000 - £90,000",
-      description: "Lead development of cutting-edge applications using modern frameworks and cloud technologies.",
-      posted: "2 days ago"
-    },
-    {
-      id: "MR-2025-002",
-      title: "Marketing Director",
-      company: "Creative Agency Ltd",
-      location: "Manchester, UK",
-      sector: "Marketing",
-      type: "Full-time",
-      salary: "£65,000 - £80,000",
-      description: "Drive marketing strategy and lead a dynamic team in a fast-growing creative environment.",
-      posted: "1 week ago"
-    },
-    {
-      id: "MR-2025-003",
-      title: "Financial Analyst",
-      company: "Investment Partners",
-      location: "Birmingham, UK",
-      sector: "Finance",
-      type: "Full-time",
-      salary: "£45,000 - £55,000",
-      description: "Analyze financial data and provide insights to support strategic business decisions.",
-      posted: "3 days ago"
-    },
-    {
-      id: "MR-2025-004",
-      title: "Operations Manager",
-      company: "Logistics Express",
-      location: "Leeds, UK",
-      sector: "Operations",
-      type: "Full-time",
-      salary: "£50,000 - £65,000",
-      description: "Oversee daily operations and optimize processes for maximum efficiency.",
-      posted: "5 days ago"
-    },
-    {
-      id: "MR-2025-005",
-      title: "UX Designer",
-      company: "Digital Innovations",
-      location: "Remote",
-      sector: "Design",
-      type: "Full-time",
-      salary: "£40,000 - £55,000",
-      description: "Create exceptional user experiences for web and mobile applications.",
-      posted: "1 day ago"
-    },
-    {
-      id: "MR-2025-006",
-      title: "Sales Director",
-      company: "Global Sales Corp",
-      location: "Edinburgh, UK",
-      sector: "Sales",
-      type: "Full-time",
-      salary: "£80,000 - £100,000",
-      description: "Lead sales strategy and drive revenue growth across multiple markets.",
-      posted: "4 days ago"
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
+  const fetchJobs = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load jobs. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setJobs(data || []);
+      
+      // Extract unique sectors and locations from jobs
+      const uniqueSectors = [...new Set(data?.map(job => job.sector).filter(Boolean))];
+      const uniqueLocations = [...new Set(data?.map(job => job.location).filter(Boolean))];
+      
+      setSectors(uniqueSectors);
+      setLocations(uniqueLocations);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load jobs. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-  ];
-
-  const sectors = ["Technology", "Marketing", "Finance", "Operations", "Design", "Sales"];
-  const locations = ["London, UK", "Manchester, UK", "Birmingham, UK", "Leeds, UK", "Edinburgh, UK", "Remote"];
+  };
 
   const filteredJobs = jobs.filter(job => {
     const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          job.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSector = selectedSector === "all" || job.sector === selectedSector;
     const matchesLocation = selectedLocation === "all" || job.location === selectedLocation;
@@ -150,62 +125,66 @@ const Jobs = () => {
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-muted-foreground">
-            Showing {filteredJobs.length} of {jobs.length} opportunities
+            {loading ? "Loading jobs..." : `Showing ${filteredJobs.length} of ${jobs.length} opportunities`}
           </p>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-2 text-muted-foreground">Loading jobs...</span>
+          </div>
+        )}
+
         {/* Job Listings */}
-        <div className="grid grid-cols-1 gap-6">
-          {filteredJobs.map((job, index) => (
-            <Card key={job.id} className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up" style={{animationDelay: `${index * 0.1}s`}}>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <CardTitle className="text-xl mb-2">{job.title}</CardTitle>
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-3">
-                      <div className="flex items-center space-x-1">
-                        <Building2 className="h-4 w-4" />
-                        <span>{job.company}</span>
+        {!loading && (
+          <div className="grid grid-cols-1 gap-6">
+            {filteredJobs.map((job, index) => (
+              <Card key={job.id} className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up" style={{animationDelay: `${index * 0.1}s`}}>
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <CardTitle className="text-xl mb-2">{job.title}</CardTitle>
+                      <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-3">
+                        <div className="flex items-center space-x-1">
+                          <MapPin className="h-4 w-4" />
+                          <span>{job.location}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Clock className="h-4 w-4" />
+                          <span>{new Date(job.created_at).toLocaleDateString()}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-1">
-                        <MapPin className="h-4 w-4" />
-                        <span>{job.location}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Clock className="h-4 w-4" />
-                        <span>{job.posted}</span>
+                      <div className="flex items-center space-x-2 mb-3">
+                        <Badge variant="secondary">{job.sector}</Badge>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2 mb-3">
-                      <Badge variant="secondary">{job.sector}</Badge>
-                      <Badge variant="outline">{job.type}</Badge>
-                      <Badge className="bg-accent text-accent-foreground">{job.salary}</Badge>
+                    <div className="text-right">
+                      <p className="text-sm text-muted-foreground mb-2">Ref: {job.reference_id}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm text-muted-foreground mb-2">Ref: {job.id}</p>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground mb-4">{job.description}</p>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button asChild className="flex-1">
+                      <Link to={`/roles/${job.reference_id}`}>
+                        View Details
+                      </Link>
+                    </Button>
+                    <Button variant="outline" className="flex-1">
+                      Save Job
+                    </Button>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">{job.description}</p>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button asChild className="flex-1">
-                    <Link to={`/jobs/${job.id}`}>
-                      View Details
-                    </Link>
-                  </Button>
-                  <Button variant="outline" className="flex-1">
-                    Save Job
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {/* No results */}
-        {filteredJobs.length === 0 && (
+        {!loading && filteredJobs.length === 0 && (
           <Card className="text-center p-8">
             <CardContent>
               <h3 className="text-xl font-semibold mb-2">No jobs found</h3>

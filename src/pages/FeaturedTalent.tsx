@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,13 +7,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, MapPin, Calendar, Building2, Star, Filter } from "lucide-react";
+import { User, MapPin, Calendar, Building2, Star, Filter, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const FeaturedTalent = () => {
   const { toast } = useToast();
   const [selectedSector, setSelectedSector] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState("all");
+  const [talents, setTalents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sectors, setSectors] = useState<string[]>([]);
+  const [locations, setLocations] = useState<string[]>([]);
   const [requestFormData, setRequestFormData] = useState({
     name: "",
     company: "",
@@ -22,105 +27,50 @@ const FeaturedTalent = () => {
     candidateRef: ""
   });
 
-  const talents = [
-    {
-      id: "TAL-MR-001",
-      role: "Senior Software Engineer",
-      sector: "Technology",
-      experience: "7+ years",
-      location: "London, UK",
-      skills: ["React", "Node.js", "AWS", "TypeScript"],
-      availability: "Immediate",
-      summary: "Full-stack developer with expertise in modern web technologies and cloud architecture."
-    },
-    {
-      id: "TAL-MR-002",
-      role: "Marketing Director",
-      sector: "Marketing",
-      experience: "10+ years",
-      location: "Manchester, UK",
-      skills: ["Digital Marketing", "Brand Strategy", "Team Leadership", "Analytics"],
-      availability: "4 weeks",
-      summary: "Strategic marketing leader with proven track record in driving growth for B2B companies."
-    },
-    {
-      id: "TAL-MR-003",
-      role: "Financial Controller",
-      sector: "Finance",
-      experience: "8+ years",
-      location: "Birmingham, UK",
-      skills: ["IFRS", "Financial Reporting", "SAP", "Risk Management"],
-      availability: "6 weeks",
-      summary: "Experienced finance professional with expertise in corporate finance and compliance."
-    },
-    {
-      id: "TAL-MR-004",
-      role: "Operations Manager",
-      sector: "Operations",
-      experience: "6+ years",
-      location: "Leeds, UK",
-      skills: ["Process Optimization", "Lean Six Sigma", "Team Management", "KPI Tracking"],
-      availability: "2 weeks",
-      summary: "Results-driven operations leader focused on efficiency and continuous improvement."
-    },
-    {
-      id: "TAL-MR-005",
-      role: "UX/UI Designer",
-      sector: "Design",
-      experience: "5+ years",
-      location: "Remote",
-      skills: ["Figma", "User Research", "Prototyping", "Design Systems"],
-      availability: "Immediate",
-      summary: "Creative designer with strong focus on user-centered design and modern interfaces."
-    },
-    {
-      id: "TAL-MR-006",
-      role: "Sales Director",
-      sector: "Sales",
-      experience: "12+ years",
-      location: "Edinburgh, UK",
-      skills: ["Enterprise Sales", "CRM", "Team Leadership", "Negotiation"],
-      availability: "8 weeks",
-      summary: "Senior sales executive with expertise in B2B enterprise solutions and team development."
-    },
-    {
-      id: "TAL-MR-007",
-      role: "Data Scientist",
-      sector: "Technology",
-      experience: "4+ years",
-      location: "London, UK",
-      skills: ["Python", "Machine Learning", "SQL", "Tableau"],
-      availability: "3 weeks",
-      summary: "Data scientist specializing in predictive analytics and business intelligence solutions."
-    },
-    {
-      id: "TAL-MR-008",
-      role: "HR Director",
-      sector: "Human Resources",
-      experience: "9+ years",
-      location: "Manchester, UK",
-      skills: ["Talent Management", "Change Management", "HRIS", "Employment Law"],
-      availability: "6 weeks",
-      summary: "Strategic HR leader with experience in organizational development and talent acquisition."
-    },
-    {
-      id: "TAL-MR-009",
-      role: "Project Manager",
-      sector: "Operations",
-      experience: "7+ years",
-      location: "Remote",
-      skills: ["Agile", "Scrum", "Risk Management", "Stakeholder Management"],
-      availability: "4 weeks",
-      summary: "Certified project manager with track record of delivering complex initiatives on time and budget."
-    }
-  ];
+  useEffect(() => {
+    fetchTalents();
+  }, []);
 
-  const sectors = ["Technology", "Marketing", "Finance", "Operations", "Design", "Sales", "Human Resources"];
-  const locations = ["London, UK", "Manchester, UK", "Birmingham, UK", "Leeds, UK", "Edinburgh, UK", "Remote"];
+  const fetchTalents = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('talent_profiles')
+        .select('*')
+        .eq('is_visible', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load talent profiles. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setTalents(data || []);
+      
+      // Extract unique sectors and locations from talents
+      const uniqueSectors = [...new Set(data?.map(talent => talent.sector).filter(Boolean))];
+      const uniqueLocations = [...new Set(data?.map(talent => talent.preferred_location).filter(Boolean))];
+      
+      setSectors(uniqueSectors);
+      setLocations(uniqueLocations);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load talent profiles. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredTalents = talents.filter(talent => {
     const matchesSector = selectedSector === "all" || talent.sector === selectedSector;
-    const matchesLocation = selectedLocation === "all" || talent.location === selectedLocation;
+    const matchesLocation = selectedLocation === "all" || talent.preferred_location === selectedLocation;
     return matchesSector && matchesLocation;
   });
 
@@ -128,12 +78,39 @@ const FeaturedTalent = () => {
     setRequestFormData({ ...requestFormData, candidateRef });
   };
 
-  const submitRequest = () => {
-    toast({
-      title: "Profile Request Sent!",
-      description: "We'll send you the full candidate profile within 24 hours.",
-    });
-    setRequestFormData({ name: "", company: "", email: "", message: "", candidateRef: "" });
+  const submitRequest = async () => {
+    try {
+      const { error } = await supabase
+        .from('talent_requests')
+        .insert({
+          talent_id: requestFormData.candidateRef,
+          contact_name: requestFormData.name,
+          company_name: requestFormData.company,
+          email: requestFormData.email,
+          message: requestFormData.message
+        });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to submit request. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Profile Request Sent!",
+        description: "We'll send you the full candidate profile within 24 hours.",
+      });
+      setRequestFormData({ name: "", company: "", email: "", message: "", candidateRef: "" });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit request. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -206,138 +183,128 @@ const FeaturedTalent = () => {
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-muted-foreground">
-            Showing {filteredTalents.length} of {talents.length} candidates
+            {loading ? "Loading candidates..." : `Showing ${filteredTalents.length} of ${talents.length} candidates`}
           </p>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-2 text-muted-foreground">Loading candidates...</span>
+          </div>
+        )}
+
         {/* Talent Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {filteredTalents.map((talent, index) => (
-            <Card key={talent.id} className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up" style={{animationDelay: `${index * 0.1}s`}}>
-              <CardHeader>
-                <div className="flex items-center space-x-3 mb-3">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                    <User className="h-6 w-6 text-primary" />
+        {!loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {filteredTalents.map((talent, index) => (
+              <Card key={talent.id} className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up" style={{animationDelay: `${index * 0.1}s`}}>
+                <CardHeader>
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                      <User className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <CardTitle className="text-lg">{talent.role}</CardTitle>
+                      <p className="text-sm text-muted-foreground">{talent.reference_id}</p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <CardTitle className="text-lg">{talent.role}</CardTitle>
-                    <p className="text-sm text-muted-foreground">{talent.id}</p>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                      <Building2 className="h-4 w-4" />
+                      <span>{talent.sector}</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      <span>{talent.years_experience}+ years experience</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                      <MapPin className="h-4 w-4" />
+                      <span>{talent.preferred_location}</span>
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                    <Building2 className="h-4 w-4" />
-                    <span>{talent.sector}</span>
-                  </div>
-                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    <span>{talent.experience} experience</span>
-                  </div>
-                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                    <MapPin className="h-4 w-4" />
-                    <span>{talent.location}</span>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">{talent.summary}</p>
-                
-                <div className="mb-4">
-                  <p className="text-sm font-semibold mb-2">Key Skills:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {talent.skills.map((skill, skillIndex) => (
-                      <Badge key={skillIndex} variant="secondary" className="text-xs">
-                        {skill}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm font-semibold">Availability:</span>
-                  <Badge className={talent.availability === "Immediate" ? "bg-accent" : "bg-muted"}>
-                    {talent.availability}
-                  </Badge>
-                </div>
-
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button 
-                      className="w-full" 
-                      onClick={() => handleRequestProfile(talent.id)}
-                    >
-                      Request Full Profile
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Request Candidate Profile</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div className="bg-muted/50 p-4 rounded-lg">
-                        <p className="text-sm font-semibold">Candidate Reference: {requestFormData.candidateRef}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {talents.find(t => t.id === requestFormData.candidateRef)?.role} - {talents.find(t => t.id === requestFormData.candidateRef)?.sector}
+                </CardHeader>
+                <CardContent>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button 
+                        className="w-full" 
+                        onClick={() => handleRequestProfile(talent.id)}
+                      >
+                        Request Full Profile
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Request Candidate Profile</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="bg-muted/50 p-4 rounded-lg">
+                          <p className="text-sm font-semibold">Candidate Reference: {talent.reference_id}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {talent.role} - {talent.sector}
+                          </p>
+                        </div>
+                        <div>
+                          <Label htmlFor="request-name">Your Name</Label>
+                          <Input
+                            id="request-name"
+                            value={requestFormData.name}
+                            onChange={(e) => setRequestFormData({...requestFormData, name: e.target.value})}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="request-company">Company</Label>
+                          <Input
+                            id="request-company"
+                            value={requestFormData.company}
+                            onChange={(e) => setRequestFormData({...requestFormData, company: e.target.value})}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="request-email">Email</Label>
+                          <Input
+                            id="request-email"
+                            type="email"
+                            value={requestFormData.email}
+                            onChange={(e) => setRequestFormData({...requestFormData, email: e.target.value})}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="request-message">Message (Optional)</Label>
+                          <Textarea
+                            id="request-message"
+                            value={requestFormData.message}
+                            onChange={(e) => setRequestFormData({...requestFormData, message: e.target.value})}
+                            placeholder="Tell us about the opportunity or any specific requirements..."
+                            rows={3}
+                          />
+                        </div>
+                        <Button 
+                          onClick={submitRequest}
+                          disabled={!requestFormData.name || !requestFormData.company || !requestFormData.email}
+                          className="w-full"
+                        >
+                          Request Profile
+                        </Button>
+                        <p className="text-xs text-muted-foreground text-center">
+                          Requests are sent to zuhair@myrecruita.com and you'll receive the full profile within 24 hours.
                         </p>
                       </div>
-                      <div>
-                        <Label htmlFor="request-name">Your Name</Label>
-                        <Input
-                          id="request-name"
-                          value={requestFormData.name}
-                          onChange={(e) => setRequestFormData({...requestFormData, name: e.target.value})}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="request-company">Company</Label>
-                        <Input
-                          id="request-company"
-                          value={requestFormData.company}
-                          onChange={(e) => setRequestFormData({...requestFormData, company: e.target.value})}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="request-email">Email</Label>
-                        <Input
-                          id="request-email"
-                          type="email"
-                          value={requestFormData.email}
-                          onChange={(e) => setRequestFormData({...requestFormData, email: e.target.value})}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="request-message">Message (Optional)</Label>
-                        <Textarea
-                          id="request-message"
-                          value={requestFormData.message}
-                          onChange={(e) => setRequestFormData({...requestFormData, message: e.target.value})}
-                          placeholder="Tell us about the opportunity or any specific requirements..."
-                          rows={3}
-                        />
-                      </div>
-                      <Button 
-                        onClick={submitRequest}
-                        disabled={!requestFormData.name || !requestFormData.company || !requestFormData.email}
-                        className="w-full"
-                      >
-                        Request Profile
-                      </Button>
-                      <p className="text-xs text-muted-foreground text-center">
-                        Requests are sent to zuhair@myrecruita.com and you'll receive the full profile within 24 hours.
-                      </p>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                    </DialogContent>
+                  </Dialog>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {/* No results */}
-        {filteredTalents.length === 0 && (
+        {!loading && filteredTalents.length === 0 && (
           <Card className="text-center p-8">
             <CardContent>
               <h3 className="text-xl font-semibold mb-2">No candidates found</h3>

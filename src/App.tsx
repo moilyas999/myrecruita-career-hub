@@ -39,6 +39,8 @@ const App = () => (
                 <main className="flex-1">
                   <Routes>
                     <Route path="/" element={<Home />} />
+                    <Route path="/explore-roles" element={<Jobs />} />
+                    <Route path="/roles/:referenceId" element={<JobDetail />} />
                     <Route path="/jobs" element={<Jobs />} />
                     <Route path="/jobs/:jobId" element={<JobDetail />} />
                     <Route path="/submit-cv" element={<SubmitCV />} />
