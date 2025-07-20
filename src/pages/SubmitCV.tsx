@@ -38,6 +38,27 @@ const SubmitCV = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validate file type
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: "Invalid File Type",
+          description: "Please upload a PDF or Word document.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File Too Large",
+          description: "Please upload a file smaller than 5MB.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       setFormData({
         ...formData,
         cv: file
@@ -50,10 +71,45 @@ const SubmitCV = () => {
     setIsSubmitting(true);
 
     try {
-      // Upload file URL placeholder - in production, implement file upload to Supabase Storage
-      const cvFileUrl = formData.cv ? `cv_files/${formData.cv.name}` : null;
+      let cvFileUrl = null;
+      
+      // Upload CV file to Supabase Storage if provided
+      if (formData.cv) {
+        const fileExt = formData.cv.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+        const filePath = `cv-submissions/${fileName}`;
 
-      const { error } = await supabase
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('cv-uploads')
+          .upload(filePath, formData.cv);
+
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          toast({
+            title: "Upload Error",
+            description: "Failed to upload CV. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Get the file URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('cv-uploads')
+          .getPublicUrl(filePath);
+        
+        cvFileUrl = publicUrl;
+      }
+
+      console.log('Submitting CV with data:', {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        cv_file_url: cvFileUrl,
+        message: formData.message
+      });
+
+      const { data, error } = await supabase
         .from('cv_submissions')
         .insert({
           name: formData.name,
@@ -61,23 +117,27 @@ const SubmitCV = () => {
           phone: formData.phone,
           cv_file_url: cvFileUrl,
           message: formData.message
-        });
+        })
+        .select();
 
       if (error) {
+        console.error('Insert error:', error);
         toast({
           title: "Error",
-          description: "Failed to submit CV. Please try again.",
+          description: `Failed to submit CV: ${error.message}`,
           variant: "destructive",
         });
         return;
       }
 
+      console.log('CV submitted successfully:', data);
       setIsSubmitted(true);
       toast({
         title: "CV Submitted Successfully!",
         description: "We'll review your profile and be in touch within 24 hours.",
       });
     } catch (error) {
+      console.error('Submission error:', error);
       toast({
         title: "Error",
         description: "Failed to submit CV. Please try again.",
