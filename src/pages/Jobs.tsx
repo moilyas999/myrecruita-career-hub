@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Clock, Building2, Loader2 } from "lucide-react";
+import { Search, MapPin, Clock, Building2, Loader2, Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/useSEO";
@@ -18,6 +19,7 @@ const Jobs = () => {
     description: "Find your next role in Finance, IT, or Law. Browse our active job listings and apply easily with MyRecruita.",
     canonical: `${window.location.origin}/jobs`
   });
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSector, setSelectedSector] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState("all");
@@ -25,9 +27,15 @@ const Jobs = () => {
   const [loading, setLoading] = useState(true);
   const [sectors, setSectors] = useState<string[]>([]);
   const [locations, setLocations] = useState<string[]>([]);
+  const [savedJobs, setSavedJobs] = useState<string[]>([]);
 
   useEffect(() => {
     fetchJobs();
+    // Load saved jobs from localStorage
+    const saved = localStorage.getItem('savedJobs');
+    if (saved) {
+      setSavedJobs(JSON.parse(saved));
+    }
   }, []);
 
   const fetchJobs = async () => {
@@ -65,6 +73,22 @@ const Jobs = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSaveJob = (jobId: string) => {
+    const newSavedJobs = savedJobs.includes(jobId) 
+      ? savedJobs.filter(id => id !== jobId)
+      : [...savedJobs, jobId];
+    
+    setSavedJobs(newSavedJobs);
+    localStorage.setItem('savedJobs', JSON.stringify(newSavedJobs));
+    
+    toast({
+      title: savedJobs.includes(jobId) ? "Job Removed" : "Job Saved",
+      description: savedJobs.includes(jobId) 
+        ? "Job removed from your saved list" 
+        : "Job saved to your list for later viewing",
+    });
   };
 
   const filteredJobs = jobs.filter(job => {
@@ -180,8 +204,13 @@ const Jobs = () => {
                         View Details
                       </Link>
                     </Button>
-                    <Button variant="outline" className="flex-1">
-                      Save Job
+                    <Button 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => handleSaveJob(job.id)}
+                    >
+                      <Heart className={`mr-2 h-4 w-4 ${savedJobs.includes(job.id) ? 'fill-current text-red-500' : ''}`} />
+                      {savedJobs.includes(job.id) ? 'Saved' : 'Save Job'}
                     </Button>
                   </div>
                 </CardContent>

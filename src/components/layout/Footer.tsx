@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin, Linkedin, Twitter } from "lucide-react";
 
@@ -95,7 +96,7 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <MapPin className="h-4 w-4" />
-                <span>Office 124, Barking Enterprise Centre, IG11</span>
+                <span>Unit 124, Barking Enterprise Centre, IG11</span>
               </div>
             </div>
           </div>

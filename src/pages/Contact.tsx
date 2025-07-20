@@ -20,6 +20,7 @@ const Contact = () => {
     description: "Need support or want to discuss hiring? Contact the MyRecruita team for help with jobs or talent acquisition.",
     canonical: `${window.location.origin}/contact`
   });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -50,8 +51,8 @@ const Contact = () => {
       icon: MapPin,
       title: "Visit Us",
       description: "Meet us at our office location",
-      contact: "Office 124, Barking Enterprise Centre, IG11",
-      action: "#"
+      contact: "Unit 124, Barking Enterprise Centre, IG11",
+      action: "https://maps.google.com/maps?q=Unit+124+Barking+Enterprise+Centre+IG11"
     },
     {
       icon: Clock,
@@ -150,7 +151,7 @@ const Contact = () => {
                 {method.action.startsWith('#') ? (
                   <p className="text-sm font-medium text-primary">{method.contact}</p>
                 ) : (
-                  <a href={method.action} className="text-sm font-medium text-primary hover:text-accent transition-colors">
+                  <a href={method.action} target={method.action.startsWith('https') ? '_blank' : '_self'} rel={method.action.startsWith('https') ? 'noopener noreferrer' : undefined} className="text-sm font-medium text-primary hover:text-accent transition-colors">
                     {method.contact}
                   </a>
                 )}
@@ -368,15 +369,18 @@ const Contact = () => {
           </div>
         </div>
 
-        {/* Map Section (Placeholder) */}
+        {/* Interactive Map Section */}
         <Card className="mt-12 shadow-card">
           <CardContent className="p-0">
-            <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
-              <div className="text-center">
-                <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                <p className="text-muted-foreground">Office 124, Barking Enterprise Centre, IG11</p>
-                <p className="text-sm text-muted-foreground">Interactive map would be integrated here</p>
-              </div>
+            <div className="h-64 rounded-lg overflow-hidden">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2483.7089462634507!2d0.08089991570743632!3d51.53389771745782!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47d8a7c8f6d8f6d9%3A0x1e8e8f8e8f8e8f8e!2sBarking%20Enterprise%20Centre%2C%20Dagenham%20Rd%2C%20Barking%20IG11%200HL%2C%20UK!5e0!3m2!1sen!2sus!4v1642687654321!5m2!1sen!2sus"
+                className="w-full h-full border-0"
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="MyRecruita Office Location"
+              ></iframe>
             </div>
           </CardContent>
         </Card>
