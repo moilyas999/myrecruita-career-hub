@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Mail, Phone, Calendar, FileText, User, Briefcase } from 'lucide-react';
+import { Mail, Phone, Calendar, FileText, User, Briefcase, Download, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface JobApplication {
@@ -14,6 +14,7 @@ interface JobApplication {
   email: string;
   phone: string;
   message: string;
+  cv_file_url?: string;
   created_at: string;
   jobs: {
     title: string;
@@ -117,6 +118,33 @@ export default function SubmissionsManagement() {
     }
   };
 
+  const handleDownloadCV = async (cvUrl: string, applicantName: string) => {
+    try {
+      if (cvUrl.includes('cv-uploads/')) {
+        // Extract the file path from the URL
+        const filePath = cvUrl.split('/cv-uploads/')[1];
+        
+        // Create a signed URL for download
+        const { data, error } = await supabase.storage
+          .from('cv-uploads')
+          .createSignedUrl(filePath, 3600); // 1 hour expiry
+
+        if (error) {
+          toast.error('Failed to generate download link');
+          return;
+        }
+
+        // Open the signed URL in a new tab
+        window.open(data.signedUrl, '_blank');
+      } else {
+        // For external URLs, open directly
+        window.open(cvUrl, '_blank');
+      }
+    } catch (error) {
+      toast.error('Failed to download CV');
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-8">Loading submissions...</div>;
   }
@@ -204,6 +232,23 @@ export default function SubmissionsManagement() {
                       <p>{new Date(app.created_at).toLocaleString()}</p>
                     </div>
                   </div>
+                  {app.cv_file_url && (
+                    <div className="flex items-start gap-2 text-sm">
+                      <FileText className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-muted-foreground mb-1">CV File:</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownloadCV(app.cv_file_url!, app.name)}
+                          className="h-8"
+                        >
+                          <Download className="w-3 h-3 mr-1" />
+                          Download CV
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                   {app.message && (
                     <div className="pt-2 border-t">
                       <p className="text-sm text-muted-foreground mb-2">Message:</p>
@@ -266,9 +311,15 @@ export default function SubmissionsManagement() {
                       <FileText className="w-4 h-4 flex-shrink-0 mt-0.5" />
                       <div className="min-w-0 flex-1">
                         <p className="text-xs text-muted-foreground mb-1">CV File:</p>
-                        <a href={submission.cv_file_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline break-all">
-                          View CV File
-                        </a>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownloadCV(submission.cv_file_url, submission.name)}
+                          className="h-8"
+                        >
+                          <Download className="w-3 h-3 mr-1" />
+                          Download CV
+                        </Button>
                       </div>
                     </div>
                   )}

@@ -104,6 +104,7 @@ export type Database = {
       job_applications: {
         Row: {
           created_at: string
+          cv_file_url: string | null
           email: string
           id: string
           job_id: string | null
@@ -113,6 +114,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          cv_file_url?: string | null
           email: string
           id?: string
           job_id?: string | null
@@ -122,6 +124,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          cv_file_url?: string | null
           email?: string
           id?: string
           job_id?: string | null

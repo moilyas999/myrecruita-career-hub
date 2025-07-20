@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, MapPin, Clock, Building2, Phone, Mail, CheckCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, Building2, Phone, Mail, CheckCircle, Loader2, Upload, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO, createJobSchema, injectStructuredData } from "@/hooks/useSEO";
@@ -30,8 +30,10 @@ const JobDetail = () => {
     name: "",
     email: "",
     phone: "",
-    message: ""
+    message: "",
+    cv: null as File | null
   });
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     fetchJob();
@@ -93,11 +95,70 @@ const JobDetail = () => {
     });
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: "Invalid File Type",
+          description: "Please upload a PDF or Word document.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File Too Large",
+          description: "Please upload a file smaller than 5MB.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setFormData({
+        ...formData,
+        cv: file
+      });
+    }
+  };
+
   const handleApply = async () => {
-    if (!job) return;
+    if (!job || !formData.cv) return;
     
     setIsApplying(true);
+    setIsUploading(true);
+    
     try {
+      // Upload CV file to Supabase Storage
+      const fileExt = formData.cv.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+      const filePath = `job-applications/${fileName}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('cv-uploads')
+        .upload(filePath, formData.cv);
+
+      if (uploadError) {
+        toast({
+          title: "Upload Error",
+          description: "Failed to upload CV. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsUploading(false);
+
+      // Get the file URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('cv-uploads')
+        .getPublicUrl(filePath);
+
+      // Submit application with CV URL
       const { error } = await supabase
         .from('job_applications')
         .insert({
@@ -105,7 +166,8 @@ const JobDetail = () => {
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
-          message: formData.message
+          message: formData.message,
+          cv_file_url: publicUrl
         });
 
       if (error) {
@@ -121,7 +183,7 @@ const JobDetail = () => {
         title: "Application Submitted!",
         description: "We'll be in touch within 24 hours to discuss your application.",
       });
-      setFormData({ name: "", email: "", phone: "", message: "" });
+      setFormData({ name: "", email: "", phone: "", message: "", cv: null });
     } catch (error) {
       toast({
         title: "Error",
@@ -130,6 +192,7 @@ const JobDetail = () => {
       });
     } finally {
       setIsApplying(false);
+      setIsUploading(false);
     }
   };
 
@@ -260,7 +323,7 @@ const JobDetail = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone">Phone Number *</Label>
                   <Input
                     id="phone"
                     name="phone"
@@ -268,6 +331,38 @@ const JobDetail = () => {
                     onChange={handleInputChange}
                     required
                   />
+                </div>
+                <div>
+                  <Label htmlFor="cv">Upload CV *</Label>
+                  <div className="mt-2">
+                    <label htmlFor="cv" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer bg-muted/30 hover:bg-muted/50 transition-colors">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        {formData.cv ? (
+                          <>
+                            <FileText className="w-8 h-8 mb-2 text-accent" />
+                            <p className="mb-2 text-sm text-foreground font-semibold">{formData.cv.name}</p>
+                            <p className="text-xs text-muted-foreground">Click to change file</p>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
+                            <p className="mb-2 text-sm text-muted-foreground">
+                              <span className="font-semibold">Click to upload</span> or drag and drop
+                            </p>
+                            <p className="text-xs text-muted-foreground">PDF, DOC, DOCX (MAX. 5MB)</p>
+                          </>
+                        )}
+                      </div>
+                      <input
+                        id="cv"
+                        type="file"
+                        className="hidden"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleFileChange}
+                        required
+                      />
+                    </label>
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="message">Cover Message (Optional)</Label>
@@ -282,10 +377,10 @@ const JobDetail = () => {
                 </div>
                 <Button 
                   onClick={handleApply} 
-                  disabled={isApplying || !formData.name || !formData.email || !formData.phone}
+                  disabled={isApplying || isUploading || !formData.name || !formData.email || !formData.phone || !formData.cv}
                   className="w-full"
                 >
-                  {isApplying ? "Submitting..." : "Submit Application"}
+                  {isUploading ? "Uploading CV..." : isApplying ? "Submitting..." : "Submit Application"}
                 </Button>
               </div>
             </DialogContent>
