@@ -18,8 +18,7 @@ const Footer = () => {
               Your trusted recruitment partner, connecting talent with opportunity across all industries.
             </p>
             <div className="flex space-x-4">
-              <Linkedin className="h-5 w-5 hover:text-accent cursor-pointer transition-colors" />
-              <Twitter className="h-5 w-5 hover:text-accent cursor-pointer transition-colors" />
+              <span className="text-sm text-primary-foreground/60">Follow us on social media (coming soon)</span>
             </div>
           </div>
 
@@ -72,11 +71,11 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <Phone className="h-4 w-4" />
-                <span>+44 (0) 123 456 7890</span>
+                <span>+44 203 8685 510</span>
               </div>
               <div className="flex items-center space-x-2">
                 <MapPin className="h-4 w-4" />
-                <span>London, United Kingdom</span>
+                <span>Office 124, Barking Enterprise Centre, IG11</span>
               </div>
             </div>
           </div>
