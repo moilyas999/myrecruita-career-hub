@@ -124,17 +124,43 @@ export default function SubmissionsManagement() {
         throw talentError;
       }
 
+      // Fetch employer job submissions
+      const { data: employerJobs, error: employerError } = await supabase
+        .from('employer_job_submissions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (employerError) {
+        console.error('Employer job submissions error:', employerError);
+        throw employerError;
+      }
+
+      // Fetch contact submissions
+      const { data: contactSubs, error: contactError } = await supabase
+        .from('contact_submissions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (contactError) {
+        console.error('Contact submissions error:', contactError);
+        throw contactError;
+      }
+
       console.log('Fetched data:', {
         jobApplications: jobApps?.length || 0,
         cvSubmissions: cvSubs?.length || 0,
         careerRequests: careerReqs?.length || 0,
-        talentRequests: talentReqs?.length || 0
+        talentRequests: talentReqs?.length || 0,
+        employerJobSubmissions: employerJobs?.length || 0,
+        contactSubmissions: contactSubs?.length || 0
       });
 
       setJobApplications(jobApps || []);
       setCvSubmissions(cvSubs || []);
       setCareerRequests(careerReqs || []);
       setTalentRequests(talentReqs || []);
+      setEmployerJobSubmissions(employerJobs || []);
+      setContactSubmissions(contactSubs || []);
     } catch (error: any) {
       console.error('Failed to fetch submissions:', error);
       toast.error('Failed to fetch submissions: ' + error.message);
@@ -188,7 +214,7 @@ export default function SubmissionsManagement() {
       </div>
 
       <Tabs defaultValue="job-applications" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 gap-1">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6 gap-1">
           <TabsTrigger value="job-applications" className="text-xs sm:text-sm">
             <span className="hidden sm:inline">Job Applications</span>
             <span className="sm:hidden">Jobs</span>
@@ -208,6 +234,16 @@ export default function SubmissionsManagement() {
             <span className="hidden sm:inline">Talent Requests</span>
             <span className="sm:hidden">Talent</span>
             <span className="ml-1">({talentRequests.length})</span>
+          </TabsTrigger>
+          <TabsTrigger value="employer-jobs" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Employer Posts</span>
+            <span className="sm:hidden">Employer</span>
+            <span className="ml-1">({employerJobSubmissions.length})</span>
+          </TabsTrigger>
+          <TabsTrigger value="contact-submissions" className="text-xs sm:text-sm">
+            <span className="hidden sm:inline">Contact Forms</span>
+            <span className="sm:hidden">Contact</span>
+            <span className="ml-1">({contactSubmissions.length})</span>
           </TabsTrigger>
         </TabsList>
 
@@ -482,6 +518,167 @@ export default function SubmissionsManagement() {
                       <p className="text-sm break-words bg-muted/50 p-3 rounded-md">{request.message}</p>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </TabsContent>
+
+        <TabsContent value="employer-jobs" className="space-y-4">
+          {employerJobSubmissions.length === 0 ? (
+            <Card>
+              <CardContent className="py-8 text-center text-muted-foreground">
+                No employer job submissions yet.
+              </CardContent>
+            </Card>
+          ) : (
+            employerJobSubmissions.map((submission: any) => (
+              <Card key={submission.id}>
+                <CardHeader className="pb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                      <span className="break-words">{submission.job_title}</span>
+                    </CardTitle>
+                    <Badge variant="outline" className="self-start sm:self-auto">
+                      {submission.sector}
+                    </Badge>
+                  </div>
+                  <CardDescription className="break-words">
+                    {submission.company_name} - {submission.contact_name}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="flex items-start gap-2 text-sm">
+                      <Mail className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-muted-foreground mb-1">Email:</p>
+                        <a href={`mailto:${submission.email}`} className="text-primary hover:underline break-all">
+                          {submission.email}
+                        </a>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2 text-sm">
+                      <Phone className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-muted-foreground mb-1">Phone:</p>
+                        <a href={`tel:${submission.phone}`} className="text-primary hover:underline break-all">
+                          {submission.phone}
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="flex items-start gap-2 text-sm">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-muted-foreground mb-1">Location:</p>
+                        <p className="break-words">{submission.location}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2 text-sm">
+                      <Calendar className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-muted-foreground mb-1">Submitted:</p>
+                        <p>{new Date(submission.created_at).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  </div>
+                  {submission.job_spec_file_url && (
+                    <div className="flex items-start gap-2 text-sm">
+                      <FileText className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-muted-foreground mb-1">Job Specification:</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownloadCV(submission.job_spec_file_url, `${submission.company_name}-${submission.job_title}`)}
+                          className="h-8"
+                        >
+                          <Download className="w-3 h-3 mr-1" />
+                          Download Spec
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  <div className="pt-2 border-t">
+                    <p className="text-sm text-muted-foreground mb-2">Job Description:</p>
+                    <p className="text-sm break-words bg-muted/50 p-3 rounded-md">{submission.job_description}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </TabsContent>
+
+        <TabsContent value="contact-submissions" className="space-y-4">
+          {contactSubmissions.length === 0 ? (
+            <Card>
+              <CardContent className="py-8 text-center text-muted-foreground">
+                No contact form submissions yet.
+              </CardContent>
+            </Card>
+          ) : (
+            contactSubmissions.map((submission: any) => (
+              <Card key={submission.id}>
+                <CardHeader className="pb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Mail className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                      <span className="break-words">{submission.name}</span>
+                    </CardTitle>
+                    <Badge variant="outline" className="self-start sm:self-auto">
+                      {submission.inquiry_type}
+                    </Badge>
+                  </div>
+                  <CardDescription className="break-words">
+                    Subject: {submission.subject}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="flex items-start gap-2 text-sm">
+                      <Mail className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-muted-foreground mb-1">Email:</p>
+                        <a href={`mailto:${submission.email}`} className="text-primary hover:underline break-all">
+                          {submission.email}
+                        </a>
+                      </div>
+                    </div>
+                    {submission.phone && (
+                      <div className="flex items-start gap-2 text-sm">
+                        <Phone className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs text-muted-foreground mb-1">Phone:</p>
+                          <a href={`tel:${submission.phone}`} className="text-primary hover:underline break-all">
+                            {submission.phone}
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {submission.company && (
+                      <div className="flex items-start gap-2 text-sm">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs text-muted-foreground mb-1">Company:</p>
+                          <p className="break-words">{submission.company}</p>
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex items-start gap-2 text-sm">
+                      <Calendar className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs text-muted-foreground mb-1">Submitted:</p>
+                        <p>{new Date(submission.created_at).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="pt-2 border-t">
+                    <p className="text-sm text-muted-foreground mb-2">Message:</p>
+                    <p className="text-sm break-words bg-muted/50 p-3 rounded-md">{submission.message}</p>
+                  </div>
                 </CardContent>
               </Card>
             ))
