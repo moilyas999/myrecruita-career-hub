@@ -40,20 +40,17 @@ const Home = () => {
     {
       name: "Sarah Johnson",
       role: "Senior Marketing Manager",
-      content: "MyRecruita found me the perfect role within 2 weeks. Their career support was exceptional!",
-      company: "Tech Solutions Ltd"
+      content: "MyRecruita found me the perfect role within 2 weeks. Their career support was exceptional!"
     },
     {
       name: "Michael Chen",
       role: "Finance Director",
-      content: "The team understood exactly what I was looking for and delivered beyond expectations.",
-      company: "Global Finance Corp"
+      content: "The team understood exactly what I was looking for and delivered beyond expectations."
     },
     {
       name: "Emma Williams",
       role: "Operations Manager",
-      content: "Outstanding service from start to finish. I couldn't have asked for better support.",
-      company: "Logistics Plus"
+      content: "Outstanding service from start to finish. I couldn't have asked for better support."
     }
   ];
 
@@ -279,7 +276,6 @@ const Home = () => {
                   <div className="border-t pt-4">
                     <p className="font-semibold">{testimonial.name}</p>
                     <p className="text-sm text-muted-foreground">{testimonial.role}</p>
-                    <p className="text-sm text-accent">{testimonial.company}</p>
                   </div>
                 </CardContent>
               </Card>

@@ -52,12 +52,32 @@ const Footer = () => {
           {/* Services */}
           <div>
             <h3 className="font-semibold text-lg mb-4">Services</h3>
-            <ul className="space-y-2 text-sm text-primary-foreground/80">
-              <li>CV Review & Enhancement</li>
-              <li>LinkedIn Profile Optimization</li>
-              <li>Interview Preparation</li>
-              <li>Career Coaching</li>
-              <li>Talent Sourcing</li>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link to="/career-partner" className="hover:text-accent transition-colors">
+                  CV Review & Enhancement
+                </Link>
+              </li>
+              <li>
+                <Link to="/career-partner" className="hover:text-accent transition-colors">
+                  LinkedIn Profile Optimization
+                </Link>
+              </li>
+              <li>
+                <Link to="/career-partner" className="hover:text-accent transition-colors">
+                  Interview Preparation
+                </Link>
+              </li>
+              <li>
+                <Link to="/career-partner" className="hover:text-accent transition-colors">
+                  Career Coaching
+                </Link>
+              </li>
+              <li>
+                <Link to="/employers" className="hover:text-accent transition-colors">
+                  Talent Sourcing
+                </Link>
+              </li>
             </ul>
           </div>
 
