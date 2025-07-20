@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileText, User, Linkedin, MessageSquare, CheckCircle, Calendar, Upload, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/useSEO";
+import { supabase } from "@/integrations/supabase/client";
 
 const CareerPartner = () => {
   const { toast } = useToast();
@@ -69,20 +70,74 @@ const CareerPartner = () => {
     }
   ];
 
-  const handleCvSubmit = () => {
-    toast({
-      title: "CV Enhancement Request Sent!",
-      description: "We'll review your CV and contact you within 24 hours.",
-    });
-    setCvFormData({ name: "", email: "", phone: "", cv: null, message: "" });
+  const handleCvSubmit = async () => {
+    try {
+      const { error } = await supabase
+        .from('career_partner_requests')
+        .insert({
+          name: cvFormData.name,
+          email: cvFormData.email,
+          phone: cvFormData.phone,
+          service_type: 'cv_enhancement',
+          message: cvFormData.message
+        });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to submit request. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "CV Enhancement Request Sent!",
+        description: "We'll review your CV and contact you within 24 hours.",
+      });
+      setCvFormData({ name: "", email: "", phone: "", cv: null, message: "" });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit request. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleSessionRequest = () => {
-    toast({
-      title: "Session Request Sent!",
-      description: "We'll contact you within 2 hours to schedule your session.",
-    });
-    setSessionFormData({ name: "", email: "", phone: "", service: "", preferredTime: "", message: "" });
+  const handleSessionRequest = async () => {
+    try {
+      const { error } = await supabase
+        .from('career_partner_requests')
+        .insert({
+          name: sessionFormData.name,
+          email: sessionFormData.email,
+          phone: sessionFormData.phone,
+          service_type: sessionFormData.service,
+          message: `Preferred time: ${sessionFormData.preferredTime}. ${sessionFormData.message}`
+        });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to submit request. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Session Request Sent!",
+        description: "We'll contact you within 2 hours to schedule your session.",
+      });
+      setSessionFormData({ name: "", email: "", phone: "", service: "", preferredTime: "", message: "" });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit request. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

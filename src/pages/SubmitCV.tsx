@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Upload, CheckCircle, ArrowRight, FileText, Users, Award } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/useSEO";
+import { supabase } from "@/integrations/supabase/client";
 
 const SubmitCV = () => {
   const { toast } = useToast();
@@ -44,19 +45,47 @@ const SubmitCV = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      // Upload file URL placeholder - in production, implement file upload to Supabase Storage
+      const cvFileUrl = formData.cv ? `cv_files/${formData.cv.name}` : null;
+
+      const { error } = await supabase
+        .from('cv_submissions')
+        .insert({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          cv_file_url: cvFileUrl,
+          message: formData.message
+        });
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to submit CV. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       setIsSubmitted(true);
       toast({
         title: "CV Submitted Successfully!",
         description: "We'll review your profile and be in touch within 24 hours.",
       });
-    }, 2000);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit CV. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const benefits = [
