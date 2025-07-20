@@ -10,12 +10,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, MapPin, Clock, Building2, Phone, Mail, CheckCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useSEO, createJobSchema, injectStructuredData } from "@/hooks/useSEO";
 
 const JobDetail = () => {
   const { referenceId, jobId } = useParams();
   const { toast } = useToast();
   const [isApplying, setIsApplying] = useState(false);
   const [job, setJob] = useState<any>(null);
+
+  // Dynamic SEO based on job data
+  useSEO({
+    title: job ? `${job.title} in ${job.location} | Careers in ${job.sector} | MyRecruita` : "Job Details | MyRecruita",
+    description: job ? `Apply for ${job.title} in ${job.location}. MyRecruita connects professionals in ${job.sector} with top employers. Immediate openings.` : "View job details and apply directly with MyRecruita.",
+    canonical: `${window.location.origin}/roles/${referenceId || jobId}`
+  });
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [formData, setFormData] = useState({
@@ -61,6 +69,12 @@ const JobDetail = () => {
       }
 
       setJob(data);
+      
+      // Update SEO and structured data for the job
+      if (data) {
+        const jobSchema = createJobSchema(data);
+        injectStructuredData(jobSchema, "job-schema");
+      }
     } catch (error) {
       toast({
         title: "Error",

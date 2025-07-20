@@ -2,8 +2,39 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Users, Briefcase, Award, CheckCircle } from "lucide-react";
+import { useSEO, injectStructuredData } from "@/hooks/useSEO";
+import { useEffect } from "react";
 
 const Home = () => {
+  useSEO({
+    title: "MyRecruita | Specialist Recruitment in Finance, IT & Law",
+    description: "Looking for a career move or talent in finance, tech, or legal sectors? MyRecruita is your trusted partner for recruitment in the UK and beyond.",
+    canonical: window.location.origin
+  });
+
+  useEffect(() => {
+    const organizationSchema = {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "MyRecruita",
+      "description": "Specialist recruitment agency for Finance, IT, and Legal sectors",
+      "url": window.location.origin,
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+44 203 8685 510",
+        "contactType": "Customer Service"
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Office 124, Barking Enterprise Centre",
+        "postalCode": "IG11",
+        "addressCountry": "GB"
+      }
+    };
+    
+    injectStructuredData(organizationSchema, "organization-schema");
+  }, []);
+
   const testimonials = [
     {
       name: "Sarah Johnson",
@@ -59,7 +90,7 @@ const Home = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-3">
-                <Link to="/jobs">
+                <Link to="/explore-roles">
                   Explore Roles
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>

@@ -2,8 +2,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Users, Target, Award, Heart, ArrowRight, CheckCircle } from "lucide-react";
+import { useSEO } from "@/hooks/useSEO";
 
 const About = () => {
+  useSEO({
+    title: "About MyRecruita | Expert Finance, Tech & Legal Recruiters",
+    description: "Learn about MyRecruita's mission to connect skilled professionals with high-impact roles in Finance, IT, and Law.",
+    canonical: `${window.location.origin}/about`
+  });
+
   const values = [
     {
       icon: Users,

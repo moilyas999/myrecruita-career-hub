@@ -8,9 +8,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText, User, Linkedin, MessageSquare, CheckCircle, Calendar, Upload, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useSEO } from "@/hooks/useSEO";
 
 const CareerPartner = () => {
   const { toast } = useToast();
+  
+  useSEO({
+    title: "CV Help & Interview Prep | Career Services by MyRecruita",
+    description: "Free CV reviews, LinkedIn audits, and mock interviews to help you land your next Finance, IT, or Law role.",
+    canonical: `${window.location.origin}/career-partner`
+  });
   const [cvFormData, setCvFormData] = useState({
     name: "",
     email: "",

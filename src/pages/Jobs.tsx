@@ -8,9 +8,16 @@ import { Badge } from "@/components/ui/badge";
 import { Search, MapPin, Clock, Building2, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useSEO } from "@/hooks/useSEO";
 
 const Jobs = () => {
   const { toast } = useToast();
+  
+  useSEO({
+    title: "Explore Job Vacancies | Finance, IT & Legal Careers | MyRecruita",
+    description: "Find your next role in Finance, IT, or Law. Browse our active job listings and apply easily with MyRecruita.",
+    canonical: `${window.location.origin}/jobs`
+  });
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSector, setSelectedSector] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState("all");
@@ -74,7 +81,7 @@ const Jobs = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-4">Explore Roles</h1>
+          <h1 className="text-4xl font-bold text-foreground mb-4">Explore Job Vacancies</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Discover exciting career opportunities with leading companies across various industries.
           </p>

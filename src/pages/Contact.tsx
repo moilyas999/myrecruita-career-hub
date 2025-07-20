@@ -7,9 +7,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Mail, Phone, MapPin, Clock, Send, MessageSquare, Users, Briefcase } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useSEO } from "@/hooks/useSEO";
 
 const Contact = () => {
   const { toast } = useToast();
+  
+  useSEO({
+    title: "Contact MyRecruita | Specialist Recruitment Support",
+    description: "Need support or want to discuss hiring? Contact the MyRecruita team for help with jobs or talent acquisition.",
+    canonical: `${window.location.origin}/contact`
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",

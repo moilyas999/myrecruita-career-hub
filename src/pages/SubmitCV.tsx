@@ -7,9 +7,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Upload, CheckCircle, ArrowRight, FileText, Users, Award } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useSEO } from "@/hooks/useSEO";
 
 const SubmitCV = () => {
   const { toast } = useToast();
+  
+  useSEO({
+    title: "Submit Your CV | Join Top Finance, IT & Legal Jobs | MyRecruita",
+    description: "Send us your CV to be considered for roles in Finance, IT, and Law. MyRecruita helps professionals get hired faster.",
+    canonical: `${window.location.origin}/submit-cv`
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState({

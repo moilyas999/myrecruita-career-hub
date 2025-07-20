@@ -10,9 +10,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { User, MapPin, Calendar, Building2, Star, Filter, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useSEO } from "@/hooks/useSEO";
 
 const FeaturedTalent = () => {
   const { toast } = useToast();
+  
+  useSEO({
+    title: "Hire Talent | Pre-vetted Professionals in Finance, IT & Law | MyRecruita",
+    description: "Browse top candidate profiles ready for placement. Hire top-tier professionals in the UK across legal, tech, and finance sectors.",
+    canonical: `${window.location.origin}/featured-talent`
+  });
   const [selectedSector, setSelectedSector] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState("all");
   const [talents, setTalents] = useState<any[]>([]);
