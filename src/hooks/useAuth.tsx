@@ -8,8 +8,9 @@ interface AuthContextType {
   session: Session | null;
   isAdmin: boolean;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error?: string }>;
+  signIn: (email: string, password: string, rememberMe?: boolean) => Promise<{ error?: string }>;
   signUp: (email: string, password: string) => Promise<{ error?: string }>;
+  createAdminUser: (email: string, password: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
 }
 
@@ -61,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, rememberMe = false) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -70,6 +71,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (error) {
         return { error: error.message };
+      }
+      
+      // Set session persistence based on remember me
+      if (rememberMe) {
+        localStorage.setItem('supabase.auth.rememberMe', 'true');
+      } else {
+        localStorage.removeItem('supabase.auth.rememberMe');
       }
       
       return {};
@@ -100,6 +108,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const createAdminUser = async (email: string, password: string) => {
+    try {
+      // First create the user account
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      
+      if (signUpError) {
+        return { error: signUpError.message };
+      }
+      
+      if (data.user) {
+        // Add the user to admin_profiles table
+        const { error: adminError } = await supabase
+          .from('admin_profiles')
+          .insert({
+            user_id: data.user.id,
+            email: email,
+            role: 'admin'
+          });
+        
+        if (adminError) {
+          return { error: 'Failed to create admin profile: ' + adminError.message };
+        }
+      }
+      
+      return {};
+    } catch (error: any) {
+      return { error: error.message };
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setIsAdmin(false);
@@ -115,6 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signIn,
       signUp,
       signOut,
+      createAdminUser,
     }}>
       {children}
     </AuthContext.Provider>

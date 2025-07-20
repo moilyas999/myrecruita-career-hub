@@ -3,11 +3,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { LogOut, Users, Briefcase, FileText, Star, MessageSquare, BarChart3 } from 'lucide-react';
+import { LogOut, Users, Briefcase, FileText, Star, MessageSquare, BarChart3, UserPlus } from 'lucide-react';
 import JobsManagement from '@/components/admin/JobsManagement';
 import SubmissionsManagement from '@/components/admin/SubmissionsManagement';
 import TalentManagement from '@/components/admin/TalentManagement';
 import StatsDashboard from '@/components/admin/StatsDashboard';
+import AdminManagement from '@/components/admin/AdminManagement';
 
 export default function AdminDashboard() {
   const { user, isAdmin, loading, signOut } = useAuth();
@@ -53,7 +54,7 @@ export default function AdminDashboard() {
 
       <main className="container mx-auto px-4 py-4 sm:py-8">
         <Tabs defaultValue="stats" className="space-y-4 sm:space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 gap-1">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 gap-1">
             <TabsTrigger value="stats" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
               <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">Statistics</span>
@@ -72,6 +73,11 @@ export default function AdminDashboard() {
               <Star className="w-3 h-3 sm:w-4 sm:h-4" />
               Talent
             </TabsTrigger>
+            <TabsTrigger value="admins" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+              <UserPlus className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Admins</span>
+              <span className="sm:hidden">Admin</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="stats" className="space-y-4 sm:space-y-6">
@@ -88,6 +94,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="talent" className="space-y-4 sm:space-y-6">
             <TalentManagement />
+          </TabsContent>
+
+          <TabsContent value="admins" className="space-y-4 sm:space-y-6">
+            <AdminManagement />
           </TabsContent>
         </Tabs>
       </main>
