@@ -14,6 +14,8 @@ import CareerPartner from "./pages/CareerPartner";
 import FeaturedTalent from "./pages/FeaturedTalent";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import Employers from "./pages/Employers";
+import ThankYou from "./pages/ThankYou";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
@@ -49,6 +51,8 @@ const App = () => (
                     <Route path="/featured-talent" element={<FeaturedTalent />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/contact" element={<Contact />} />
+                    <Route path="/employers" element={<Employers />} />
+                    <Route path="/thank-you" element={<ThankYou />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </main>

@@ -61,6 +61,8 @@ export default function SubmissionsManagement() {
   const [cvSubmissions, setCvSubmissions] = useState<CVSubmission[]>([]);
   const [careerRequests, setCareerRequests] = useState<CareerPartnerRequest[]>([]);
   const [talentRequests, setTalentRequests] = useState<TalentRequest[]>([]);
+  const [employerJobSubmissions, setEmployerJobSubmissions] = useState<any[]>([]);
+  const [contactSubmissions, setContactSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

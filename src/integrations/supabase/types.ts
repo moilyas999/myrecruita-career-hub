@@ -71,6 +71,42 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_submissions: {
+        Row: {
+          company: string | null
+          created_at: string
+          email: string
+          id: string
+          inquiry_type: string
+          message: string
+          name: string
+          phone: string | null
+          subject: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          inquiry_type: string
+          message: string
+          name: string
+          phone?: string | null
+          subject: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          inquiry_type?: string
+          message?: string
+          name?: string
+          phone?: string | null
+          subject?: string
+        }
+        Relationships: []
+      }
       cv_submissions: {
         Row: {
           created_at: string
@@ -98,6 +134,48 @@ export type Database = {
           message?: string | null
           name?: string
           phone?: string
+        }
+        Relationships: []
+      }
+      employer_job_submissions: {
+        Row: {
+          company_name: string
+          contact_name: string
+          created_at: string
+          email: string
+          id: string
+          job_description: string
+          job_spec_file_url: string | null
+          job_title: string
+          location: string
+          phone: string
+          sector: string
+        }
+        Insert: {
+          company_name: string
+          contact_name: string
+          created_at?: string
+          email: string
+          id?: string
+          job_description: string
+          job_spec_file_url?: string | null
+          job_title: string
+          location: string
+          phone: string
+          sector: string
+        }
+        Update: {
+          company_name?: string
+          contact_name?: string
+          created_at?: string
+          email?: string
+          id?: string
+          job_description?: string
+          job_spec_file_url?: string | null
+          job_title?: string
+          location?: string
+          phone?: string
+          sector?: string
         }
         Relationships: []
       }

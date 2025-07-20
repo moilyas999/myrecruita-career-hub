@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const CareerPartner = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   useSEO({
     title: "CV Help & Interview Prep | Career Services by MyRecruita",
@@ -95,7 +97,9 @@ const CareerPartner = () => {
         title: "CV Enhancement Request Sent!",
         description: "We'll review your CV and contact you within 24 hours.",
       });
-      setCvFormData({ name: "", email: "", phone: "", cv: null, message: "" });
+      
+      // Redirect to thank you page
+      navigate('/thank-you');
     } catch (error) {
       toast({
         title: "Error",
@@ -130,7 +134,9 @@ const CareerPartner = () => {
         title: "Session Request Sent!",
         description: "We'll contact you within 2 hours to schedule your session.",
       });
-      setSessionFormData({ name: "", email: "", phone: "", service: "", preferredTime: "", message: "" });
+      
+      // Redirect to thank you page
+      navigate('/thank-you');
     } catch (error) {
       toast({
         title: "Error",

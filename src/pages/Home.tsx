@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Users, Briefcase, Award, CheckCircle } from "lucide-react";
+import { ArrowRight, Users, Briefcase, Award, CheckCircle, Building2 } from "lucide-react";
 import { useSEO, injectStructuredData } from "@/hooks/useSEO";
 import { useEffect } from "react";
+import EmployerJobForm from "@/components/EmployerJobForm";
 
 const Home = () => {
   useSEO({
@@ -181,6 +182,76 @@ const Home = () => {
                   </Button>
                 </CardContent>
               </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Employer Job Posting Section */}
+      <section className="py-16 bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
+              Hiring Top Talent?
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+              Connect with exceptional candidates across Finance, IT, and Legal sectors. 
+              Submit your job requirements and let our specialists find the perfect match for your organization.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="p-4 text-center shadow-card">
+                  <CardContent className="pt-4">
+                    <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mx-auto mb-3">
+                      <Users className="h-6 w-6 text-accent" />
+                    </div>
+                    <h3 className="font-semibold text-sm mb-2">Pre-Screened Candidates</h3>
+                    <p className="text-xs text-muted-foreground">Access our pool of thoroughly vetted professionals</p>
+                  </CardContent>
+                </Card>
+                <Card className="p-4 text-center shadow-card">
+                  <CardContent className="pt-4">
+                    <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mx-auto mb-3">
+                      <Award className="h-6 w-6 text-accent" />
+                    </div>
+                    <h3 className="font-semibold text-sm mb-2">Quality Assurance</h3>
+                    <p className="text-xs text-muted-foreground">All candidates meet your specific requirements</p>
+                  </CardContent>
+                </Card>
+                <Card className="p-4 text-center shadow-card">
+                  <CardContent className="pt-4">
+                    <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mx-auto mb-3">
+                      <Building2 className="h-6 w-6 text-accent" />
+                    </div>
+                    <h3 className="font-semibold text-sm mb-2">Industry Expertise</h3>
+                    <p className="text-xs text-muted-foreground">Specialized knowledge in your sector</p>
+                  </CardContent>
+                </Card>
+                <Card className="p-4 text-center shadow-card">
+                  <CardContent className="pt-4">
+                    <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mx-auto mb-3">
+                      <CheckCircle className="h-6 w-6 text-accent" />
+                    </div>
+                    <h3 className="font-semibold text-sm mb-2">Fast Turnaround</h3>
+                    <p className="text-xs text-muted-foreground">Receive candidate profiles within 48 hours</p>
+                  </CardContent>
+                </Card>
+              </div>
+              <div className="text-center">
+                <Button asChild variant="outline" size="lg">
+                  <Link to="/employers">
+                    Learn More About Our Employer Services
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+            
+            <div>
+              <EmployerJobForm isCompact={true} />
             </div>
           </div>
         </div>

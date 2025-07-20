@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ import { useSEO, createJobSchema, injectStructuredData } from "@/hooks/useSEO";
 const JobDetail = () => {
   const { referenceId, jobId } = useParams();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isApplying, setIsApplying] = useState(false);
   const [job, setJob] = useState<any>(null);
 
@@ -183,7 +184,9 @@ const JobDetail = () => {
         title: "Application Submitted!",
         description: "We'll be in touch within 24 hours to discuss your application.",
       });
-      setFormData({ name: "", email: "", phone: "", message: "", cv: null });
+      
+      // Redirect to thank you page
+      navigate('/thank-you');
     } catch (error) {
       toast({
         title: "Error",

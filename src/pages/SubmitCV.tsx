@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const SubmitCV = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   useSEO({
     title: "Submit Your CV | Join Top Finance, IT & Legal Jobs | MyRecruita",
@@ -131,11 +132,13 @@ const SubmitCV = () => {
       }
 
       console.log('CV submitted successfully:', data);
-      setIsSubmitted(true);
       toast({
         title: "CV Submitted Successfully!",
         description: "We'll review your profile and be in touch within 24 hours.",
       });
+      
+      // Redirect to thank you page
+      navigate('/thank-you');
     } catch (error) {
       console.error('Submission error:', error);
       toast({

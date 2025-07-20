@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,9 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Mail, Phone, MapPin, Clock, Send, MessageSquare, Users, Briefcase } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/useSEO";
+import { supabase } from "@/integrations/supabase/client";
 
 const Contact = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   useSEO({
     title: "Contact MyRecruita | Specialist Recruitment Support",
@@ -40,14 +43,14 @@ const Contact = () => {
       icon: Phone,
       title: "Call Us",
       description: "Speak directly with our team during business hours",
-      contact: "+44 (0) 123 456 7890",
-      action: "tel:+441234567890"
+      contact: "+44 203 8685 510",
+      action: "tel:+442038685510"
     },
     {
       icon: MapPin,
       title: "Visit Us",
-      description: "Meet us at our office in the heart of London",
-      contact: "123 Business District, London EC1A 1AA",
+      description: "Meet us at our office location",
+      contact: "Office 124, Barking Enterprise Centre, IG11",
       action: "#"
     },
     {
@@ -74,27 +77,52 @@ const Contact = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      const { data, error } = await supabase
+        .from('contact_submissions')
+        .insert({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          company: formData.company,
+          subject: formData.subject,
+          message: formData.message,
+          inquiry_type: formData.inquiryType
+        })
+        .select();
+
+      if (error) {
+        console.error('Insert error:', error);
+        toast({
+          title: "Error",
+          description: `Failed to submit message: ${error.message}`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Contact form submitted successfully:', data);
       toast({
         title: "Message Sent!",
         description: "We'll get back to you within 2 hours during business hours.",
       });
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        company: "",
-        subject: "",
-        message: "",
-        inquiryType: ""
+      
+      // Redirect to thank you page
+      navigate('/thank-you');
+    } catch (error) {
+      console.error('Submission error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit message. Please try again.",
+        variant: "destructive",
       });
-    }, 1000);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -272,8 +300,8 @@ const Contact = () => {
                   <Phone className="h-5 w-5 text-accent" />
                   <div>
                     <p className="font-medium">Phone</p>
-                    <a href="tel:+441234567890" className="text-sm text-muted-foreground hover:text-accent">
-                      +44 (0) 123 456 7890
+                    <a href="tel:+442038685510" className="text-sm text-muted-foreground hover:text-accent">
+                      +44 203 8685 510
                     </a>
                   </div>
                 </div>
@@ -346,7 +374,7 @@ const Contact = () => {
             <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
               <div className="text-center">
                 <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                <p className="text-muted-foreground">123 Business District, London EC1A 1AA</p>
+                <p className="text-muted-foreground">Office 124, Barking Enterprise Centre, IG11</p>
                 <p className="text-sm text-muted-foreground">Interactive map would be integrated here</p>
               </div>
             </div>
