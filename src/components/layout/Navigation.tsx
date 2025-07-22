@@ -9,7 +9,6 @@ const Navigation = () => {
 
   const navItems = [
     { name: "Home", path: "/" },
-    { name: "Explore Roles", path: "/jobs" },
     { name: "Submit CV", path: "/submit-cv" },
     { name: "Your Career Partner", path: "/career-partner" },
     { name: "Featured Talent", path: "/featured-talent" },
