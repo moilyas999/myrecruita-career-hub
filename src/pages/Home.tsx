@@ -102,7 +102,7 @@ const Home = () => {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-primary text-lg px-8 py-3">
+              <Button asChild variant="outline" size="lg" className="border-white text-primary bg-white hover:bg-white/90 hover:text-primary text-lg px-8 py-3">
                 <a href="https://calendly.com/myrecruita" target="_blank" rel="noopener noreferrer">
                   Book a call with a recruiter
                 </a>
