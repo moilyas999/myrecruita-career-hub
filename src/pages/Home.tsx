@@ -58,18 +58,18 @@ const Home = () => {
   const features = [
     {
       icon: Users,
-      title: "Expert Career Guidance",
-      description: "Personalized support from experienced recruitment professionals"
+      title: "Strategic Career Mentorship",
+      description: "Partner with specialists who understand your industry, your goals, and how to get you there — fast."
     },
     {
       icon: Briefcase,
-      title: "Exclusive Opportunities",
-      description: "Access to premium roles not advertised elsewhere"
+      title: "Access to Hidden Roles",
+      description: "We unlock roles reserved for vetted talent — curated, confidential, career-changing."
     },
     {
       icon: Award,
-      title: "Proven Success Rate",
-      description: "95% of our candidates secure interviews within 30 days"
+      title: "Efficiency You Can Trust",
+      description: "95% of our candidates secure interviews within 14 days."
     }
   ];
 
@@ -117,10 +117,10 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              Why Choose MyRecruita?
+              Your Career, Powered by Myrecruita
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              We're more than just a recruitment agency - we're your career partners committed to your success.
+              From exclusive roles and expert guidance to personalised support at every stage — MyRecruita is built to help ambitious professionals secure the jobs they deserve, faster.
             </p>
           </div>
           
