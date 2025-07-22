@@ -264,7 +264,7 @@ const About = () => {
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Link>
                   </Button>
-                  <Button asChild size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10">
+                  <Button asChild size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 hover:text-white">
                     <Link to="/contact">
                       Contact Our Team
                     </Link>
