@@ -34,12 +34,21 @@ const ThankYou = () => {
                 <div className="flex items-center justify-center space-x-3">
                   <Mail className="h-5 w-5 text-accent" />
                   <div>
-                    <strong>Email:</strong>{" "}
+                    <strong>General Inquiries:</strong>{" "}
                     <a 
-                      href="mailto:zuhair@myrecruita.com" 
+                      href="mailto:help@myrecruita.com" 
                       className="text-accent hover:text-accent/80 transition-colors"
                     >
-                      zuhair@myrecruita.com
+                      help@myrecruita.com
+                    </a>
+                  </div>
+                  <div>
+                    <strong>Career Opportunities:</strong>{" "}
+                    <a 
+                      href="mailto:careers@myrecruita.com" 
+                      className="text-accent hover:text-accent/80 transition-colors"
+                    >
+                      careers@myrecruita.com
                     </a>
                   </div>
                 </div>

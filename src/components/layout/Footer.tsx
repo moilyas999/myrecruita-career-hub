@@ -19,7 +19,15 @@ const Footer = () => {
               Your trusted recruitment partner, connecting talent with opportunity across all industries.
             </p>
             <div className="flex space-x-4">
-              <span className="text-sm text-primary-foreground/60">Follow us on social media (coming soon)</span>
+              <a 
+                href="https://www.linkedin.com/company/myrecruita" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-primary-foreground/80 hover:text-accent transition-colors"
+              >
+                <Linkedin className="h-5 w-5" />
+              </a>
+              <span className="text-sm text-primary-foreground/60">Follow us for live roles & industry insights</span>
             </div>
           </div>
 
@@ -88,7 +96,11 @@ const Footer = () => {
             <div className="space-y-3 text-sm">
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4" />
-                <span>zuhair@myrecruita.com</span>
+                <span>help@myrecruita.com</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Mail className="h-4 w-4" />
+                <span>careers@myrecruita.com</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Phone className="h-4 w-4" />

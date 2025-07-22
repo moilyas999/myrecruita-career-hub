@@ -370,7 +370,7 @@ const Employers = () => {
 
                   <p className="text-xs text-muted-foreground text-center">
                     By submitting this form, you agree to our terms and privacy policy. 
-                    Your information will be sent to zuhair@myrecruita.com.
+                    Your information will be sent to help@myrecruita.com.
                   </p>
                 </form>
               </CardContent>
@@ -412,7 +412,7 @@ const Employers = () => {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="opacity-90">Email:</span>
-                    <span>zuhair@myrecruita.com</span>
+                    <span>help@myrecruita.com</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="opacity-90">Phone:</span>

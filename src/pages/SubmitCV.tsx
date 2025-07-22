@@ -337,7 +337,7 @@ const SubmitCV = () => {
 
                   <p className="text-xs text-muted-foreground text-center">
                     By submitting your CV, you agree to our terms and privacy policy. 
-                    Your information will be sent to zuhair@myrecruita.com.
+                    Your information will be sent to careers@myrecruita.com.
                   </p>
                 </form>
               </CardContent>

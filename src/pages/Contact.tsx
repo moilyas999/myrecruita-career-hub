@@ -35,10 +35,17 @@ const Contact = () => {
   const contactMethods = [
     {
       icon: Mail,
-      title: "Email Us",
+      title: "General Inquiries",
       description: "Send us an email and we'll respond within 2 hours",
-      contact: "zuhair@myrecruita.com",
-      action: "mailto:zuhair@myrecruita.com"
+      contact: "help@myrecruita.com",
+      action: "mailto:help@myrecruita.com"
+    },
+    {
+      icon: Mail,
+      title: "Career Opportunities",
+      description: "For job applications and career-related inquiries",
+      contact: "careers@myrecruita.com",
+      action: "mailto:careers@myrecruita.com"
     },
     {
       icon: Phone,
@@ -273,7 +280,7 @@ const Contact = () => {
                   </Button>
 
                   <p className="text-xs text-muted-foreground text-center">
-                    We respect your privacy. Your information will be sent to zuhair@myrecruita.com and used only to respond to your inquiry.
+                    We respect your privacy. Your information will be sent to help@myrecruita.com and used only to respond to your inquiry.
                   </p>
                 </form>
               </CardContent>
@@ -291,9 +298,18 @@ const Contact = () => {
                 <div className="flex items-center space-x-3">
                   <Mail className="h-5 w-5 text-accent" />
                   <div>
-                    <p className="font-medium">Email</p>
-                    <a href="mailto:zuhair@myrecruita.com" className="text-sm text-muted-foreground hover:text-accent">
-                      zuhair@myrecruita.com
+                    <p className="font-medium">General Inquiries</p>
+                    <a href="mailto:help@myrecruita.com" className="text-sm text-muted-foreground hover:text-accent">
+                      help@myrecruita.com
+                    </a>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Mail className="h-5 w-5 text-accent" />
+                  <div>
+                    <p className="font-medium">Career Opportunities</p>
+                    <a href="mailto:careers@myrecruita.com" className="text-sm text-muted-foreground hover:text-accent">
+                      careers@myrecruita.com
                     </a>
                   </div>
                 </div>

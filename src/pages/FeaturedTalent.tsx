@@ -299,7 +299,7 @@ const FeaturedTalent = () => {
                           Request Profile
                         </Button>
                         <p className="text-xs text-muted-foreground text-center">
-                          Requests are sent to zuhair@myrecruita.com and you'll receive the full profile within 24 hours.
+                          Requests are sent to help@myrecruita.com and you'll receive the full profile within 24 hours.
                         </p>
                       </div>
                     </DialogContent>

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Users, Briefcase, Award, CheckCircle, Building2 } from "lucide-react";
+import { ArrowRight, Users, Briefcase, Award, CheckCircle, Building2, Linkedin } from "lucide-react";
 import { useSEO, injectStructuredData } from "@/hooks/useSEO";
 import { useEffect } from "react";
 import EmployerJobForm from "@/components/EmployerJobForm";
@@ -289,6 +289,33 @@ const Home = () => {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Social Media Section */}
+      <section className="py-12 bg-background">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-2xl p-8">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center">
+                <Linkedin className="h-8 w-8 text-white" />
+              </div>
+            </div>
+            <h2 className="text-2xl font-bold mb-3">Stay Connected</h2>
+            <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
+              Follow our LinkedIn page to keep up to date with live roles, industry insights, and connect directly with our recruiters.
+            </p>
+            <Button asChild className="bg-blue-600 hover:bg-blue-700">
+              <a 
+                href="https://www.linkedin.com/company/myrecruita" 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                <Linkedin className="mr-2 h-4 w-4" />
+                Follow MyRecruita
+              </a>
+            </Button>
           </div>
         </div>
       </section>
