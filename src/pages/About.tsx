@@ -67,22 +67,46 @@ const About = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Hero Section */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-6">About MyRecruita</h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-            We're more than a recruitment agency. We're career architects, relationship builders, 
-            and success enablers dedicated to transforming the way talent meets opportunity.
+          <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-6">About Us</h1>
+          <p className="text-xl text-muted-foreground max-w-4xl mx-auto mb-8 leading-relaxed">
+            We didn't set out to be just another recruitment agency — we built MyRecruita to raise the standard of what recruitment should be.
           </p>
-          <div className="w-24 h-1 bg-accent mx-auto"></div>
+          <div className="w-24 h-1 bg-accent mx-auto mb-12"></div>
+          
+          <div className="max-w-5xl mx-auto text-left space-y-6">
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              With a foundation rooted in professional services, MyRecruita was born out of two distinct but powerful journeys. One of our founders spent several years in audit at Grant Thornton, before launching Kingsley Hart, a specialist finance and accountancy recruitment firm. The other brings deep expertise from the healthcare recruitment space, having supported some of the UK's leading providers through complex hiring demands.
+            </p>
+            
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              Together, we combined our backgrounds, insight and networks to build a multi-sector recruitment company that actually understands both sides of the hiring table — from candidate experience to client delivery.
+            </p>
+            
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              Starting in finance, MyRecruita now recruits across Tech, Legal, HR, Finance, Healthcare, and Executive roles — with a growing presence across the UK and beyond.
+            </p>
+            
+            <p className="text-xl font-semibold text-foreground text-center mt-8">
+              We're not generalists. We're specialists who scale.
+            </p>
+          </div>
         </div>
 
         {/* Mission Statement */}
         <Card className="mb-16 shadow-card-lg">
           <CardContent className="p-8 lg:p-12 text-center">
             <h2 className="text-3xl font-bold mb-6">Our Mission</h2>
-            <p className="text-lg text-muted-foreground max-w-4xl mx-auto leading-relaxed">
-              To bridge the gap between exceptional talent and outstanding opportunities by providing personalized, 
-              expert guidance that transforms careers and builds stronger organizations. We believe everyone deserves 
-              to find work they love and companies deserve teams that drive their success.
+            <p className="text-lg text-muted-foreground max-w-4xl mx-auto leading-relaxed mb-6">
+              To redefine what great recruitment feels like — for both candidates and employers.
+            </p>
+            <p className="text-lg text-muted-foreground max-w-4xl mx-auto leading-relaxed mb-6">
+              We exist to bridge the gap between high-calibre talent and forward-thinking organisations, by offering tailored, relationship-led recruitment that goes beyond just filling a role.
+            </p>
+            <p className="text-lg text-muted-foreground max-w-4xl mx-auto leading-relaxed mb-6">
+              At MyRecruita, we believe job searches shouldn't be overwhelming, and hiring shouldn't be hit-or-miss. That's why we focus on real conversations, sector expertise, and a deep understanding of people — to deliver matches that actually make sense.
+            </p>
+            <p className="text-lg font-semibold text-foreground max-w-4xl mx-auto leading-relaxed">
+              Because people deserve careers they're proud of. And businesses deserve teams that drive results.
             </p>
           </CardContent>
         </Card>
