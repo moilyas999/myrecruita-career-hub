@@ -416,7 +416,7 @@ const Employers = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="opacity-90">Phone:</span>
-                    <span>+44 203 8685 510</span>
+                    <span>+44 208 058 4490</span>
                   </div>
                 </div>
               </CardContent>

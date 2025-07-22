@@ -22,7 +22,7 @@ const Home = () => {
       "url": window.location.origin,
       "contactPoint": {
         "@type": "ContactPoint",
-        "telephone": "+44 203 8685 510",
+        "telephone": "+44 208 058 4490",
         "contactType": "Customer Service"
       },
       "address": {

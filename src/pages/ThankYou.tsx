@@ -58,10 +58,10 @@ const ThankYou = () => {
                   <div>
                     <strong>Phone:</strong>{" "}
                     <a 
-                      href="tel:+442038685510" 
+                      href="tel:+442080584490" 
                       className="text-accent hover:text-accent/80 transition-colors"
                     >
-                      +44 203 8685 510
+                      +44 208 058 4490
                     </a>
                   </div>
                 </div>

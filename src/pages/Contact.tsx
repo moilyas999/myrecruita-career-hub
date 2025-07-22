@@ -51,8 +51,8 @@ const Contact = () => {
       icon: Phone,
       title: "Call Us",
       description: "Speak directly with our team during business hours",
-      contact: "+44 203 8685 510",
-      action: "tel:+442038685510"
+      contact: "+44 208 058 4490",
+      action: "tel:+442080584490"
     },
     {
       icon: MapPin,
@@ -317,8 +317,8 @@ const Contact = () => {
                   <Phone className="h-5 w-5 text-accent" />
                   <div>
                     <p className="font-medium">Phone</p>
-                    <a href="tel:+442038685510" className="text-sm text-muted-foreground hover:text-accent">
-                      +44 203 8685 510
+                    <a href="tel:+442080584490" className="text-sm text-muted-foreground hover:text-accent">
+                      +44 208 058 4490
                     </a>
                   </div>
                 </div>
