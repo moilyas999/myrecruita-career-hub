@@ -43,22 +43,22 @@ const About = () => {
 
   const team = [
     {
-      name: "Zuhair Ahmed",
+      name: "Zuhair Nadeem",
       role: "Founder & Managing Director",
-      description: "With over 10 years in recruitment, Zuhair brings deep industry expertise and a passion for connecting exceptional talent with outstanding opportunities.",
-      specialties: ["Executive Search", "Technology Recruitment", "Strategic Partnerships"]
+      description: "With 5 years of experience in audit and accountancy — including time at Grant Thornton — Zuhair brings technical precision and commercial insight to every hiring conversation. After launching Kingsley Hart, a finance-specialist recruitment firm, he expanded into multi-sector hiring through MyRecruita, now serving industries across Tech, Legal, HR, Finance, and Executive Search.",
+      specialties: ["Finance & Accountancy", "Executive Search", "Strategic Partnerships", "Multi-Sector Recruitment"]
     },
     {
-      name: "Sarah Johnson",
-      role: "Senior Recruitment Consultant",
-      description: "Specializing in finance and accounting roles, Sarah has successfully placed over 300 professionals in their ideal positions.",
-      specialties: ["Finance & Accounting", "Risk Management", "Compliance"]
+      name: "Seaneen Ahmed",
+      role: "Co-Founder & Director",
+      description: "Seaneen brings a wealth of experience in healthcare recruitment, having spent several years building trusted partnerships with providers across the UK. As Co-Founder of MyRecruita, he plays a central role in shaping strategy, nurturing client relationships, and driving candidate-first delivery across all sectors.",
+      specialties: ["Client Relationships", "Healthcare Recruitment", "Executive Search", "Business Development & Partnerships"]
     },
     {
-      name: "Michael Chen",
-      role: "Technology Recruitment Lead",
-      description: "A former software engineer turned recruiter, Michael understands the tech landscape and helps companies build exceptional development teams.",
-      specialties: ["Software Development", "Data Science", "DevOps"]
+      name: "Shamsul Islam",
+      role: "Head of Candidate Engagement & Client Success",
+      description: "With over a decade of experience in operations, project delivery, and stakeholder engagement, Shamsul brings a unique perspective to the recruitment process. He previously managed multi-agency partnerships on high-profile projects such as the Grenfell Tower Recovery, and led operational delivery at national charities and service centres. At MyRecruita, Shamsul ensures seamless candidate experiences, leads interview support workshops, and supports relationship-building with both clients and community networks.",
+      specialties: ["Candidate Experience & Onboarding", "Client Engagement & Retention", "Interview Support & Workshops"]
     }
   ];
 
