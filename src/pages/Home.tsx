@@ -5,6 +5,7 @@ import { ArrowRight, Users, Briefcase, Award, CheckCircle, Building2 } from "luc
 import { useSEO, injectStructuredData } from "@/hooks/useSEO";
 import { useEffect } from "react";
 import EmployerJobForm from "@/components/EmployerJobForm";
+import heroBackground from "@/assets/hero-background.jpg";
 
 const Home = () => {
   useSEO({
@@ -75,28 +76,36 @@ const Home = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-hero-gradient text-white py-20 lg:py-32">
-        <div className="absolute inset-0 bg-black/20"></div>
+      <section 
+        className="relative text-white py-20 lg:py-32 min-h-[90vh] flex items-center justify-center"
+        style={{
+          backgroundImage: `url(${heroBackground})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        <div className="absolute inset-0 bg-black/50"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="animate-fade-in">
             <h1 className="text-4xl lg:text-6xl font-bold mb-6">
-              Your Career Success
-              <span className="block text-accent">Starts Here</span>
+              Where Ambition Meets
+              <span className="block text-blue-400">Opportunity</span>
             </h1>
             <p className="text-xl lg:text-2xl mb-8 text-white/90 max-w-3xl mx-auto">
-              Connect with top employers, enhance your career prospects, and unlock your potential with MyRecruita's expert recruitment services.
+              Empowering ambitious professionals to connect, grow, and lead — across Tech, Legal, HR, Finance & Executive sectors.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-3">
-                <Link to="/explore-roles">
-                  Explore Roles
+                <Link to="/jobs">
+                  Explore Live Roles
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="border-white text-primary hover:bg-white hover:text-primary text-lg px-8 py-3">
-                <Link to="/submit-cv">
-                  Submit Your CV
-                </Link>
+              <Button asChild variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-primary text-lg px-8 py-3">
+                <a href="https://calendly.com/myrecruita" target="_blank" rel="noopener noreferrer">
+                  Book a call with a recruiter
+                </a>
               </Button>
             </div>
           </div>
