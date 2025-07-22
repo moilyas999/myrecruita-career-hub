@@ -24,9 +24,14 @@ const Navigation = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-hero-gradient rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">M</span>
+          <Link to="/" className="flex items-center space-x-3">
+            <div className="flex flex-col items-center">
+              <img 
+                src="/lovable-uploads/ec4f6544-f68f-47e5-80eb-2cbb2b7b0790.png" 
+                alt="MyRecruita Logo" 
+                className="w-10 h-10"
+              />
+              <span className="text-xs text-muted-foreground font-medium leading-tight">Your Job. Our Mission.</span>
             </div>
             <span className="text-xl font-bold text-primary">MyRecruita</span>
           </Link>
