@@ -47,6 +47,11 @@ const Navigation = () => {
                 {item.name}
               </Link>
             ))}
+            <Button asChild size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Link to="/post-job">
+                Post a Job
+              </Link>
+            </Button>
           </div>
 
           {/* Mobile menu button */}
@@ -80,6 +85,13 @@ const Navigation = () => {
                   {item.name}
                 </Link>
               ))}
+              <div className="px-3 py-2">
+                <Button asChild size="sm" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                  <Link to="/post-job" onClick={() => setIsOpen(false)}>
+                    Post a Job
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
         )}
