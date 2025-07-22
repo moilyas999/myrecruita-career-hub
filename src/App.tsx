@@ -18,6 +18,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Employers from "./pages/Employers";
 import ThankYou from "./pages/ThankYou";
+import PostJob from "./pages/PostJob";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
@@ -54,6 +55,7 @@ const App = () => (
                     <Route path="/about" element={<About />} />
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/employers" element={<Employers />} />
+                    <Route path="/post-job" element={<PostJob />} />
                     <Route path="/thank-you" element={<ThankYou />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
