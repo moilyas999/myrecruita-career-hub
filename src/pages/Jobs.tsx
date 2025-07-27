@@ -186,6 +186,12 @@ const Jobs = () => {
                           <Clock className="h-4 w-4" />
                           <span>{new Date(job.created_at).toLocaleDateString()}</span>
                         </div>
+                        {job.salary && (
+                          <div className="flex items-center space-x-1">
+                            <Building2 className="h-4 w-4" />
+                            <span>{job.salary}</span>
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center space-x-2 mb-3">
                         <Badge variant="secondary">{job.sector}</Badge>

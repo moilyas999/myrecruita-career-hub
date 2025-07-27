@@ -20,6 +20,7 @@ interface Job {
   description: string;
   requirements: string;
   benefits: string;
+  salary?: string;
   status: string;
   created_at: string;
 }
@@ -36,6 +37,7 @@ export default function JobsManagement() {
     description: '',
     requirements: '',
     benefits: '',
+    salary: '',
     status: 'active'
   });
 
@@ -67,6 +69,7 @@ export default function JobsManagement() {
       description: '',
       requirements: '',
       benefits: '',
+      salary: '',
       status: 'active'
     });
     setEditingJob(null);
@@ -120,6 +123,7 @@ export default function JobsManagement() {
       description: job.description,
       requirements: job.requirements,
       benefits: job.benefits || '',
+      salary: job.salary || '',
       status: job.status
     });
     setIsDialogOpen(true);
@@ -245,6 +249,16 @@ export default function JobsManagement() {
                   value={formData.benefits}
                   onChange={(e) => setFormData({ ...formData, benefits: e.target.value })}
                   rows={3}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="salary">Salary (Optional)</Label>
+                <Input
+                  id="salary"
+                  value={formData.salary}
+                  onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
+                  placeholder="e.g., £30,000 - £35,000 per annum"
                 />
               </div>
               

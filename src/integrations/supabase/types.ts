@@ -229,6 +229,7 @@ export type Database = {
           location: string
           reference_id: string
           requirements: string
+          salary: string | null
           sector: string
           status: string
           title: string
@@ -242,6 +243,7 @@ export type Database = {
           location: string
           reference_id: string
           requirements: string
+          salary?: string | null
           sector: string
           status?: string
           title: string
@@ -255,6 +257,7 @@ export type Database = {
           location?: string
           reference_id?: string
           requirements?: string
+          salary?: string | null
           sector?: string
           status?: string
           title?: string
