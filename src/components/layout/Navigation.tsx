@@ -25,7 +25,7 @@ const Navigation = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center">
             <img 
-              src="/lovable-uploads/d5a25af6-7d1b-49a2-974c-991383e28991.png" 
+              src="/lovable-uploads/4121491c-ffff-4dec-82a6-3b0fa454c578.png" 
               alt="MyRecruita - Your Job. Our Mission." 
               className="h-12"
             />
