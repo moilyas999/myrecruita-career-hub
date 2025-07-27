@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -18,6 +19,7 @@ interface TalentProfile {
   sector: string;
   years_experience: number;
   preferred_location: string;
+  details?: string;
   is_visible: boolean;
   created_at: string;
 }
@@ -32,6 +34,7 @@ export default function TalentManagement() {
     sector: '',
     years_experience: 1,
     preferred_location: '',
+    details: '',
     is_visible: true
   });
 
@@ -61,6 +64,7 @@ export default function TalentManagement() {
       sector: '',
       years_experience: 1,
       preferred_location: '',
+      details: '',
       is_visible: true
     });
     setEditingTalent(null);
@@ -112,6 +116,7 @@ export default function TalentManagement() {
       sector: talent.sector,
       years_experience: talent.years_experience,
       preferred_location: talent.preferred_location,
+      details: talent.details || '',
       is_visible: talent.is_visible
     });
     setIsDialogOpen(true);
@@ -168,7 +173,7 @@ export default function TalentManagement() {
               Add New Talent
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingTalent ? 'Edit Talent Profile' : 'Create New Talent Profile'}</DialogTitle>
               <DialogDescription>
@@ -217,6 +222,17 @@ export default function TalentManagement() {
                   value={formData.preferred_location}
                   onChange={(e) => setFormData({ ...formData, preferred_location: e.target.value })}
                   required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="details">Details (Optional)</Label>
+                <Textarea
+                  id="details"
+                  value={formData.details}
+                  onChange={(e) => setFormData({ ...formData, details: e.target.value })}
+                  placeholder="Additional details about the candidate's experience, skills, or background..."
+                  rows={4}
                 />
               </div>
               

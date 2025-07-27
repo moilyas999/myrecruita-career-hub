@@ -268,6 +268,7 @@ export type Database = {
       talent_profiles: {
         Row: {
           created_at: string
+          details: string | null
           id: string
           is_visible: boolean
           preferred_location: string
@@ -279,6 +280,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          details?: string | null
           id?: string
           is_visible?: boolean
           preferred_location: string
@@ -290,6 +292,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          details?: string | null
           id?: string
           is_visible?: boolean
           preferred_location?: string

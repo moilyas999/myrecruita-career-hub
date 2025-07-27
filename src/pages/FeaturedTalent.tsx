@@ -231,6 +231,11 @@ const FeaturedTalent = () => {
                       <span>{talent.preferred_location}</span>
                     </div>
                   </div>
+                  {talent.details && (
+                    <div className="mt-3">
+                      <p className="text-sm text-muted-foreground line-clamp-3">{talent.details}</p>
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <Dialog>
