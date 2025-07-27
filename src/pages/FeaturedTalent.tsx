@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, MapPin, Calendar, Building2, Star, Filter, Loader2 } from "lucide-react";
+import { User, MapPin, Calendar, Building2, Star, Filter, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
@@ -26,6 +26,7 @@ const FeaturedTalent = () => {
   const [loading, setLoading] = useState(true);
   const [sectors, setSectors] = useState<string[]>([]);
   const [locations, setLocations] = useState<string[]>([]);
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
   const [requestFormData, setRequestFormData] = useState({
     name: "",
     company: "",
@@ -80,6 +81,16 @@ const FeaturedTalent = () => {
     const matchesLocation = selectedLocation === "all" || talent.preferred_location === selectedLocation;
     return matchesSector && matchesLocation;
   });
+
+  const toggleExpanded = (talentId: string) => {
+    const newExpanded = new Set(expandedCards);
+    if (newExpanded.has(talentId)) {
+      newExpanded.delete(talentId);
+    } else {
+      newExpanded.add(talentId);
+    }
+    setExpandedCards(newExpanded);
+  };
 
   const handleRequestProfile = (candidateRef: string) => {
     setRequestFormData({ ...requestFormData, candidateRef });
@@ -233,7 +244,25 @@ const FeaturedTalent = () => {
                   </div>
                   {talent.details && (
                     <div className="mt-3">
-                      <p className="text-sm text-muted-foreground line-clamp-3">{talent.details}</p>
+                      <p className={`text-sm text-muted-foreground ${expandedCards.has(talent.id) ? '' : 'line-clamp-3'}`}>
+                        {talent.details}
+                      </p>
+                      {talent.details.length > 150 && (
+                        <button
+                          onClick={() => toggleExpanded(talent.id)}
+                          className="text-primary text-sm mt-1 hover:underline flex items-center gap-1"
+                        >
+                          {expandedCards.has(talent.id) ? (
+                            <>
+                              Show less <ChevronUp className="h-3 w-3" />
+                            </>
+                          ) : (
+                            <>
+                              Show more <ChevronDown className="h-3 w-3" />
+                            </>
+                          )}
+                        </button>
+                      )}
                     </div>
                   )}
                 </CardHeader>
