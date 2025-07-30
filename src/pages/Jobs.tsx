@@ -174,10 +174,10 @@ const Jobs = () => {
             {filteredJobs.map((job, index) => (
               <Card key={job.id} className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up" style={{animationDelay: `${index * 0.1}s`}}>
                 <CardHeader>
-                  <div className="flex justify-between items-start">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
                     <div className="flex-1">
                       <CardTitle className="text-xl mb-2">{job.title}</CardTitle>
-                      <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground mb-3">
                         <div className="flex items-center space-x-1">
                           <MapPin className="h-4 w-4" />
                           <span>{job.location}</span>
@@ -187,9 +187,9 @@ const Jobs = () => {
                           <span>{new Date(job.created_at).toLocaleDateString()}</span>
                         </div>
                         {job.salary && (
-                          <div className="flex items-center space-x-1">
-                            <Building2 className="h-4 w-4" />
-                            <span>{job.salary}</span>
+                          <div className="flex items-center space-x-1 max-w-full">
+                            <Building2 className="h-4 w-4 flex-shrink-0" />
+                            <span className="truncate">{job.salary}</span>
                           </div>
                         )}
                       </div>
@@ -197,7 +197,7 @@ const Jobs = () => {
                         <Badge variant="secondary">{job.sector}</Badge>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-left sm:text-right">
                       <p className="text-sm text-muted-foreground mb-2">Ref: {job.reference_id}</p>
                     </div>
                   </div>
