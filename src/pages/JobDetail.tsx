@@ -278,7 +278,7 @@ const JobDetail = () => {
                   {job.salary && (
                     <div className="flex items-center space-x-1">
                       <Building2 className="h-4 w-4 flex-shrink-0" />
-                      <span className="font-medium text-foreground">{job.salary}</span>
+                      <span>{job.salary}</span>
                     </div>
                   )}
                 </div>
