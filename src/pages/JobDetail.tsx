@@ -266,7 +266,7 @@ const JobDetail = () => {
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 <CardTitle className="text-3xl mb-4">{job.title}</CardTitle>
-                <div className="flex items-center space-x-4 text-muted-foreground mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-muted-foreground mb-4">
                   <div className="flex items-center space-x-1">
                     <MapPin className="h-4 w-4" />
                     <span>{job.location}</span>
@@ -275,6 +275,12 @@ const JobDetail = () => {
                     <Clock className="h-4 w-4" />
                     <span>Posted {new Date(job.created_at).toLocaleDateString()}</span>
                   </div>
+                  {job.salary && (
+                    <div className="flex items-center space-x-1">
+                      <Building2 className="h-4 w-4 flex-shrink-0" />
+                      <span className="font-medium text-foreground">{job.salary}</span>
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center space-x-2 mb-6">
                   <Badge variant="secondary">{job.sector}</Badge>
