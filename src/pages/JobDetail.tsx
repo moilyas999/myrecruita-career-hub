@@ -276,9 +276,9 @@ const JobDetail = () => {
                     <span>Posted {new Date(job.created_at).toLocaleDateString()}</span>
                   </div>
                   {job.salary && (
-                    <div className="flex items-center space-x-1">
-                      <Building2 className="h-4 w-4 flex-shrink-0" />
-                      <span>{job.salary}</span>
+                    <div className="flex items-start space-x-1 w-full sm:w-auto">
+                      <Building2 className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                      <span className="break-words">{job.salary}</span>
                     </div>
                   )}
                 </div>
