@@ -128,7 +128,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailContent = getEmailContent(type, data);
 
     const emailResponse = await resend.emails.send({
-      from: "MyRecruita Notifications <onboarding@resend.dev>",
+      from: "onboarding@resend.dev",
       to: ["zuhair@myrecruita.com"],
       subject: emailContent.subject,
       html: emailContent.html,
