@@ -258,13 +258,13 @@ const About = () => {
                   we're here to help you achieve your goals with personalized, expert guidance.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90 font-semibold">
+                  <Button asChild size="lg" variant="solid-white" className="font-semibold">
                     <Link to="/submit-cv">
                       Find Your Next Role
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Link>
                   </Button>
-                  <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90 font-semibold">
+                  <Button asChild size="lg" variant="solid-white" className="font-semibold">
                     <Link to="/contact">
                       Contact Our Team
                     </Link>

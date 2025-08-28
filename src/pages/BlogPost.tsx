@@ -425,10 +425,10 @@ const BlogPost = () => {
                 Ready to implement these insights? Partner with MyRecruita to access industry-leading talent and cutting-edge recruitment strategies.
               </p>
               <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                <Button asChild size="lg" className="bg-white text-primary hover:bg-white/95 text-lg px-8 py-4 h-auto">
+                <Button asChild size="lg" variant="solid-white" className="text-lg px-8 py-4 h-auto">
                   <Link to="/contact">Start Your Journey</Link>
                 </Button>
-                <Button asChild size="lg" variant="secondary" className="border-2 border-white text-white bg-transparent hover:bg-white/10 text-lg px-8 py-4 h-auto">
+                <Button asChild size="lg" variant="outline-white" className="text-lg px-8 py-4 h-auto">
                   <Link to="/employers">Explore Services</Link>
                 </Button>
               </div>
@@ -546,10 +546,10 @@ const BlogPost = () => {
                 Whether you're seeking your next career opportunity or looking to hire exceptional talent, we're here to help you succeed.
               </p>
               <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                <Button asChild size="lg" className="bg-white text-primary hover:bg-white/95 text-lg px-8 py-4 h-auto">
+                <Button asChild size="lg" variant="solid-white" className="text-lg px-8 py-4 h-auto">
                   <Link to="/submit-cv">Find Opportunities</Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white/10 text-lg px-8 py-4 h-auto">
+                <Button asChild size="lg" variant="outline-white" className="text-lg px-8 py-4 h-auto">
                   <Link to="/employers">Hire Top Talent</Link>
                 </Button>
               </div>
