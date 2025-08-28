@@ -118,46 +118,83 @@ const Home = () => {
       </section>
 
       {/* APSCo Accreditation Section */}
-      <section className="py-16 bg-white border-t border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <section className="py-16 bg-gradient-to-br from-secondary/30 to-background relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-pattern-dots opacity-30"></div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Section Header */}
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center space-x-2 bg-accent/10 text-accent px-4 py-2 rounded-full text-sm font-medium mb-4">
+              <Shield className="h-4 w-4" />
+              <span>Professional Accreditation</span>
+            </div>
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
+              Proud APSCo Member
+            </h2>
+            <p className="text-xl text-accent font-medium mb-2">
+              Setting the highest standard in UK recruitment
+            </p>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+              MyRecruita Ltd is a certified member of APSCo UK, the leading professional body for recruitment agencies. 
+              APSCo membership demonstrates our commitment to excellence, ethics, and professionalism.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
             
-            {/* Left Side - APSCo Logo & Certificate */}
-            <div className="text-center lg:text-left">
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6 mb-6">
-                <div className="flex-shrink-0">
+            {/* APSCo Logo Card */}
+            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up bg-gradient-to-br from-white to-secondary/20">
+              <CardContent className="p-8 text-center">
+                <div className="mb-6">
                   <img 
                     src="/images/apsco-logo.png" 
                     alt="APSCo United Kingdom Recruitment Accreditation"
-                    className="h-20 w-auto object-contain"
+                    className="h-16 w-auto object-contain mx-auto mb-4"
                   />
-                  <div className="flex items-center justify-center mt-2">
-                    <BadgeCheck className="h-5 w-5 text-green-600 mr-2" />
-                    <span className="text-sm font-medium text-green-600">Verified Member</span>
+                  <div className="inline-flex items-center bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
+                    <BadgeCheck className="h-4 w-4 mr-2" />
+                    Verified Member
                   </div>
                 </div>
-                
+                <h3 className="font-semibold text-foreground mb-2">Official Member</h3>
+                <p className="text-sm text-muted-foreground">
+                  Certified professional staffing company recognized by APSCo UK
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Certificate Card */}
+            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up bg-gradient-to-br from-white to-accent/5" style={{animationDelay: '0.1s'}}>
+              <CardContent className="p-8 text-center">
                 <Dialog>
                   <DialogTrigger asChild>
                     <div className="cursor-pointer group">
-                      <div className="relative">
+                      <div className="relative mb-4">
                         <img 
                           src="/images/apsco-certificate.png" 
                           alt="MyRecruita Ltd APSCo Membership Certificate 2025"
-                          className="h-32 w-24 object-cover rounded-lg shadow-lg border border-gray-200 group-hover:shadow-xl transition-shadow duration-300"
+                          className="h-20 w-16 object-cover rounded-lg shadow-md border border-border mx-auto group-hover:shadow-lg transition-shadow duration-300"
                         />
-                        <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors duration-300 rounded-lg flex items-center justify-center">
-                          <ExternalLink className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <div className="absolute inset-0 bg-primary/10 group-hover:bg-primary/20 transition-colors duration-300 rounded-lg flex items-center justify-center">
+                          <ExternalLink className="h-5 w-5 text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         </div>
                       </div>
-                      <p className="text-xs text-gray-600 mt-2">Click to view certificate</p>
+                      <h3 className="font-semibold text-foreground mb-2">Membership Certificate</h3>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Official certification document
+                      </p>
+                      <Button variant="outline" size="sm" className="w-full">
+                        View Certificate
+                        <ExternalLink className="ml-2 h-3 w-3" />
+                      </Button>
                     </div>
                   </DialogTrigger>
-                  <DialogContent className="max-w-3xl">
+                  <DialogContent className="max-w-4xl">
                     <DialogHeader>
-                      <DialogTitle>APSCo Membership Certificate</DialogTitle>
+                      <DialogTitle className="text-center">APSCo Membership Certificate</DialogTitle>
                     </DialogHeader>
-                    <div className="mt-4">
+                    <div className="mt-6">
                       <img 
                         src="/images/apsco-certificate.png" 
                         alt="MyRecruita Ltd APSCo Membership Certificate 2025"
@@ -166,98 +203,131 @@ const Home = () => {
                     </div>
                   </DialogContent>
                 </Dialog>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
-            {/* Right Side - Content */}
-            <div>
-              <div className="mb-8">
-                <h2 className="text-3xl lg:text-4xl font-bold text-[#0B1F3B] mb-3">
-                  Proud APSCo Member
-                </h2>
-                <p className="text-xl text-[#14B8A6] font-medium mb-4 italic">
-                  Setting the highest standard in UK recruitment.
-                </p>
-                <p className="text-lg text-[#64748B] leading-relaxed">
-                  MyRecruita Ltd is a certified member of APSCo UK, the leading professional body for recruitment agencies. APSCo membership demonstrates our commitment to excellence, ethics, and professionalism.
-                </p>
-              </div>
-
-              {/* Benefits List */}
-              <div className="mb-8">
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="flex items-start space-x-3">
-                    <Shield className="h-5 w-5 text-[#14B8A6] mt-0.5 flex-shrink-0" />
-                    <div>
-                      <span className="font-semibold text-[#0B1F3B]">Industry Excellence</span>
-                      <span className="text-[#64748B]"> — Recognised as part of a trusted global recruitment body.</span>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <CheckCircle className="h-5 w-5 text-[#14B8A6] mt-0.5 flex-shrink-0" />
-                    <div>
-                      <span className="font-semibold text-[#0B1F3B]">Code of Conduct</span>
-                      <span className="text-[#64748B]"> — We follow APSCo's strict professional standards.</span>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <Building2 className="h-5 w-5 text-[#14B8A6] mt-0.5 flex-shrink-0" />
-                    <div>
-                      <span className="font-semibold text-[#0B1F3B]">Client Confidence</span>
-                      <span className="text-[#64748B]"> — Assurance of ethical, compliant, and high-quality service.</span>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <Heart className="h-5 w-5 text-[#14B8A6] mt-0.5 flex-shrink-0" />
-                    <div>
-                      <span className="font-semibold text-[#0B1F3B]">Candidate Care</span>
-                      <span className="text-[#64748B]"> — Protecting candidate rights and ensuring fair processes.</span>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <TrendingUp className="h-5 w-5 text-[#14B8A6] mt-0.5 flex-shrink-0" />
-                    <div>
-                      <span className="font-semibold text-[#0B1F3B]">Continuous Improvement</span>
-                      <span className="text-[#64748B]"> — Ongoing training, resources, and best-practice updates.</span>
-                    </div>
+            {/* CTA Card */}
+            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up bg-gradient-to-br from-primary/5 to-accent/5" style={{animationDelay: '0.2s'}}>
+              <CardContent className="p-8 text-center">
+                <div className="mb-6">
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <ExternalLink className="h-8 w-8 text-primary" />
                   </div>
                 </div>
-              </div>
+                <h3 className="font-semibold text-foreground mb-2">Learn More</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Discover APSCo's mission and standards
+                </p>
+                <Button asChild className="w-full bg-primary hover:bg-primary/90">
+                  <a 
+                    href="https://www.apsco.org" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
+                    Visit APSCo
+                    <ExternalLink className="ml-2 h-4 w-4" />
+                  </a>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
 
-              {/* APSCo Values Row */}
-              <div className="mb-8">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-                  <div className="flex flex-col items-center">
-                    <Users2 className="h-6 w-6 text-[#14B8A6] mb-2" />
-                    <span className="text-sm font-medium text-[#0B1F3B]">Dynamic</span>
+          {/* Benefits Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up" style={{animationDelay: '0.3s'}}>
+              <CardContent className="p-6">
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Shield className="h-6 w-6 text-accent" />
                   </div>
-                  <div className="flex flex-col items-center">
-                    <BookOpen className="h-6 w-6 text-[#14B8A6] mb-2" />
-                    <span className="text-sm font-medium text-[#0B1F3B]">Knowledgeable</span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <Award className="h-6 w-6 text-[#14B8A6] mb-2" />
-                    <span className="text-sm font-medium text-[#0B1F3B]">Professional</span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <Heart className="h-6 w-6 text-[#14B8A6] mb-2" />
-                    <span className="text-sm font-medium text-[#0B1F3B]">Supportive</span>
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-2">Industry Excellence</h4>
+                    <p className="text-sm text-muted-foreground">Recognised as part of a trusted global recruitment body.</p>
                   </div>
                 </div>
-              </div>
+              </CardContent>
+            </Card>
 
-              {/* CTA Button */}
-              <Button asChild className="bg-[#0B1F3B] hover:bg-[#0B1F3B]/90 text-white">
-                <a 
-                  href="https://www.apsco.org" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                >
-                  Learn More About APSCo
-                  <ExternalLink className="ml-2 h-4 w-4" />
-                </a>
-              </Button>
-            </div>
+            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up" style={{animationDelay: '0.4s'}}>
+              <CardContent className="p-6">
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <CheckCircle className="h-6 w-6 text-accent" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-2">Code of Conduct</h4>
+                    <p className="text-sm text-muted-foreground">We follow APSCo's strict professional standards.</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up" style={{animationDelay: '0.5s'}}>
+              <CardContent className="p-6">
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Building2 className="h-6 w-6 text-accent" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-2">Client Confidence</h4>
+                    <p className="text-sm text-muted-foreground">Assurance of ethical, compliant, and high-quality service.</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up" style={{animationDelay: '0.6s'}}>
+              <CardContent className="p-6">
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Heart className="h-6 w-6 text-accent" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-2">Candidate Care</h4>
+                    <p className="text-sm text-muted-foreground">Protecting candidate rights and ensuring fair processes.</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up" style={{animationDelay: '0.7s'}}>
+              <CardContent className="p-6">
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <TrendingUp className="h-6 w-6 text-accent" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-2">Continuous Improvement</h4>
+                    <p className="text-sm text-muted-foreground">Ongoing training, resources, and best-practice updates.</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* APSCo Values Card */}
+            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up bg-gradient-to-br from-accent/5 to-primary/5" style={{animationDelay: '0.8s'}}>
+              <CardContent className="p-6">
+                <h4 className="font-semibold text-foreground mb-4 text-center">APSCo Values</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col items-center text-center">
+                    <Users2 className="h-5 w-5 text-accent mb-1" />
+                    <span className="text-xs font-medium text-foreground">Dynamic</span>
+                  </div>
+                  <div className="flex flex-col items-center text-center">
+                    <BookOpen className="h-5 w-5 text-accent mb-1" />
+                    <span className="text-xs font-medium text-foreground">Knowledgeable</span>
+                  </div>
+                  <div className="flex flex-col items-center text-center">
+                    <Award className="h-5 w-5 text-accent mb-1" />
+                    <span className="text-xs font-medium text-foreground">Professional</span>
+                  </div>
+                  <div className="flex flex-col items-center text-center">
+                    <Heart className="h-5 w-5 text-accent mb-1" />
+                    <span className="text-xs font-medium text-foreground">Supportive</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
