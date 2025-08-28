@@ -428,7 +428,7 @@ const BlogPost = () => {
                 <Button asChild size="lg" className="bg-white text-primary hover:bg-white/95 text-lg px-8 py-4 h-auto">
                   <Link to="/contact">Start Your Journey</Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white/10 text-lg px-8 py-4 h-auto">
+                <Button asChild size="lg" variant="secondary" className="border-2 border-white text-white bg-transparent hover:bg-white/10 text-lg px-8 py-4 h-auto">
                   <Link to="/employers">Explore Services</Link>
                 </Button>
               </div>
