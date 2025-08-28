@@ -41,7 +41,7 @@ export const useSEO = ({
       }
     }
 
-    // Update Open Graph tags
+    // Update Open Graph tags with comprehensive social media optimization
     const updateOGTag = (property: string, content: string) => {
       let ogTag = document.querySelector(`meta[property="${property}"]`);
       if (ogTag) {
@@ -57,9 +57,14 @@ export const useSEO = ({
     updateOGTag('og:title', title);
     updateOGTag('og:description', description);
     updateOGTag('og:image', ogImage);
-    updateOGTag('og:type', 'website');
+    updateOGTag('og:type', 'article');
+    updateOGTag('og:site_name', 'MyRecruita');
+    updateOGTag('og:locale', 'en_GB');
+    updateOGTag('og:image:width', '1200');
+    updateOGTag('og:image:height', '630');
+    if (canonical) updateOGTag('og:url', canonical);
 
-    // Update Twitter tags
+    // Update Twitter tags with enhanced metadata
     const updateTwitterTag = (name: string, content: string) => {
       let twitterTag = document.querySelector(`meta[name="${name}"]`);
       if (twitterTag) {
@@ -76,6 +81,25 @@ export const useSEO = ({
     updateTwitterTag('twitter:description', description);
     updateTwitterTag('twitter:image', ogImage);
     updateTwitterTag('twitter:card', 'summary_large_image');
+    updateTwitterTag('twitter:site', '@MyRecruita');
+    updateTwitterTag('twitter:creator', '@MyRecruita');
+
+    // Additional SEO meta tags
+    const updateMetaTag = (name: string, content: string) => {
+      let metaTag = document.querySelector(`meta[name="${name}"]`);
+      if (metaTag) {
+        metaTag.setAttribute('content', content);
+      } else {
+        metaTag = document.createElement('meta');
+        metaTag.setAttribute('name', name);
+        metaTag.setAttribute('content', content);
+        document.head.appendChild(metaTag);
+      }
+    };
+
+    updateMetaTag('robots', 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1');
+    updateMetaTag('author', 'MyRecruita');
+    updateMetaTag('theme-color', '#1e3a8a'); // Primary brand color
 
   }, [title, description, canonical, ogImage]);
 };

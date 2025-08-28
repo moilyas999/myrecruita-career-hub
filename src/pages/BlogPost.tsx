@@ -46,11 +46,12 @@ const BlogPost = () => {
   const [relatedPosts, setRelatedPosts] = useState<RelatedPost[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Set default SEO
+  // Set comprehensive SEO with social media optimization
   useSEO({
     title: post?.meta_title || post?.title || "Blog Post | MyRecruita",
     description: post?.meta_description || post?.excerpt || "Read the latest career advice and industry insights from MyRecruita",
-    canonical: `${window.location.origin}/blog/${slug}`
+    canonical: `${window.location.origin}/blog/${slug}`,
+    ogImage: post?.featured_image_url ? `${window.location.origin}${post.featured_image_url}` : `${window.location.origin}/images/apsco-logo.png`
   });
 
   const fetchPost = async () => {
