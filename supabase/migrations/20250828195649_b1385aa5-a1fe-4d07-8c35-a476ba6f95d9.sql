@@ -1,0 +1,2 @@
+-- Remove the duplicate finance professionals blog post (keeping the one with 2025 in the slug)
+DELETE FROM blog_posts WHERE slug = 'attract-top-finance-professionals' AND id = '3b090e87-8e9f-41a4-81fc-d977de42dc93';
