@@ -228,7 +228,7 @@ const Blog = () => {
             </div>
           </div>
           
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-foreground mb-8 leading-tight tracking-tight">
+          <h1 className="text-4xl md:text-6xl font-black text-foreground mb-8 leading-tight tracking-tight">
             <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent bg-300% animate-gradient">
               Expert
             </span>
@@ -236,7 +236,7 @@ const Blog = () => {
             <span className="text-foreground">Recruitment Insights</span>
           </h1>
           
-          <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-4xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-4xl mx-auto leading-relaxed">
             Transform your hiring strategy with cutting-edge insights, proven methodologies, and strategic guidance from industry leaders.
           </p>
           

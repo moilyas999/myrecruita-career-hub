@@ -171,18 +171,18 @@ const BlogPost = () => {
   };
 
   const formatContent = (content: string) => {
-    // Enhanced content formatting with modern webpage styling
+    // Enhanced content formatting with modern webpage styling and proper text sizes
     return content
       .split('\n\n')
       .map((paragraph, index) => {
-        // Handle headings with modern styling
+        // Handle headings with proper sizing
         if (paragraph.startsWith('## ')) {
           return (
-            <div key={index} className="mt-16 mb-8 first:mt-0">
+            <div key={index} className="mt-12 mb-6 first:mt-0">
               <div className="relative">
-                <div className="absolute -left-6 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-accent rounded-full opacity-60"></div>
-                <h2 className="text-4xl md:text-5xl font-bold text-foreground leading-tight pl-8">
-                  {paragraph.slice(3)}
+                <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-accent rounded-full opacity-60"></div>
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground leading-tight pl-6">
+                  {paragraph.slice(3).replace(/\*/g, '')}
                 </h2>
               </div>
             </div>
@@ -190,27 +190,27 @@ const BlogPost = () => {
         }
         if (paragraph.startsWith('### ')) {
           return (
-            <div key={index} className="mt-12 mb-6">
-              <h3 className="text-2xl md:text-3xl font-bold text-foreground bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                {paragraph.slice(4)}
+            <div key={index} className="mt-8 mb-4">
+              <h3 className="text-xl md:text-2xl font-semibold text-foreground">
+                {paragraph.slice(4).replace(/\*/g, '')}
               </h3>
             </div>
           );
         }
         
-        // Handle blockquotes with modern card styling
+        // Handle blockquotes with proper sizing
         if (paragraph.startsWith('> ')) {
           return (
-            <div key={index} className="my-12">
+            <div key={index} className="my-8">
               <div className="relative">
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-accent/20 rounded-2xl blur opacity-75"></div>
-                <blockquote className="relative bg-card/90 backdrop-blur-sm border-l-4 border-accent p-8 rounded-2xl shadow-lg">
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center">
-                      <span className="text-accent font-bold text-sm">💡</span>
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-accent/20 rounded-xl blur opacity-75"></div>
+                <blockquote className="relative bg-card/90 backdrop-blur-sm border-l-4 border-accent p-6 rounded-xl shadow-lg">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 bg-accent/20 rounded-full flex items-center justify-center">
+                      <span className="text-accent font-bold text-xs">💡</span>
                     </div>
-                    <p className="text-lg md:text-xl text-foreground font-semibold italic leading-relaxed mb-0">
-                      {paragraph.slice(2)}
+                    <p className="text-base md:text-lg text-foreground font-medium italic leading-relaxed mb-0">
+                      {paragraph.slice(2).replace(/\*/g, '')}
                     </p>
                   </div>
                 </blockquote>
@@ -219,20 +219,20 @@ const BlogPost = () => {
           );
         }
         
-        // Handle bullet lists with modern styling
+        // Handle bullet lists with proper sizing
         if (paragraph.includes('\n- ')) {
           const items = paragraph.split('\n').filter(item => item.startsWith('- '));
           return (
-            <div key={index} className="my-8">
-              <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 border border-border/30">
-                <ul className="space-y-4">
+            <div key={index} className="my-6">
+              <div className="bg-card/30 backdrop-blur-sm rounded-xl p-4 border border-border/30">
+                <ul className="space-y-3">
                   {items.map((item, itemIndex) => (
                     <li key={itemIndex} className="flex items-start group">
-                      <div className="flex-shrink-0 w-6 h-6 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center mt-1 mr-4 group-hover:scale-110 transition-transform">
-                        <span className="w-2 h-2 bg-white rounded-full"></span>
+                      <div className="flex-shrink-0 w-4 h-4 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center mt-1.5 mr-3 group-hover:scale-110 transition-transform">
+                        <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
                       </div>
-                      <span className="text-base md:text-lg leading-7 text-muted-foreground group-hover:text-foreground transition-colors">
-                        {item.slice(2)}
+                      <span className="text-sm md:text-base leading-6 text-muted-foreground group-hover:text-foreground transition-colors">
+                        {item.slice(2).replace(/\*/g, '')}
                       </span>
                     </li>
                   ))}
@@ -245,12 +245,12 @@ const BlogPost = () => {
         // Handle single bullet points
         if (paragraph.startsWith('- ')) {
           return (
-            <div key={index} className="flex items-start my-6 group">
-              <div className="flex-shrink-0 w-6 h-6 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center mt-1 mr-4 group-hover:scale-110 transition-transform">
-                <span className="w-2 h-2 bg-white rounded-full"></span>
+            <div key={index} className="flex items-start my-4 group">
+              <div className="flex-shrink-0 w-4 h-4 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center mt-1.5 mr-3 group-hover:scale-110 transition-transform">
+                <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
               </div>
-              <p className="text-base md:text-lg leading-7 mb-0 text-muted-foreground group-hover:text-foreground transition-colors">
-                {paragraph.slice(2)}
+              <p className="text-sm md:text-base leading-6 mb-0 text-muted-foreground group-hover:text-foreground transition-colors">
+                {paragraph.slice(2).replace(/\*/g, '')}
               </p>
             </div>
           );
@@ -259,10 +259,10 @@ const BlogPost = () => {
         // Handle bold sections as feature cards
         if (paragraph.startsWith('**') && paragraph.endsWith('**') && paragraph.indexOf('**', 2) === paragraph.length - 2) {
           return (
-            <div key={index} className="my-10">
-              <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl p-6 border border-primary/20">
-                <h4 className="text-xl md:text-2xl font-bold text-foreground flex items-center">
-                  <span className="w-2 h-2 bg-accent rounded-full mr-3"></span>
+            <div key={index} className="my-6">
+              <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-xl p-4 border border-primary/20">
+                <h4 className="text-lg md:text-xl font-semibold text-foreground flex items-center">
+                  <span className="w-1.5 h-1.5 bg-accent rounded-full mr-2"></span>
                   {paragraph.slice(2, -2)}
                 </h4>
               </div>
@@ -270,20 +270,22 @@ const BlogPost = () => {
           );
         }
         
-        // Handle regular paragraphs with enhanced styling
+        // Handle regular paragraphs with proper sizing
         const formatInlineText = (text: string) => {
-          // Handle bold text with accent styling
-          text = text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">$1</strong>');
+          // Remove all asterisks and handle bold text properly
+          text = text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>');
+          // Remove any remaining asterisks
+          text = text.replace(/\*/g, '');
           
           return { __html: text };
         };
         
-        // Regular paragraphs with modern styling
+        // Regular paragraphs with proper text sizing
         if (paragraph.trim()) {
           return (
-            <div key={index} className="my-6">
+            <div key={index} className="my-4">
               <p 
-                className="text-base md:text-lg leading-8 text-muted-foreground hover:text-foreground transition-colors max-w-none"
+                className="text-sm md:text-base leading-7 text-muted-foreground max-w-none"
                 dangerouslySetInnerHTML={formatInlineText(paragraph)}
               />
             </div>
@@ -371,7 +373,7 @@ const BlogPost = () => {
               </div>
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-black text-foreground mb-8 leading-tight tracking-tight bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
+            <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-6 leading-tight tracking-tight bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
               {post.title}
             </h1>
             
