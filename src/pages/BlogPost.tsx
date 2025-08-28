@@ -184,35 +184,91 @@ const BlogPost = () => {
   };
 
   const formatContent = (content: string) => {
-    // Simple content formatting - you can enhance this with a proper markdown parser
+    // Enhanced content formatting with proper styling
     return content
       .split('\n\n')
       .map((paragraph, index) => {
-        if (paragraph.startsWith('# ')) {
-          return <h2 key={index} className="text-2xl font-bold mt-8 mb-4">{paragraph.slice(2)}</h2>;
-        }
+        // Handle headings
         if (paragraph.startsWith('## ')) {
-          return <h3 key={index} className="text-xl font-semibold mt-6 mb-3">{paragraph.slice(3)}</h3>;
+          return (
+            <h2 key={index} className="text-3xl font-bold text-foreground mt-12 mb-6 first:mt-0">
+              {paragraph.slice(3)}
+            </h2>
+          );
         }
-        if (paragraph.startsWith('- ')) {
+        if (paragraph.startsWith('### ')) {
+          return (
+            <h3 key={index} className="text-2xl font-semibold text-foreground mt-10 mb-4">
+              {paragraph.slice(4)}
+            </h3>
+          );
+        }
+        
+        // Handle blockquotes
+        if (paragraph.startsWith('> ')) {
+          return (
+            <blockquote key={index} className="border-l-4 border-accent bg-accent/5 pl-6 py-4 my-8 italic text-lg text-muted-foreground rounded-r-lg">
+              <p className="mb-0">{paragraph.slice(2)}</p>
+            </blockquote>
+          );
+        }
+        
+        // Handle bullet lists
+        if (paragraph.includes('\n- ')) {
           const items = paragraph.split('\n').filter(item => item.startsWith('- '));
           return (
-            <ul key={index} className="list-disc pl-6 mb-4 space-y-2">
+            <ul key={index} className="list-none space-y-3 my-6 pl-0">
               {items.map((item, itemIndex) => (
-                <li key={itemIndex}>{item.slice(2)}</li>
+                <li key={itemIndex} className="flex items-start">
+                  <span className="flex-shrink-0 w-2 h-2 bg-accent rounded-full mt-3 mr-4"></span>
+                  <span className="text-base leading-7">{item.slice(2)}</span>
+                </li>
               ))}
             </ul>
           );
         }
-        if (paragraph.startsWith('> ')) {
+        
+        // Handle single bullet points
+        if (paragraph.startsWith('- ')) {
           return (
-            <blockquote key={index} className="border-l-4 border-accent pl-4 my-6 italic text-muted-foreground bg-muted/30 py-4 rounded-r">
-              {paragraph.slice(2)}
-            </blockquote>
+            <div key={index} className="flex items-start my-4">
+              <span className="flex-shrink-0 w-2 h-2 bg-accent rounded-full mt-3 mr-4"></span>
+              <p className="text-base leading-7 mb-0">{paragraph.slice(2)}</p>
+            </div>
           );
         }
-        return <p key={index} className="mb-4 leading-7">{paragraph}</p>;
-      });
+        
+        // Handle bold sections that are standalone (like policy framework headers)
+        if (paragraph.startsWith('**') && paragraph.endsWith('**') && paragraph.indexOf('**', 2) === paragraph.length - 2) {
+          return (
+            <h4 key={index} className="text-xl font-semibold text-foreground mt-8 mb-4">
+              {paragraph.slice(2, -2)}
+            </h4>
+          );
+        }
+        
+        // Handle regular paragraphs with inline formatting
+        const formatInlineText = (text: string) => {
+          // Handle bold text
+          text = text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>');
+          
+          return { __html: text };
+        };
+        
+        // Regular paragraphs
+        if (paragraph.trim()) {
+          return (
+            <p 
+              key={index} 
+              className="text-base leading-8 mb-6 text-muted-foreground max-w-none"
+              dangerouslySetInnerHTML={formatInlineText(paragraph)}
+            />
+          );
+        }
+        
+        return null;
+      })
+      .filter(Boolean);
   };
 
   if (loading) {
@@ -260,44 +316,73 @@ const BlogPost = () => {
         )}
 
         {/* Article Header */}
-        <div className="mb-8">
+        <div className="max-w-4xl mx-auto mb-12">
           {post.blog_categories && (
-            <Badge variant="secondary" className="mb-4">
+            <Badge variant="secondary" className="mb-4 text-sm px-3 py-1">
               {post.blog_categories.name}
             </Badge>
           )}
           
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6 leading-tight">
             {post.title}
           </h1>
           
-          <div className="flex flex-wrap items-center gap-4 text-muted-foreground mb-6">
+          <div className="flex flex-wrap items-center gap-6 text-muted-foreground mb-8 pb-8 border-b border-border">
             <div className="flex items-center">
-              <User className="h-4 w-4 mr-2" />
-              {post.author_name}
+              <User className="h-5 w-5 mr-2" />
+              <span className="font-medium">{post.author_name}</span>
             </div>
             <div className="flex items-center">
-              <Calendar className="h-4 w-4 mr-2" />
-              {format(new Date(post.published_at), 'MMMM dd, yyyy')}
+              <Calendar className="h-5 w-5 mr-2" />
+              <span>{format(new Date(post.published_at), 'MMMM dd, yyyy')}</span>
             </div>
             <div className="flex items-center">
-              <BookOpen className="h-4 w-4 mr-2" />
-              {post.view_count} reads
+              <BookOpen className="h-5 w-5 mr-2" />
+              <span>{post.view_count} reads</span>
+            </div>
+            <div className="flex items-center bg-accent/10 px-3 py-1 rounded-full">
+              <span className="text-sm font-medium text-accent">8 min read</span>
             </div>
           </div>
 
           {post.excerpt && (
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              {post.excerpt}
-            </p>
+            <div className="bg-muted/30 p-6 rounded-lg border-l-4 border-accent">
+              <p className="text-lg text-muted-foreground leading-relaxed italic">
+                {post.excerpt}
+              </p>
+            </div>
           )}
         </div>
 
         <Separator className="mb-8" />
 
         {/* Article Content */}
-        <div className="prose prose-lg max-w-none mb-12">
-          {formatContent(post.content)}
+        <div className="max-w-4xl mx-auto">
+          <article className="prose prose-lg prose-slate max-w-none">
+            {formatContent(post.content)}
+          </article>
+        </div>
+
+        <Separator className="my-12" />
+
+        {/* Call to Action Section */}
+        <div className="max-w-3xl mx-auto mb-12">
+          <Card className="bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-2xl border-0">
+            <CardContent className="p-8 text-center">
+              <h3 className="text-2xl font-bold mb-4">Hire Smarter, Faster</h3>
+              <p className="text-lg mb-6 opacity-95 max-w-2xl mx-auto">
+                Partner with MyRecruita to access ready-to-hire talent and stay ahead of recruitment trends.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button asChild size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90">
+                  <Link to="/contact">Talk to a Specialist</Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+                  <Link to="/employers">View Our Services</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <Separator className="mb-8" />
