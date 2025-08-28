@@ -43,7 +43,6 @@ const CareerPartner = () => {
       title: "Free CV Review",
       description: "Get expert feedback on your CV with actionable recommendations for improvement.",
       features: ["Professional formatting review", "Content optimization", "ATS compatibility check", "Industry-specific advice"],
-      price: "Free",
       cta: "Get CV Review"
     },
     {
@@ -51,7 +50,6 @@ const CareerPartner = () => {
       title: "Tailored CV Enhancement",
       description: "Professional CV rewrite and optimization service for maximum impact.",
       features: ["Complete CV rewrite", "Keyword optimization", "Achievement highlighting", "Cover letter template"],
-      price: "From £99",
       cta: "Enhance My CV"
     },
     {
@@ -59,7 +57,6 @@ const CareerPartner = () => {
       title: "LinkedIn Profile Audit",
       description: "Optimize your LinkedIn presence to attract recruiters and opportunities.",
       features: ["Profile optimization", "Headline improvement", "Summary enhancement", "Skills & endorsements"],
-      price: "From £79",
       cta: "Optimize LinkedIn"
     },
     {
@@ -67,7 +64,6 @@ const CareerPartner = () => {
       title: "Mock Interview Sessions",
       description: "Practice interviews with expert feedback to boost your confidence.",
       features: ["1-on-1 video sessions", "Industry-specific questions", "Detailed feedback", "Performance analysis"],
-      price: "From £149",
       cta: "Book Interview Prep"
     }
   ];
@@ -210,7 +206,6 @@ const CareerPartner = () => {
                   </div>
                   <div>
                     <CardTitle className="text-xl">{service.title}</CardTitle>
-                    <p className="text-sm font-semibold text-accent">{service.price}</p>
                   </div>
                 </div>
                 <p className="text-muted-foreground">{service.description}</p>
