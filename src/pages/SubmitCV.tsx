@@ -137,6 +137,24 @@ const SubmitCV = () => {
         description: "We'll review your profile and be in touch within 24 hours.",
       });
       
+      // Send admin notification
+      try {
+        await supabase.functions.invoke('send-admin-notification', {
+          body: {
+            type: 'cv_submission',
+            data: {
+              name: formData.name,
+              email: formData.email,
+              phone: formData.phone,
+              message: formData.message,
+              cv_file_url: cvFileUrl
+            }
+          }
+        });
+      } catch (notificationError) {
+        console.log('Admin notification failed (non-critical):', notificationError);
+      }
+      
       // Redirect to thank you page
       navigate('/thank-you');
     } catch (error) {

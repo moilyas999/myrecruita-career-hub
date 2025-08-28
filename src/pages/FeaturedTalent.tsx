@@ -121,6 +121,25 @@ const FeaturedTalent = () => {
         title: "Profile Request Sent!",
         description: "We'll send you the full candidate profile within 24 hours.",
       });
+      
+      // Send admin notification
+      try {
+        await supabase.functions.invoke('send-admin-notification', {
+          body: {
+            type: 'talent_request',
+            data: {
+              talent_id: requestFormData.candidateRef,
+              contact_name: requestFormData.name,
+              company_name: requestFormData.company,
+              email: requestFormData.email,
+              message: requestFormData.message
+            }
+          }
+        });
+      } catch (notificationError) {
+        console.log('Admin notification failed (non-critical):', notificationError);
+      }
+      
       setRequestFormData({ name: "", company: "", email: "", message: "", candidateRef: "" });
     } catch (error) {
       toast({

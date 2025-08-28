@@ -146,6 +146,28 @@ const EmployerJobForm = ({ isCompact = false }: EmployerJobFormProps) => {
         description: "We'll review your requirements and contact you within 24 hours.",
       });
       
+      // Send admin notification
+      try {
+        await supabase.functions.invoke('send-admin-notification', {
+          body: {
+            type: 'employer_job_submission',
+            data: {
+              contact_name: formData.contactName,
+              company_name: formData.companyName,
+              email: formData.email,
+              phone: formData.phone,
+              job_title: formData.jobTitle,
+              sector: formData.sector,
+              location: formData.location,
+              job_description: formData.jobDescription,
+              job_spec_file_url: jobSpecUrl
+            }
+          }
+        });
+      } catch (notificationError) {
+        console.log('Admin notification failed (non-critical):', notificationError);
+      }
+      
       // Redirect to thank you page
       navigate('/thank-you');
     } catch (error) {

@@ -185,6 +185,25 @@ const JobDetail = () => {
         description: "We'll be in touch within 24 hours to discuss your application.",
       });
       
+      // Send admin notification
+      try {
+        await supabase.functions.invoke('send-admin-notification', {
+          body: {
+            type: 'job_application',
+            data: {
+              job_id: job.id,
+              name: formData.name,
+              email: formData.email,
+              phone: formData.phone,
+              message: formData.message,
+              cv_file_url: publicUrl
+            }
+          }
+        });
+      } catch (notificationError) {
+        console.log('Admin notification failed (non-critical):', notificationError);
+      }
+      
       // Redirect to thank you page
       navigate('/thank-you');
     } catch (error) {

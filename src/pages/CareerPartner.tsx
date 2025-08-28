@@ -98,6 +98,24 @@ const CareerPartner = () => {
         description: "We'll review your CV and contact you within 24 hours.",
       });
       
+      // Send admin notification
+      try {
+        await supabase.functions.invoke('send-admin-notification', {
+          body: {
+            type: 'career_partner_request',
+            data: {
+              name: cvFormData.name,
+              email: cvFormData.email,
+              phone: cvFormData.phone,
+              service_type: 'cv_enhancement',
+              message: cvFormData.message
+            }
+          }
+        });
+      } catch (notificationError) {
+        console.log('Admin notification failed (non-critical):', notificationError);
+      }
+      
       // Redirect to thank you page
       navigate('/thank-you');
     } catch (error) {
@@ -134,6 +152,24 @@ const CareerPartner = () => {
         title: "Session Request Sent!",
         description: "We'll contact you within 2 hours to schedule your session.",
       });
+      
+      // Send admin notification
+      try {
+        await supabase.functions.invoke('send-admin-notification', {
+          body: {
+            type: 'career_partner_request',
+            data: {
+              name: sessionFormData.name,
+              email: sessionFormData.email,
+              phone: sessionFormData.phone,
+              service_type: sessionFormData.service,
+              message: `Preferred time: ${sessionFormData.preferredTime}. ${sessionFormData.message}`
+            }
+          }
+        });
+      } catch (notificationError) {
+        console.log('Admin notification failed (non-critical):', notificationError);
+      }
       
       // Redirect to thank you page
       navigate('/thank-you');

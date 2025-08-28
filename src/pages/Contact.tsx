@@ -119,6 +119,26 @@ const Contact = () => {
         description: "We'll get back to you within 2 hours during business hours.",
       });
       
+      // Send admin notification
+      try {
+        await supabase.functions.invoke('send-admin-notification', {
+          body: {
+            type: 'contact_submission',
+            data: {
+              name: formData.name,
+              email: formData.email,
+              phone: formData.phone,
+              company: formData.company,
+              subject: formData.subject,
+              message: formData.message,
+              inquiry_type: formData.inquiryType
+            }
+          }
+        });
+      } catch (notificationError) {
+        console.log('Admin notification failed (non-critical):', notificationError);
+      }
+      
       // Redirect to thank you page
       navigate('/thank-you');
     } catch (error) {
