@@ -181,7 +181,7 @@ const BlogPost = () => {
             <div key={index} className="mt-12 mb-6 first:mt-0">
               <div className="relative">
                 <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-accent rounded-full opacity-60"></div>
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground leading-tight pl-6">
+                <h2 className="text-lg md:text-xl font-bold text-foreground leading-tight pl-6">
                   {paragraph.slice(3).replace(/\*/g, '')}
                 </h2>
               </div>
@@ -191,7 +191,7 @@ const BlogPost = () => {
         if (paragraph.startsWith('### ')) {
           return (
             <div key={index} className="mt-8 mb-4">
-              <h3 className="text-xl md:text-2xl font-semibold text-foreground">
+              <h3 className="text-base md:text-lg font-semibold text-foreground">
                 {paragraph.slice(4).replace(/\*/g, '')}
               </h3>
             </div>
@@ -209,7 +209,7 @@ const BlogPost = () => {
                     <div className="flex-shrink-0 w-6 h-6 bg-accent/20 rounded-full flex items-center justify-center">
                       <span className="text-accent font-bold text-xs">💡</span>
                     </div>
-                    <p className="text-base md:text-lg text-foreground font-medium italic leading-relaxed mb-0">
+                    <p className="text-sm md:text-base text-foreground font-medium italic leading-relaxed mb-0">
                       {paragraph.slice(2).replace(/\*/g, '')}
                     </p>
                   </div>
