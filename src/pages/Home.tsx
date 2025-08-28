@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Users, Briefcase, Award, CheckCircle, Building2, Linkedin } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ArrowRight, Users, Briefcase, Award, CheckCircle, Building2, Linkedin, Shield, ExternalLink, BadgeCheck, Users2, BookOpen, TrendingUp, Heart } from "lucide-react";
 import { useSEO, injectStructuredData } from "@/hooks/useSEO";
 import { useEffect } from "react";
 import heroBackground from "@/assets/hero-background.jpg";
@@ -20,6 +21,11 @@ const Home = () => {
       "name": "MyRecruita",
       "description": "Specialist recruitment agency for Finance, IT, and Legal sectors",
       "url": window.location.origin,
+      "memberOf": {
+        "@type": "Organization",
+        "name": "APSCo (Association of Professional Staffing Companies)",
+        "url": "https://www.apsco.org"
+      },
       "contactPoint": {
         "@type": "ContactPoint",
         "telephone": "+44 208 058 4490",
@@ -104,6 +110,151 @@ const Home = () => {
               <Button asChild variant="outline" size="lg" className="border-white text-primary bg-white hover:bg-white/90 hover:text-primary text-lg px-8 py-3">
                 <a href="https://calendly.com/zuhair-myrecruita/30min" target="_blank" rel="noopener noreferrer">
                   Book a call with a recruiter
+                </a>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* APSCo Accreditation Section */}
+      <section className="py-16 bg-white border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            
+            {/* Left Side - APSCo Logo & Certificate */}
+            <div className="text-center lg:text-left">
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6 mb-6">
+                <div className="flex-shrink-0">
+                  <img 
+                    src="/images/apsco-logo.png" 
+                    alt="APSCo United Kingdom Recruitment Accreditation"
+                    className="h-20 w-auto object-contain"
+                  />
+                  <div className="flex items-center justify-center mt-2">
+                    <BadgeCheck className="h-5 w-5 text-green-600 mr-2" />
+                    <span className="text-sm font-medium text-green-600">Verified Member</span>
+                  </div>
+                </div>
+                
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <div className="cursor-pointer group">
+                      <div className="relative">
+                        <img 
+                          src="/images/apsco-certificate.png" 
+                          alt="MyRecruita Ltd APSCo Membership Certificate 2025"
+                          className="h-32 w-24 object-cover rounded-lg shadow-lg border border-gray-200 group-hover:shadow-xl transition-shadow duration-300"
+                        />
+                        <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors duration-300 rounded-lg flex items-center justify-center">
+                          <ExternalLink className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-600 mt-2">Click to view certificate</p>
+                    </div>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-3xl">
+                    <DialogHeader>
+                      <DialogTitle>APSCo Membership Certificate</DialogTitle>
+                    </DialogHeader>
+                    <div className="mt-4">
+                      <img 
+                        src="/images/apsco-certificate.png" 
+                        alt="MyRecruita Ltd APSCo Membership Certificate 2025"
+                        className="w-full h-auto rounded-lg shadow-lg"
+                      />
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+
+            {/* Right Side - Content */}
+            <div>
+              <div className="mb-8">
+                <h2 className="text-3xl lg:text-4xl font-bold text-[#0B1F3B] mb-3">
+                  Proud APSCo Member
+                </h2>
+                <p className="text-xl text-[#14B8A6] font-medium mb-4 italic">
+                  Setting the highest standard in UK recruitment.
+                </p>
+                <p className="text-lg text-[#64748B] leading-relaxed">
+                  MyRecruita Ltd is a certified member of APSCo UK, the leading professional body for recruitment agencies. APSCo membership demonstrates our commitment to excellence, ethics, and professionalism.
+                </p>
+              </div>
+
+              {/* Benefits List */}
+              <div className="mb-8">
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="flex items-start space-x-3">
+                    <Shield className="h-5 w-5 text-[#14B8A6] mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="font-semibold text-[#0B1F3B]">Industry Excellence</span>
+                      <span className="text-[#64748B]"> — Recognised as part of a trusted global recruitment body.</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <CheckCircle className="h-5 w-5 text-[#14B8A6] mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="font-semibold text-[#0B1F3B]">Code of Conduct</span>
+                      <span className="text-[#64748B]"> — We follow APSCo's strict professional standards.</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <Building2 className="h-5 w-5 text-[#14B8A6] mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="font-semibold text-[#0B1F3B]">Client Confidence</span>
+                      <span className="text-[#64748B]"> — Assurance of ethical, compliant, and high-quality service.</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <Heart className="h-5 w-5 text-[#14B8A6] mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="font-semibold text-[#0B1F3B]">Candidate Care</span>
+                      <span className="text-[#64748B]"> — Protecting candidate rights and ensuring fair processes.</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <TrendingUp className="h-5 w-5 text-[#14B8A6] mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="font-semibold text-[#0B1F3B]">Continuous Improvement</span>
+                      <span className="text-[#64748B]"> — Ongoing training, resources, and best-practice updates.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* APSCo Values Row */}
+              <div className="mb-8">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                  <div className="flex flex-col items-center">
+                    <Users2 className="h-6 w-6 text-[#14B8A6] mb-2" />
+                    <span className="text-sm font-medium text-[#0B1F3B]">Dynamic</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <BookOpen className="h-6 w-6 text-[#14B8A6] mb-2" />
+                    <span className="text-sm font-medium text-[#0B1F3B]">Knowledgeable</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <Award className="h-6 w-6 text-[#14B8A6] mb-2" />
+                    <span className="text-sm font-medium text-[#0B1F3B]">Professional</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <Heart className="h-6 w-6 text-[#14B8A6] mb-2" />
+                    <span className="text-sm font-medium text-[#0B1F3B]">Supportive</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* CTA Button */}
+              <Button asChild className="bg-[#0B1F3B] hover:bg-[#0B1F3B]/90 text-white">
+                <a 
+                  href="https://www.apsco.org" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
+                  Learn More About APSCo
+                  <ExternalLink className="ml-2 h-4 w-4" />
                 </a>
               </Button>
             </div>
