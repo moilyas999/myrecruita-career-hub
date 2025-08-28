@@ -261,26 +261,15 @@ const Home = () => {
               </CardContent>
             </Card>
 
-            {/* APSCo Values Card */}
-            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up bg-gradient-to-br from-accent/5 to-primary/5" style={{animationDelay: '0.8s'}}>
+            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up" style={{animationDelay: '0.8s'}}>
               <CardContent className="p-6">
-                <h4 className="font-semibold text-foreground mb-4 text-center">APSCo Values</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col items-center text-center">
-                    <Users2 className="h-5 w-5 text-accent mb-1" />
-                    <span className="text-xs font-medium text-foreground">Dynamic</span>
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Award className="h-6 w-6 text-accent" />
                   </div>
-                  <div className="flex flex-col items-center text-center">
-                    <BookOpen className="h-5 w-5 text-accent mb-1" />
-                    <span className="text-xs font-medium text-foreground">Knowledgeable</span>
-                  </div>
-                  <div className="flex flex-col items-center text-center">
-                    <Award className="h-5 w-5 text-accent mb-1" />
-                    <span className="text-xs font-medium text-foreground">Professional</span>
-                  </div>
-                  <div className="flex flex-col items-center text-center">
-                    <Heart className="h-5 w-5 text-accent mb-1" />
-                    <span className="text-xs font-medium text-foreground">Supportive</span>
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-2">APSCo Values</h4>
+                    <p className="text-sm text-muted-foreground">Dynamic, knowledgeable, professional, and supportive approach to recruitment.</p>
                   </div>
                 </div>
               </CardContent>
