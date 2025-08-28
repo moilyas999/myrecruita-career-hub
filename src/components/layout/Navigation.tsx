@@ -27,7 +27,7 @@ const Navigation = () => {
           <Link to="/" className="flex items-center flex-shrink-0">
             <img 
               src="/lovable-uploads/4121491c-ffff-4dec-82a6-3b0fa454c578.png" 
-              alt="MyRecruita - Your Job. Our Mission." 
+              alt="MyRecruita - Expert Recruitment Agency" 
               className="h-12 w-auto object-contain flex-shrink-0"
               style={{ minWidth: 'auto' }}
             />

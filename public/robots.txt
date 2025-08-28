@@ -1,6 +1,20 @@
 User-agent: *
 Allow: /
 
+# Block access to potential nonsense URLs that might be getting indexed
+Disallow: /Blog*
+Disallow: /blog-left-sidebar*
+Disallow: /benefits-manager*
+Disallow: /employee-relations*
+Disallow: /hr-strategies*
+Disallow: /sidebar*
+Disallow: /*sidebar*
+Disallow: /components/
+Disallow: /src/
+Disallow: /node_modules/
+Disallow: /build/
+Disallow: /dist/
+
 # Explicitly allow important crawlers
 User-agent: Googlebot
 Allow: /
@@ -22,6 +36,12 @@ Disallow: /admin/
 Disallow: /api/
 Disallow: /private/
 Disallow: /*.json$
+
+# Block invalid blog patterns
+Disallow: /blog/*sidebar*
+Disallow: /blog/benefits-manager*
+Disallow: /blog/employee-relations*
+Disallow: /blog/hr-strategies*
 
 # Allow important files
 Allow: /sitemap.xml
