@@ -34,12 +34,12 @@ const Navigation = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden lg:flex items-center space-x-6 xl:space-x-8">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`text-sm font-medium transition-colors duration-200 ${
+                className={`text-sm font-medium transition-colors duration-200 whitespace-nowrap ${
                   isActive(item.path)
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"
@@ -48,18 +48,32 @@ const Navigation = () => {
                 {item.name}
               </Link>
             ))}
-            <div className="flex space-x-2">
-              <Button asChild size="sm" variant="outline">
+            <div className="flex space-x-2 flex-shrink-0">
+              <Button asChild size="sm" variant="outline" className="whitespace-nowrap">
                 <Link to="/jobs">
                   Find a Job
                 </Link>
               </Button>
-              <Button asChild size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Button asChild size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground whitespace-nowrap">
                 <Link to="/post-job">
                   Post a Job
                 </Link>
               </Button>
             </div>
+          </div>
+
+          {/* Medium Screen Navigation - Buttons Only */}
+          <div className="hidden md:flex lg:hidden items-center space-x-2">
+            <Button asChild size="sm" variant="outline" className="whitespace-nowrap">
+              <Link to="/jobs">
+                Find a Job
+              </Link>
+            </Button>
+            <Button asChild size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground whitespace-nowrap">
+              <Link to="/post-job">
+                Post a Job
+              </Link>
+            </Button>
           </div>
 
           {/* Mobile menu button */}
