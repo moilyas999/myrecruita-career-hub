@@ -6,11 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { Search, Calendar, User, ArrowRight, BookOpen, TrendingUp } from "lucide-react";
+import { Search, User, ArrowRight, BookOpen, TrendingUp, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/useSEO";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
 
 interface BlogPost {
   id: string;
@@ -19,8 +18,6 @@ interface BlogPost {
   excerpt: string;
   featured_image_url: string | null;
   author_name: string;
-  published_at: string;
-  view_count: number;
   blog_categories: {
     name: string;
     slug: string;
@@ -31,8 +28,6 @@ interface SidebarPost {
   id: string;
   title: string;
   slug: string;
-  published_at: string;
-  view_count?: number;
   blog_categories: {
     name: string;
     slug: string;
@@ -81,15 +76,13 @@ const Blog = () => {
           excerpt,
           featured_image_url,
           author_name,
-          published_at,
-          view_count,
           blog_categories (
             name,
             slug
           )
         `, { count: 'exact' })
         .eq('is_published', true)
-        .order('published_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
       // Apply search filter
       if (searchQuery) {
@@ -151,34 +144,31 @@ const Blog = () => {
           id,
           title,
           slug,
-          published_at,
           blog_categories (name, slug)
         `)
         .eq('is_published', true)
-        .order('published_at', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(5);
 
       if (recentData) {
         setRecentPosts(recentData);
       }
 
-      // Fetch popular posts
-      const { data: popularData } = await supabase
+      // Fetch featured posts
+      const { data: featuredData } = await supabase
         .from('blog_posts')
         .select(`
           id,
           title,
           slug,
-          view_count,
-          published_at,
           blog_categories (name, slug)
         `)
         .eq('is_published', true)
-        .order('view_count', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(5);
 
-      if (popularData) {
-        setPopularPosts(popularData);
+      if (featuredData) {
+        setPopularPosts(featuredData);
       }
     } catch (error) {
       console.error('Error fetching sidebar data:', error);
@@ -224,42 +214,52 @@ const Blog = () => {
   const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-foreground mb-4">Career & Industry Blog</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Stay updated with the latest career advice, industry insights, and recruitment trends
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 bg-accent/10 text-accent px-4 py-2 rounded-full text-sm font-medium mb-6">
+            <Sparkles className="h-4 w-4" />
+            Expert Insights & Industry Knowledge
+          </div>
+          <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
+            Recruitment <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">Insights</span>
+          </h1>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            Discover expert guidance, market trends, and strategic insights to accelerate your career or transform your hiring process.
           </p>
         </div>
 
         {/* Search and Filters */}
-        <div className="mb-8 space-y-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search blog posts..."
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={selectedCategory} onValueChange={handleCategoryFilter}>
-              <SelectTrigger className="md:w-48">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.slug}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="mb-12">
+          <Card className="border-0 shadow-xl bg-card/50 backdrop-blur-sm">
+            <CardContent className="p-6">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+                  <Input
+                    placeholder="Search insights and articles..."
+                    value={searchQuery}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className="pl-12 h-12 text-base border-0 bg-background/80 focus:bg-background"
+                  />
+                </div>
+                <Select value={selectedCategory} onValueChange={handleCategoryFilter}>
+                  <SelectTrigger className="md:w-56 h-12 border-0 bg-background/80">
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.slug}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -300,56 +300,52 @@ const Blog = () => {
               </Card>
             ) : (
               <>
-                <div className="grid gap-6 mb-8">
+                <div className="grid gap-8 mb-12">
                   {posts.map((post) => (
-                    <Card key={post.id} className="shadow-card hover:shadow-card-lg transition-all duration-300">
+                    <Card key={post.id} className="border-0 shadow-2xl hover:shadow-3xl transition-all duration-500 bg-card/80 backdrop-blur-sm group overflow-hidden">
                       <div className="md:flex">
                         {post.featured_image_url && (
-                          <div className="md:w-1/3">
+                          <div className="md:w-2/5 overflow-hidden">
                             <img
                               src={post.featured_image_url}
                               alt={post.title}
-                              className="w-full h-48 md:h-full object-cover rounded-t-lg md:rounded-l-lg md:rounded-t-none"
+                              className="w-full h-64 md:h-full object-cover group-hover:scale-105 transition-transform duration-700"
                             />
                           </div>
                         )}
-                        <div className={`${post.featured_image_url ? 'md:w-2/3' : 'w-full'} p-6`}>
-                          <div className="flex items-center gap-2 mb-3">
+                        <div className={`${post.featured_image_url ? 'md:w-3/5' : 'w-full'} p-8`}>
+                          <div className="flex items-center gap-3 mb-4">
                             {post.blog_categories && (
-                              <Badge variant="secondary">{post.blog_categories.name}</Badge>
+                              <Badge variant="secondary" className="px-3 py-1 text-xs font-medium">
+                                {post.blog_categories.name}
+                              </Badge>
                             )}
                             <div className="flex items-center text-sm text-muted-foreground">
-                              <Calendar className="h-4 w-4 mr-1" />
-                              {format(new Date(post.published_at), 'MMM dd, yyyy')}
+                              <User className="h-4 w-4 mr-2" />
+                              {post.author_name}
                             </div>
                           </div>
                           
-                          <CardTitle className="mb-3 hover:text-accent transition-colors">
-                            <Link to={`/blog/${post.slug}`}>
+                          <CardTitle className="mb-4 text-2xl leading-tight group-hover:text-accent transition-colors duration-300">
+                            <Link to={`/blog/${post.slug}`} className="block">
                               {post.title}
                             </Link>
                           </CardTitle>
                           
-                          <p className="text-muted-foreground mb-4 line-clamp-3">
+                          <p className="text-muted-foreground mb-6 line-clamp-3 text-base leading-relaxed">
                             {post.excerpt}
                           </p>
                           
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                              <div className="flex items-center">
-                                <User className="h-4 w-4 mr-1" />
-                                {post.author_name}
-                              </div>
-                              <div className="flex items-center">
-                                <BookOpen className="h-4 w-4 mr-1" />
-                                {post.view_count} reads
-                              </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-accent rounded-full"></div>
+                              <span className="text-sm text-accent font-medium">Expert Insight</span>
                             </div>
                             
-                            <Button asChild variant="ghost" size="sm">
+                            <Button asChild variant="ghost" size="lg" className="text-base font-medium group-hover:bg-accent/10 group-hover:text-accent">
                               <Link to={`/blog/${post.slug}`}>
-                                Read More
-                                <ArrowRight className="ml-2 h-4 w-4" />
+                                Explore
+                                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                               </Link>
                             </Button>
                           </div>
@@ -410,28 +406,31 @@ const Blog = () => {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-8">
             {/* Categories */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Categories</CardTitle>
+            <Card className="border-0 shadow-xl bg-card/50 backdrop-blur-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl font-bold flex items-center">
+                  <div className="w-2 h-2 bg-accent rounded-full mr-3"></div>
+                  Explore Topics
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-3">
                 <Button
                   variant={!selectedCategory ? "default" : "ghost"}
-                  size="sm"
+                  size="lg"
                   onClick={() => handleCategoryFilter('all')}
-                  className="w-full justify-start"
+                  className="w-full justify-start text-base h-12"
                 >
-                  All Posts
+                  All Insights
                 </Button>
                 {categories.map((category) => (
                   <Button
                     key={category.id}
                     variant={selectedCategory === category.slug ? "default" : "ghost"}
-                    size="sm"
+                    size="lg"
                     onClick={() => handleCategoryFilter(category.slug)}
-                    className="w-full justify-start"
+                    className="w-full justify-start text-base h-12"
                   >
                     {category.name}
                   </Button>
@@ -440,21 +439,24 @@ const Blog = () => {
             </Card>
 
             {/* Recent Posts */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Recent Posts</CardTitle>
+            <Card className="border-0 shadow-xl bg-card/50 backdrop-blur-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl font-bold flex items-center">
+                  <Sparkles className="h-5 w-5 mr-2 text-accent" />
+                  Latest Insights
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 {recentPosts.map((post) => (
-                  <div key={post.id} className="border-b border-border last:border-0 pb-4 last:pb-0">
+                  <div key={post.id} className="group">
                     <Link 
                       to={`/blog/${post.slug}`}
-                      className="block hover:text-accent transition-colors"
+                      className="block space-y-2"
                     >
-                      <h4 className="font-medium mb-1 line-clamp-2">{post.title}</h4>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        {format(new Date(post.published_at), 'MMM dd')}
+                      <h4 className="font-semibold text-base line-clamp-2 group-hover:text-accent transition-colors leading-tight">
+                        {post.title}
+                      </h4>
+                      <div className="flex items-center gap-2">
                         {post.blog_categories && (
                           <Badge variant="outline" className="text-xs">
                             {post.blog_categories.name}
@@ -467,30 +469,32 @@ const Blog = () => {
               </CardContent>
             </Card>
 
-            {/* Popular Posts */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center">
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  Popular Posts
+            {/* Featured Posts */}
+            <Card className="border-0 shadow-xl bg-gradient-to-br from-primary/5 to-accent/5">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl font-bold flex items-center">
+                  <TrendingUp className="h-5 w-5 mr-2 text-primary" />
+                  Featured Reads
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 {popularPosts.map((post) => (
-                  <div key={post.id} className="border-b border-border last:border-0 pb-4 last:pb-0">
-                    <Link 
+                  <div key={post.id} className="group">
+                     <Link 
                       to={`/blog/${post.slug}`}
-                      className="block hover:text-accent transition-colors"
+                      className="block space-y-2"
                     >
-                      <h4 className="font-medium mb-1 line-clamp-2">{post.title}</h4>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <BookOpen className="h-3 w-3" />
-                        {post.view_count} reads
+                      <h4 className="font-semibold text-base line-clamp-2 group-hover:text-primary transition-colors leading-tight">
+                        {post.title}
+                      </h4>
+                      <div className="flex items-center gap-2">
                         {post.blog_categories && (
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-xs border-primary/20 text-primary">
                             {post.blog_categories.name}
                           </Badge>
                         )}
+                        <div className="w-1 h-1 bg-primary/40 rounded-full"></div>
+                        <span className="text-xs text-primary/60 font-medium">Must Read</span>
                       </div>
                     </Link>
                   </div>

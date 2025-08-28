@@ -4,11 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Calendar, User, BookOpen, ArrowLeft, Share2, Facebook, Twitter, Linkedin, Copy, ArrowRight } from "lucide-react";
+import { User, ArrowLeft, Share2, Facebook, Twitter, Linkedin, Copy, ArrowRight, Sparkles, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/useSEO";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
 
 interface BlogPost {
   id: string;
@@ -18,8 +17,6 @@ interface BlogPost {
   content: string;
   featured_image_url: string | null;
   author_name: string;
-  published_at: string;
-  view_count: number;
   meta_title: string | null;
   meta_description: string | null;
   blog_categories: {
@@ -34,7 +31,6 @@ interface RelatedPost {
   slug: string;
   excerpt: string;
   featured_image_url: string | null;
-  published_at: string;
   blog_categories: {
     name: string;
     slug: string;
@@ -73,8 +69,6 @@ const BlogPost = () => {
           content,
           featured_image_url,
           author_name,
-          published_at,
-          view_count,
           meta_title,
           meta_description,
           blog_categories (
@@ -97,12 +91,6 @@ const BlogPost = () => {
 
       setPost(data);
 
-      // Increment view count
-      await supabase
-        .from('blog_posts')
-        .update({ view_count: data.view_count + 1 })
-        .eq('id', data.id);
-
       // Fetch related posts
       if (data.blog_categories) {
         const { data: categoryData } = await supabase
@@ -112,7 +100,7 @@ const BlogPost = () => {
           .single();
         
         if (categoryData) {
-          const { data: relatedData } = await supabase
+            const { data: relatedData } = await supabase
             .from('blog_posts')
             .select(`
               id,
@@ -120,7 +108,6 @@ const BlogPost = () => {
               slug,
               excerpt,
               featured_image_url,
-              published_at,
               blog_categories (
                 name,
                 slug
@@ -129,7 +116,7 @@ const BlogPost = () => {
             .eq('is_published', true)
             .eq('category_id', categoryData.id)
             .neq('id', data.id)
-            .order('published_at', { ascending: false })
+            .order('created_at', { ascending: false })
             .limit(3);
 
           if (relatedData) {
@@ -294,212 +281,220 @@ const BlogPost = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
-        <Button asChild variant="ghost" className="mb-6">
+        <Button asChild variant="ghost" size="lg" className="mb-8 hover:bg-accent/10">
           <Link to="/blog">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Blog
+            <ArrowLeft className="mr-3 h-5 w-5" />
+            Back to Insights
           </Link>
         </Button>
 
         {/* Featured Image */}
         {post.featured_image_url && (
-          <div className="mb-8">
+          <div className="mb-12 relative overflow-hidden rounded-2xl shadow-2xl">
             <img
               src={post.featured_image_url}
               alt={post.title}
-              className="w-full h-64 md:h-96 object-cover rounded-lg shadow-lg"
+              className="w-full h-72 md:h-[28rem] object-cover"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
           </div>
         )}
 
         {/* Article Header */}
-        <div className="max-w-4xl mx-auto mb-12">
-          {post.blog_categories && (
-            <Badge variant="secondary" className="mb-4 text-sm px-3 py-1">
-              {post.blog_categories.name}
-            </Badge>
-          )}
+        <div className="max-w-4xl mx-auto mb-16">
+          <div className="flex items-center gap-4 mb-8">
+            {post.blog_categories && (
+              <Badge variant="secondary" className="text-sm px-4 py-2 font-medium">
+                {post.blog_categories.name}
+              </Badge>
+            )}
+            <div className="flex items-center gap-2 text-accent">
+              <Sparkles className="h-4 w-4" />
+              <span className="text-sm font-medium">Expert Insight</span>
+            </div>
+          </div>
           
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6 leading-tight">
+          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-8 leading-tight">
             {post.title}
           </h1>
           
-          <div className="flex flex-wrap items-center gap-6 text-muted-foreground mb-8 pb-8 border-b border-border">
-            <div className="flex items-center">
-              <User className="h-5 w-5 mr-2" />
-              <span className="font-medium">{post.author_name}</span>
+          <div className="flex flex-wrap items-center gap-6 text-muted-foreground mb-10 pb-8 border-b border-border/50">
+            <div className="flex items-center bg-card/80 px-4 py-2 rounded-full backdrop-blur-sm">
+              <User className="h-5 w-5 mr-3 text-accent" />
+              <span className="font-medium text-foreground">{post.author_name}</span>
             </div>
-            <div className="flex items-center">
-              <Calendar className="h-5 w-5 mr-2" />
-              <span>{format(new Date(post.published_at), 'MMMM dd, yyyy')}</span>
-            </div>
-            <div className="flex items-center">
-              <BookOpen className="h-5 w-5 mr-2" />
-              <span>{post.view_count} reads</span>
-            </div>
-            <div className="flex items-center bg-accent/10 px-3 py-1 rounded-full">
-              <span className="text-sm font-medium text-accent">8 min read</span>
+            <div className="flex items-center bg-card/80 px-4 py-2 rounded-full backdrop-blur-sm">
+              <Clock className="h-5 w-5 mr-3 text-accent" />
+              <span className="font-medium text-foreground">8 min read</span>
             </div>
           </div>
 
           {post.excerpt && (
-            <div className="bg-muted/30 p-6 rounded-lg border-l-4 border-accent">
-              <p className="text-lg text-muted-foreground leading-relaxed italic">
-                {post.excerpt}
-              </p>
+            <div className="relative">
+              <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-accent rounded-full"></div>
+              <div className="bg-gradient-to-r from-accent/5 to-primary/5 p-8 rounded-2xl border border-border/50">
+                <p className="text-xl text-muted-foreground leading-relaxed italic font-medium">
+                  {post.excerpt}
+                </p>
+              </div>
             </div>
           )}
         </div>
 
-        <Separator className="mb-8" />
-
         {/* Article Content */}
-        <div className="max-w-4xl mx-auto">
-          <article className="prose prose-lg prose-slate max-w-none">
+        <div className="max-w-4xl mx-auto mb-16">
+          <article className="prose prose-xl prose-slate max-w-none prose-headings:text-foreground prose-p:text-muted-foreground prose-p:leading-8 prose-strong:text-foreground">
             {formatContent(post.content)}
           </article>
         </div>
 
-        <Separator className="my-12" />
-
         {/* Call to Action Section */}
-        <div className="max-w-3xl mx-auto mb-12">
-          <Card className="bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-2xl border-0">
-            <CardContent className="p-8 text-center">
-              <h3 className="text-2xl font-bold mb-4">Hire Smarter, Faster</h3>
-              <p className="text-lg mb-6 opacity-95 max-w-2xl mx-auto">
-                Partner with MyRecruita to access ready-to-hire talent and stay ahead of recruitment trends.
+        <div className="max-w-4xl mx-auto mb-16">
+          <Card className="border-0 shadow-2xl bg-gradient-to-br from-primary via-primary to-accent text-white overflow-hidden relative">
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMiIgZmlsbD0iI2ZmZmZmZjEwIi8+Cjwvc3ZnPgo=')] opacity-20"></div>
+            <CardContent className="p-12 text-center relative">
+              <div className="mb-6">
+                <Sparkles className="h-12 w-12 mx-auto text-white/80" />
+              </div>
+              <h3 className="text-3xl md:text-4xl font-bold mb-6">Transform Your Hiring Strategy</h3>
+              <p className="text-xl mb-8 opacity-95 max-w-3xl mx-auto leading-relaxed">
+                Ready to implement these insights? Partner with MyRecruita to access industry-leading talent and cutting-edge recruitment strategies.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button asChild size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90">
-                  <Link to="/contact">Talk to a Specialist</Link>
+              <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                <Button asChild size="lg" className="bg-white text-primary hover:bg-white/95 text-lg px-8 py-4 h-auto">
+                  <Link to="/contact">Start Your Journey</Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                  <Link to="/employers">View Our Services</Link>
+                <Button asChild size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white/10 text-lg px-8 py-4 h-auto">
+                  <Link to="/employers">Explore Services</Link>
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <Separator className="mb-8" />
-
         {/* Share Buttons */}
-        <div className="mb-12">
-          <h3 className="text-lg font-semibold mb-4 flex items-center">
-            <Share2 className="h-5 w-5 mr-2" />
-            Share this article
-          </h3>
-          <div className="flex flex-wrap gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleShare('facebook')}
-              className="flex items-center"
-            >
-              <Facebook className="h-4 w-4 mr-2" />
-              Facebook
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleShare('twitter')}
-              className="flex items-center"
-            >
-              <Twitter className="h-4 w-4 mr-2" />
-              Twitter
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleShare('linkedin')}
-              className="flex items-center"
-            >
-              <Linkedin className="h-4 w-4 mr-2" />
-              LinkedIn
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleShare('copy')}
-              className="flex items-center"
-            >
-              <Copy className="h-4 w-4 mr-2" />
-              Copy Link
-            </Button>
-          </div>
+        <div className="max-w-4xl mx-auto mb-16">
+          <Card className="border-0 shadow-xl bg-card/50 backdrop-blur-sm">
+            <CardContent className="p-8">
+              <h3 className="text-2xl font-bold mb-6 flex items-center">
+                <Share2 className="h-6 w-6 mr-3 text-accent" />
+                Share This Insight
+              </h3>
+              <div className="flex flex-wrap gap-4">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => handleShare('facebook')}
+                  className="flex items-center hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600"
+                >
+                  <Facebook className="h-5 w-5 mr-3" />
+                  Facebook
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => handleShare('twitter')}
+                  className="flex items-center hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600"
+                >
+                  <Twitter className="h-5 w-5 mr-3" />
+                  Twitter
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => handleShare('linkedin')}
+                  className="flex items-center hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600"
+                >
+                  <Linkedin className="h-5 w-5 mr-3" />
+                  LinkedIn
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => handleShare('copy')}
+                  className="flex items-center hover:bg-accent/10 hover:border-accent hover:text-accent"
+                >
+                  <Copy className="h-5 w-5 mr-3" />
+                  Copy Link
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Related Posts */}
         {relatedPosts.length > 0 && (
-          <div className="mb-12">
-            <h3 className="text-2xl font-bold mb-6">Related Posts</h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="max-w-6xl mx-auto mb-16">
+            <div className="text-center mb-12">
+              <h3 className="text-3xl md:text-4xl font-bold mb-4">Continue Learning</h3>
+              <p className="text-xl text-muted-foreground">Explore more expert insights and industry knowledge</p>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {relatedPosts.map((relatedPost) => (
-                <Card key={relatedPost.id} className="shadow-card hover:shadow-card-lg transition-all duration-300">
+                <Card key={relatedPost.id} className="border-0 shadow-xl hover:shadow-2xl transition-all duration-500 group overflow-hidden">
                   {relatedPost.featured_image_url && (
-                    <div className="aspect-video overflow-hidden rounded-t-lg">
+                    <div className="aspect-video overflow-hidden">
                       <img
                         src={relatedPost.featured_image_url}
                         alt={relatedPost.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                       />
                     </div>
                   )}
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center gap-2 mb-2">
+                  <CardHeader className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
                       {relatedPost.blog_categories && (
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="secondary" className="text-xs font-medium">
                           {relatedPost.blog_categories.name}
                         </Badge>
                       )}
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(relatedPost.published_at), 'MMM dd, yyyy')}
-                      </span>
+                      <div className="w-1 h-1 bg-accent rounded-full"></div>
+                      <span className="text-xs text-accent font-medium">Related</span>
                     </div>
-                    <CardTitle className="text-lg leading-tight">
+                    <CardTitle className="text-xl leading-tight mb-3">
                       <Link to={`/blog/${relatedPost.slug}`} className="hover:text-accent transition-colors">
                         {relatedPost.title}
                       </Link>
                     </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                    <p className="text-muted-foreground mb-4 line-clamp-3 leading-relaxed">
                       {relatedPost.excerpt}
                     </p>
-                    <Button asChild variant="ghost" size="sm" className="p-0 h-auto">
+                    <Button asChild variant="ghost" className="p-0 h-auto font-medium text-accent hover:bg-transparent">
                       <Link to={`/blog/${relatedPost.slug}`}>
-                        Read More
-                        <ArrowRight className="ml-2 h-3 w-3" />
+                        Explore More
+                        <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                       </Link>
                     </Button>
-                  </CardContent>
+                  </CardHeader>
                 </Card>
               ))}
             </div>
           </div>
         )}
 
-        {/* CTA Section */}
-        <Card className="bg-primary text-primary-foreground">
-          <CardContent className="p-8 text-center">
-            <h3 className="text-2xl font-bold mb-4">Ready to Take the Next Step?</h3>
-            <p className="text-lg mb-6 opacity-90">
-              Let our expert recruiters help you find your dream job or the perfect candidate.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" variant="secondary">
-                <Link to="/submit-cv">Submit Your CV</Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-                <Link to="/employers">Hire Talent</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Final CTA Section */}
+        <div className="max-w-4xl mx-auto">
+          <Card className="border-0 shadow-2xl bg-gradient-to-r from-accent to-primary text-white overflow-hidden relative">
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMiIgZmlsbD0iI2ZmZmZmZjEwIi8+Cjwvc3ZnPgo=')] opacity-20"></div>
+            <CardContent className="p-12 text-center relative">
+              <h3 className="text-3xl md:text-4xl font-bold mb-6">Ready to Accelerate Your Success?</h3>
+              <p className="text-xl mb-8 opacity-95 max-w-3xl mx-auto leading-relaxed">
+                Whether you're seeking your next career opportunity or looking to hire exceptional talent, we're here to help you succeed.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                <Button asChild size="lg" className="bg-white text-primary hover:bg-white/95 text-lg px-8 py-4 h-auto">
+                  <Link to="/submit-cv">Find Opportunities</Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white/10 text-lg px-8 py-4 h-auto">
+                  <Link to="/employers">Hire Top Talent</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
