@@ -146,7 +146,7 @@ const Home = () => {
               Setting the highest standard in UK recruitment
             </p>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              MyRecruita Ltd is a certified member of APSCo UK, the leading professional body for recruitment agencies. 
+              MyRecruita is a certified member of APSCo UK, the leading professional body for recruitment agencies. 
               APSCo membership demonstrates our commitment to excellence, ethics, and professionalism.
             </p>
           </div>

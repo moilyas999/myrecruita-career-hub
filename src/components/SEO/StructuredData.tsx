@@ -37,7 +37,7 @@ export const generateOrganizationSchema = () => ({
   "@context": "https://schema.org",
   "@type": "Organization",
   "name": "MyRecruita",
-  "alternateName": ["MyRecruita Ltd", "My Recruita"],
+  "alternateName": ["My Recruita"],
   "description": "APSCo-accredited specialist recruitment agency for Finance, IT, Legal, HR and Executive sectors in the UK",
   "url": "https://myrecruita.com",
   "logo": "https://myrecruita.com/images/apsco-logo.png",
