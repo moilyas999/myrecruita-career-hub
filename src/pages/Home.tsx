@@ -3,42 +3,53 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Users, Briefcase, Award, CheckCircle, Building2, Linkedin, Shield, ExternalLink, BadgeCheck, Users2, BookOpen, TrendingUp, Heart } from "lucide-react";
 import { useSEO, injectStructuredData } from "@/hooks/useSEO";
+import { StructuredData, generateOrganizationSchema, generateLocalBusinessSchema } from "@/components/SEO/StructuredData";
 import { useEffect } from "react";
 import heroBackground from "@/assets/hero-background.jpg";
 
 const Home = () => {
   useSEO({
-    title: "MyRecruita | Specialist Recruitment in Finance, IT & Law",
-    description: "Looking for a career move or talent in finance, tech, or legal sectors? MyRecruita is your trusted partner for recruitment in the UK and beyond.",
-    canonical: window.location.origin
+    title: "MyRecruita | APSCo-Accredited Specialist Recruitment in Finance, IT & Law",
+    description: "APSCo-accredited recruitment specialists connecting top talent with leading employers in Finance, IT, Legal, HR and Executive sectors across the UK. Join 500+ successful placements.",
+    canonical: window.location.origin,
+    keywords: ["recruitment agency UK", "finance jobs", "IT careers", "legal recruitment", "executive search", "APSCo accredited", "talent acquisition"],
+    schema: generateOrganizationSchema()
   });
 
   useEffect(() => {
-    const organizationSchema = {
+    // Inject additional structured data for better SEO
+    const webSiteSchema = {
       "@context": "https://schema.org",
-      "@type": "Organization",
+      "@type": "WebSite",
       "name": "MyRecruita",
-      "description": "Specialist recruitment agency for Finance, IT, and Legal sectors",
       "url": window.location.origin,
-      "memberOf": {
-        "@type": "Organization",
-        "name": "APSCo (Association of Professional Staffing Companies)",
-        "url": "https://www.apsco.org"
-      },
-      "contactPoint": {
-        "@type": "ContactPoint",
-        "telephone": "+44 208 058 4490",
-        "contactType": "Customer Service"
-      },
-      "address": {
-        "@type": "PostalAddress",
-        "streetAddress": "Office 124, Barking Enterprise Centre",
-        "postalCode": "IG11",
-        "addressCountry": "GB"
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": `${window.location.origin}/jobs?search={search_term_string}`,
+        "query-input": "required name=search_term_string"
       }
     };
     
-    injectStructuredData(organizationSchema, "organization-schema");
+    const serviceSchema = {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "name": "Professional Recruitment Services",
+      "description": "Specialist recruitment and talent acquisition services for Finance, IT, Legal, HR and Executive roles",
+      "provider": {
+        "@type": "Organization",
+        "name": "MyRecruita",
+        "url": window.location.origin
+      },
+      "serviceType": "Recruitment and Staffing",
+      "areaServed": {
+        "@type": "Country",
+        "name": "United Kingdom"
+      }
+    };
+    
+    injectStructuredData(webSiteSchema, "website-schema");
+    injectStructuredData(serviceSchema, "service-schema");
+    injectStructuredData(generateLocalBusinessSchema(), "local-business-schema");
   }, []);
 
   const testimonials = [
@@ -93,11 +104,11 @@ const Home = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="animate-fade-in">
             <h1 className="text-4xl lg:text-6xl font-bold mb-6">
-              Where Ambition Meets
-              <span className="block text-blue-400">Opportunity</span>
+              APSCo-Accredited Recruitment Specialists
+              <span className="block text-blue-400">Where Ambition Meets Opportunity</span>
             </h1>
             <p className="text-xl lg:text-2xl mb-8 text-white/90 max-w-3xl mx-auto">
-              Empowering ambitious professionals to connect, grow, and lead — across Tech, Legal, HR, Finance & Executive sectors.
+              Connecting exceptional talent with leading employers in Finance, IT, Legal, HR & Executive sectors across the UK. Join 500+ successful career transformations.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-3">

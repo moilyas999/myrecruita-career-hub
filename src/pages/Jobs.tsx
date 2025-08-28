@@ -15,9 +15,10 @@ const Jobs = () => {
   const { toast } = useToast();
   
   useSEO({
-    title: "Explore Job Vacancies | Finance, IT & Legal Careers | MyRecruita",
-    description: "Find your next role in Finance, IT, or Law. Browse our active job listings and apply easily with MyRecruita.",
-    canonical: `${window.location.origin}/jobs`
+    title: "Current Job Vacancies UK | Finance, IT & Legal Careers 2025 | MyRecruita",
+    description: "Discover latest job openings in Finance, IT, Legal and Executive sectors. Browse 100+ active roles with competitive salaries. Apply with MyRecruita - APSCo accredited recruiters.",
+    canonical: `${window.location.origin}/jobs`,
+    keywords: ["jobs UK 2025", "finance careers", "IT jobs London", "legal recruitment", "executive positions", "professional jobs", "current vacancies"]
   });
 
   const [searchTerm, setSearchTerm] = useState("");

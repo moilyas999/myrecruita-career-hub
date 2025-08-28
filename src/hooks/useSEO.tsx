@@ -5,13 +5,19 @@ interface SEOProps {
   description?: string;
   canonical?: string;
   ogImage?: string;
+  keywords?: string[];
+  noindex?: boolean;
+  schema?: object;
 }
 
 export const useSEO = ({ 
   title = "MyRecruita | Specialist Recruitment in Finance, IT & Law",
-  description = "MyRecruita connects top-tier talent with leading employers in Finance, IT, and Legal sectors. Discover jobs, submit your CV, or hire standout professionals.",
+  description = "APSCo-accredited recruitment specialists connecting top talent with leading employers in Finance, IT, Legal, HR and Executive sectors across the UK.",
   canonical,
-  ogImage = "https://lovable.dev/opengraph-image-p98pqg.png"
+  ogImage = "/images/apsco-logo.png",
+  keywords = [],
+  noindex = false,
+  schema
 }: SEOProps) => {
   useEffect(() => {
     // Update document title
@@ -97,11 +103,21 @@ export const useSEO = ({
       }
     };
 
-    updateMetaTag('robots', 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1');
+    updateMetaTag('robots', noindex ? 'noindex, nofollow' : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1');
     updateMetaTag('author', 'MyRecruita');
-    updateMetaTag('theme-color', '#1e3a8a'); // Primary brand color
+    updateMetaTag('theme-color', '#1e3a8a');
+    
+    // Add keywords if provided
+    if (keywords.length > 0) {
+      updateMetaTag('keywords', keywords.join(', '));
+    }
+    
+    // Inject structured data if provided
+    if (schema) {
+      injectStructuredData(schema, 'page-schema');
+    }
 
-  }, [title, description, canonical, ogImage]);
+  }, [title, description, canonical, ogImage, keywords, noindex, schema]);
 };
 
 // Helper function to create job schema
