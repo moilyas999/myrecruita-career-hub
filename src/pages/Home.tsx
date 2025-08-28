@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ArrowRight, Users, Briefcase, Award, CheckCircle, Building2, Linkedin, Shield, ExternalLink, BadgeCheck, Users2, BookOpen, TrendingUp, Heart } from "lucide-react";
 import { useSEO, injectStructuredData } from "@/hooks/useSEO";
 import { useEffect } from "react";
@@ -141,7 +140,7 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
             
             {/* APSCo Logo Card */}
             <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up bg-gradient-to-br from-white to-secondary/20">
@@ -164,67 +163,25 @@ const Home = () => {
               </CardContent>
             </Card>
 
-            {/* Certificate Card */}
-            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up bg-gradient-to-br from-white to-accent/5" style={{animationDelay: '0.1s'}}>
-              <CardContent className="p-8 text-center">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <div className="cursor-pointer group">
-                      <div className="relative mb-4">
-                        <img 
-                          src="/images/apsco-certificate.png" 
-                          alt="MyRecruita Ltd APSCo Membership Certificate 2025"
-                          className="h-20 w-16 object-cover rounded-lg shadow-md border border-border mx-auto group-hover:shadow-lg transition-shadow duration-300"
-                        />
-                        <div className="absolute inset-0 bg-primary/10 group-hover:bg-primary/20 transition-colors duration-300 rounded-lg flex items-center justify-center">
-                          <ExternalLink className="h-5 w-5 text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        </div>
-                      </div>
-                      <h3 className="font-semibold text-foreground mb-2">Membership Certificate</h3>
-                      <p className="text-sm text-muted-foreground mb-3">
-                        Official certification document
-                      </p>
-                      <Button variant="outline" size="sm" className="w-full">
-                        View Certificate
-                        <ExternalLink className="ml-2 h-3 w-3" />
-                      </Button>
-                    </div>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl">
-                    <DialogHeader>
-                      <DialogTitle className="text-center">APSCo Membership Certificate</DialogTitle>
-                    </DialogHeader>
-                    <div className="mt-6">
-                      <img 
-                        src="/images/apsco-certificate.png" 
-                        alt="MyRecruita Ltd APSCo Membership Certificate 2025"
-                        className="w-full h-auto rounded-lg shadow-lg"
-                      />
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </CardContent>
-            </Card>
-
             {/* CTA Card */}
-            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up bg-gradient-to-br from-primary/5 to-accent/5" style={{animationDelay: '0.2s'}}>
+            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up bg-gradient-to-br from-primary/5 to-accent/5" style={{animationDelay: '0.1s'}}>
               <CardContent className="p-8 text-center">
                 <div className="mb-6">
                   <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                     <ExternalLink className="h-8 w-8 text-primary" />
                   </div>
                 </div>
-                <h3 className="font-semibold text-foreground mb-2">Learn More</h3>
+                <h3 className="font-semibold text-foreground mb-2">View Our Profile</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Discover APSCo's mission and standards
+                  See MyRecruita's official APSCo member profile
                 </p>
                 <Button asChild className="w-full bg-primary hover:bg-primary/90">
                   <a 
-                    href="https://www.apsco.org" 
+                    href="https://uk.apsco.org/discover-apsco/recruitment-members/myrecruita-ltd" 
                     target="_blank" 
                     rel="noopener noreferrer"
                   >
-                    Visit APSCo
+                    View APSCo Profile
                     <ExternalLink className="ml-2 h-4 w-4" />
                   </a>
                 </Button>
