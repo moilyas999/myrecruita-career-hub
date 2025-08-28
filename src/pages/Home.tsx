@@ -102,7 +102,7 @@ const Home = () => {
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="border-white text-primary bg-white hover:bg-white/90 hover:text-primary text-lg px-8 py-3">
-                <a href="https://calendly.com/myrecruita" target="_blank" rel="noopener noreferrer">
+                <a href="https://calendly.com/zuhair-myrecruita/30min" target="_blank" rel="noopener noreferrer">
                   Book a call with a recruiter
                 </a>
               </Button>
