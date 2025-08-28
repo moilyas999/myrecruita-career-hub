@@ -409,10 +409,6 @@ const SubmitCV = () => {
                     <span className="text-muted-foreground">Success Rate:</span>
                     <span className="font-semibold text-accent">95%</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Active Clients:</span>
-                    <span className="font-semibold">500+</span>
-                  </div>
                 </div>
               </CardContent>
             </Card>
