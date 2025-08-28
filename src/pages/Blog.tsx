@@ -48,7 +48,6 @@ interface BlogCategory {
 const POSTS_PER_PAGE = 10;
 
 const Blog = () => {
-  console.log("Blog component loading...");
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   

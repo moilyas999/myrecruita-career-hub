@@ -42,7 +42,6 @@ interface RelatedPost {
 }
 
 const BlogPost = () => {
-  console.log("BlogPost component loading...");
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
