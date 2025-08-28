@@ -34,7 +34,7 @@ const Navigation = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-6 xl:space-x-8">
+          <div className="hidden xl:flex items-center space-x-6 2xl:space-x-8">
             {navItems.map((item) => (
               <Link
                 key={item.path}
@@ -62,8 +62,8 @@ const Navigation = () => {
             </div>
           </div>
 
-          {/* Medium Screen Navigation - Buttons Only */}
-          <div className="hidden md:flex lg:hidden items-center space-x-2">
+          {/* Medium/Large Screen Navigation - Buttons Only */}
+          <div className="hidden md:flex xl:hidden items-center space-x-2">
             <Button asChild size="sm" variant="outline" className="whitespace-nowrap">
               <Link to="/jobs">
                 Find a Job
