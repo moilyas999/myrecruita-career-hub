@@ -171,85 +171,122 @@ const BlogPost = () => {
   };
 
   const formatContent = (content: string) => {
-    // Enhanced content formatting with proper styling
+    // Enhanced content formatting with modern webpage styling
     return content
       .split('\n\n')
       .map((paragraph, index) => {
-        // Handle headings
+        // Handle headings with modern styling
         if (paragraph.startsWith('## ')) {
           return (
-            <h2 key={index} className="text-3xl font-bold text-foreground mt-12 mb-6 first:mt-0">
-              {paragraph.slice(3)}
-            </h2>
+            <div key={index} className="mt-16 mb-8 first:mt-0">
+              <div className="relative">
+                <div className="absolute -left-6 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-accent rounded-full opacity-60"></div>
+                <h2 className="text-4xl md:text-5xl font-bold text-foreground leading-tight pl-8">
+                  {paragraph.slice(3)}
+                </h2>
+              </div>
+            </div>
           );
         }
         if (paragraph.startsWith('### ')) {
           return (
-            <h3 key={index} className="text-2xl font-semibold text-foreground mt-10 mb-4">
-              {paragraph.slice(4)}
-            </h3>
+            <div key={index} className="mt-12 mb-6">
+              <h3 className="text-2xl md:text-3xl font-bold text-foreground bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                {paragraph.slice(4)}
+              </h3>
+            </div>
           );
         }
         
-        // Handle blockquotes
+        // Handle blockquotes with modern card styling
         if (paragraph.startsWith('> ')) {
           return (
-            <blockquote key={index} className="border-l-4 border-accent bg-accent/5 pl-6 py-4 my-8 italic text-lg text-muted-foreground rounded-r-lg">
-              <p className="mb-0">{paragraph.slice(2)}</p>
-            </blockquote>
+            <div key={index} className="my-12">
+              <div className="relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-accent/20 rounded-2xl blur opacity-75"></div>
+                <blockquote className="relative bg-card/90 backdrop-blur-sm border-l-4 border-accent p-8 rounded-2xl shadow-lg">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center">
+                      <span className="text-accent font-bold text-sm">💡</span>
+                    </div>
+                    <p className="text-lg md:text-xl text-foreground font-semibold italic leading-relaxed mb-0">
+                      {paragraph.slice(2)}
+                    </p>
+                  </div>
+                </blockquote>
+              </div>
+            </div>
           );
         }
         
-        // Handle bullet lists
+        // Handle bullet lists with modern styling
         if (paragraph.includes('\n- ')) {
           const items = paragraph.split('\n').filter(item => item.startsWith('- '));
           return (
-            <ul key={index} className="list-none space-y-3 my-6 pl-0">
-              {items.map((item, itemIndex) => (
-                <li key={itemIndex} className="flex items-start">
-                  <span className="flex-shrink-0 w-2 h-2 bg-accent rounded-full mt-3 mr-4"></span>
-                  <span className="text-base leading-7">{item.slice(2)}</span>
-                </li>
-              ))}
-            </ul>
+            <div key={index} className="my-8">
+              <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 border border-border/30">
+                <ul className="space-y-4">
+                  {items.map((item, itemIndex) => (
+                    <li key={itemIndex} className="flex items-start group">
+                      <div className="flex-shrink-0 w-6 h-6 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center mt-1 mr-4 group-hover:scale-110 transition-transform">
+                        <span className="w-2 h-2 bg-white rounded-full"></span>
+                      </div>
+                      <span className="text-base md:text-lg leading-7 text-muted-foreground group-hover:text-foreground transition-colors">
+                        {item.slice(2)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           );
         }
         
         // Handle single bullet points
         if (paragraph.startsWith('- ')) {
           return (
-            <div key={index} className="flex items-start my-4">
-              <span className="flex-shrink-0 w-2 h-2 bg-accent rounded-full mt-3 mr-4"></span>
-              <p className="text-base leading-7 mb-0">{paragraph.slice(2)}</p>
+            <div key={index} className="flex items-start my-6 group">
+              <div className="flex-shrink-0 w-6 h-6 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center mt-1 mr-4 group-hover:scale-110 transition-transform">
+                <span className="w-2 h-2 bg-white rounded-full"></span>
+              </div>
+              <p className="text-base md:text-lg leading-7 mb-0 text-muted-foreground group-hover:text-foreground transition-colors">
+                {paragraph.slice(2)}
+              </p>
             </div>
           );
         }
         
-        // Handle bold sections that are standalone (like policy framework headers)
+        // Handle bold sections as feature cards
         if (paragraph.startsWith('**') && paragraph.endsWith('**') && paragraph.indexOf('**', 2) === paragraph.length - 2) {
           return (
-            <h4 key={index} className="text-xl font-semibold text-foreground mt-8 mb-4">
-              {paragraph.slice(2, -2)}
-            </h4>
+            <div key={index} className="my-10">
+              <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl p-6 border border-primary/20">
+                <h4 className="text-xl md:text-2xl font-bold text-foreground flex items-center">
+                  <span className="w-2 h-2 bg-accent rounded-full mr-3"></span>
+                  {paragraph.slice(2, -2)}
+                </h4>
+              </div>
+            </div>
           );
         }
         
-        // Handle regular paragraphs with inline formatting
+        // Handle regular paragraphs with enhanced styling
         const formatInlineText = (text: string) => {
-          // Handle bold text
-          text = text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground">$1</strong>');
+          // Handle bold text with accent styling
+          text = text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-foreground bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">$1</strong>');
           
           return { __html: text };
         };
         
-        // Regular paragraphs
+        // Regular paragraphs with modern styling
         if (paragraph.trim()) {
           return (
-            <p 
-              key={index} 
-              className="text-base leading-8 mb-6 text-muted-foreground max-w-none"
-              dangerouslySetInnerHTML={formatInlineText(paragraph)}
-            />
+            <div key={index} className="my-6">
+              <p 
+                className="text-base md:text-lg leading-8 text-muted-foreground hover:text-foreground transition-colors max-w-none"
+                dangerouslySetInnerHTML={formatInlineText(paragraph)}
+              />
+            </div>
           );
         }
         
@@ -281,74 +318,96 @@ const BlogPost = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back Button */}
-        <Button asChild variant="ghost" size="lg" className="mb-8 hover:bg-accent/10">
-          <Link to="/blog">
-            <ArrowLeft className="mr-3 h-5 w-5" />
-            Back to Insights
-          </Link>
-        </Button>
-
-        {/* Featured Image */}
-        {post.featured_image_url && (
-          <div className="mb-12 relative overflow-hidden rounded-2xl shadow-2xl">
-            <img
-              src={post.featured_image_url}
-              alt={post.title}
-              className="w-full h-72 md:h-[28rem] object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-accent/5 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23f0f0f0%22 fill-opacity=%220.05%22%3E%3Ccircle cx=%2230%22 cy=%2230%22 r=%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"></div>
+      
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Navigation Bar */}
+        <nav className="flex items-center justify-between mb-12 bg-card/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-border/50">
+          <Button asChild variant="ghost" size="lg" className="hover:bg-accent/10 transition-all duration-300">
+            <Link to="/blog">
+              <ArrowLeft className="mr-3 h-5 w-5" />
+              Back to Insights
+            </Link>
+          </Button>
+          <div className="flex items-center gap-4">
+            <Button variant="outline" size="sm" onClick={() => handleShare('copy')} className="hover:bg-accent/10">
+              <Share2 className="h-4 w-4 mr-2" />
+              Share
+            </Button>
           </div>
-        )}
+        </nav>
 
-        {/* Article Header */}
-        <div className="max-w-4xl mx-auto mb-16">
-          <div className="flex items-center gap-4 mb-8">
-            {post.blog_categories && (
-              <Badge variant="secondary" className="text-sm px-4 py-2 font-medium">
-                {post.blog_categories.name}
-              </Badge>
-            )}
-            <div className="flex items-center gap-2 text-accent">
-              <Sparkles className="h-4 w-4" />
-              <span className="text-sm font-medium">Expert Insight</span>
-            </div>
-          </div>
-          
-          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-8 leading-tight">
-            {post.title}
-          </h1>
-          
-          <div className="flex flex-wrap items-center gap-6 text-muted-foreground mb-10 pb-8 border-b border-border/50">
-            <div className="flex items-center bg-card/80 px-4 py-2 rounded-full backdrop-blur-sm">
-              <User className="h-5 w-5 mr-3 text-accent" />
-              <span className="font-medium text-foreground">{post.author_name}</span>
-            </div>
-            <div className="flex items-center bg-card/80 px-4 py-2 rounded-full backdrop-blur-sm">
-              <Clock className="h-5 w-5 mr-3 text-accent" />
-              <span className="font-medium text-foreground">8 min read</span>
-            </div>
-          </div>
-
-          {post.excerpt && (
-            <div className="relative">
-              <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-accent rounded-full"></div>
-              <div className="bg-gradient-to-r from-accent/5 to-primary/5 p-8 rounded-2xl border border-border/50">
-                <p className="text-xl text-muted-foreground leading-relaxed italic font-medium">
-                  {post.excerpt}
-                </p>
+        {/* Hero Section */}
+        <div className="mb-16">
+          {post.featured_image_url && (
+            <div className="mb-12 relative overflow-hidden rounded-3xl shadow-2xl group">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 z-10"></div>
+              <img
+                src={post.featured_image_url}
+                alt={post.title}
+                className="w-full h-80 md:h-[32rem] object-cover transform group-hover:scale-105 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent z-20"></div>
+              
+              {/* Floating Category Badge */}
+              <div className="absolute top-6 left-6 z-30">
+                {post.blog_categories && (
+                  <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/30 text-sm px-4 py-2 font-medium">
+                    {post.blog_categories.name}
+                  </Badge>
+                )}
               </div>
             </div>
           )}
+
+          {/* Article Header */}
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="flex items-center justify-center gap-4 mb-8">
+              <div className="flex items-center gap-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                <Sparkles className="h-5 w-5 text-accent" />
+                <span className="text-sm font-semibold">Expert Strategic Guide</span>
+              </div>
+            </div>
+            
+            <h1 className="text-5xl md:text-7xl font-black text-foreground mb-8 leading-tight tracking-tight bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
+              {post.title}
+            </h1>
+            
+            <div className="flex flex-wrap items-center justify-center gap-8 text-muted-foreground mb-12">
+              <div className="flex items-center bg-card/90 backdrop-blur-sm px-6 py-3 rounded-full shadow-lg border border-border/50">
+                <User className="h-5 w-5 mr-3 text-primary" />
+                <span className="font-semibold text-foreground">{post.author_name}</span>
+              </div>
+              <div className="flex items-center bg-card/90 backdrop-blur-sm px-6 py-3 rounded-full shadow-lg border border-border/50">
+                <Clock className="h-5 w-5 mr-3 text-primary" />
+                <span className="font-semibold text-foreground">Strategic Deep Dive</span>
+              </div>
+            </div>
+
+            {post.excerpt && (
+              <div className="relative max-w-3xl mx-auto">
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-3xl blur opacity-25"></div>
+                <div className="relative bg-card/95 backdrop-blur-sm p-10 rounded-3xl border border-border/50 shadow-2xl">
+                  <div className="absolute top-4 left-4 text-6xl text-primary/20 font-serif">&quot;</div>
+                  <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed font-medium italic pt-6">
+                    {post.excerpt}
+                  </p>
+                  <div className="absolute bottom-4 right-4 text-6xl text-primary/20 font-serif rotate-180">&quot;</div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Article Content */}
         <div className="max-w-4xl mx-auto mb-16">
-          <article className="prose prose-xl prose-slate max-w-none prose-headings:text-foreground prose-p:text-muted-foreground prose-p:leading-8 prose-strong:text-foreground">
-            {formatContent(post.content)}
-          </article>
+          <div className="bg-card/30 backdrop-blur-sm rounded-3xl p-8 md:p-12 border border-border/30 shadow-xl">
+            <article className="prose prose-xl prose-slate max-w-none prose-headings:text-foreground prose-p:text-muted-foreground prose-p:leading-8 prose-strong:text-foreground">
+              {formatContent(post.content)}
+            </article>
+          </div>
         </div>
 
         {/* Call to Action Section */}
