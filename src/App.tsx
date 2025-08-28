@@ -19,6 +19,8 @@ import Contact from "./pages/Contact";
 import Employers from "./pages/Employers";
 import ThankYou from "./pages/ThankYou";
 import PostJob from "./pages/PostJob";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
@@ -52,6 +54,8 @@ const App = () => (
                     <Route path="/submit-cv" element={<SubmitCV />} />
                     <Route path="/career-partner" element={<CareerPartner />} />
                     <Route path="/featured-talent" element={<FeaturedTalent />} />
+                    <Route path="/blog" element={<Blog />} />
+                    <Route path="/blog/:slug" element={<BlogPost />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/contact" element={<Contact />} />
                     <Route path="/employers" element={<Employers />} />

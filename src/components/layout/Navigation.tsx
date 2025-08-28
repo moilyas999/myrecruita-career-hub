@@ -12,6 +12,7 @@ const Navigation = () => {
     { name: "Submit CV", path: "/submit-cv" },
     { name: "Your Career Partner", path: "/career-partner" },
     { name: "Featured Talent", path: "/featured-talent" },
+    { name: "Blog", path: "/blog" },
     { name: "About", path: "/about" },
     { name: "Contact", path: "/contact" },
   ];
