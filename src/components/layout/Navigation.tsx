@@ -24,11 +24,12 @@ const Navigation = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center">
+          <Link to="/" className="flex items-center flex-shrink-0">
             <img 
               src="/lovable-uploads/4121491c-ffff-4dec-82a6-3b0fa454c578.png" 
               alt="MyRecruita - Your Job. Our Mission." 
-              className="h-12"
+              className="h-12 w-auto object-contain flex-shrink-0"
+              style={{ minWidth: 'auto' }}
             />
           </Link>
 
