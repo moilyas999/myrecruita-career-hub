@@ -33,7 +33,7 @@ const Navigation = () => {
             />
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation - Full Menu */}
           <div className="hidden xl:flex items-center space-x-6 2xl:space-x-8">
             {navItems.map((item) => (
               <Link
@@ -62,22 +62,20 @@ const Navigation = () => {
             </div>
           </div>
 
-          {/* Medium/Large Screen Navigation - Buttons Only */}
-          <div className="hidden md:flex xl:hidden items-center space-x-2">
-            <Button asChild size="sm" variant="outline" className="whitespace-nowrap">
-              <Link to="/jobs">
-                Find a Job
-              </Link>
-            </Button>
-            <Button asChild size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground whitespace-nowrap">
-              <Link to="/post-job">
-                Post a Job
-              </Link>
-            </Button>
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="md:hidden">
+          {/* Tablet/Mobile - Hamburger Menu + Essential Buttons */}
+          <div className="xl:hidden flex items-center space-x-2">
+            <div className="hidden sm:flex items-center space-x-2">
+              <Button asChild size="sm" variant="outline" className="whitespace-nowrap">
+                <Link to="/jobs">
+                  Find a Job
+                </Link>
+              </Button>
+              <Button asChild size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground whitespace-nowrap">
+                <Link to="/post-job">
+                  Post a Job
+                </Link>
+              </Button>
+            </div>
             <Button
               variant="ghost"
               size="icon"
@@ -89,9 +87,9 @@ const Navigation = () => {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile/Tablet Navigation */}
         {isOpen && (
-          <div className="md:hidden">
+          <div className="xl:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 bg-background border-t border-border">
               {navItems.map((item) => (
                 <Link
@@ -107,7 +105,7 @@ const Navigation = () => {
                   {item.name}
                 </Link>
               ))}
-              <div className="px-3 py-2 space-y-2">
+              <div className="px-3 py-2 space-y-2 sm:hidden">
                 <Button asChild size="sm" variant="outline" className="w-full">
                   <Link to="/jobs" onClick={() => setIsOpen(false)}>
                     Find a Job
