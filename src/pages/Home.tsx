@@ -158,7 +158,7 @@ const Home = () => {
               <CardContent className="p-8 text-center">
                 <div className="mb-6">
                   <img 
-                    src="/lovable-uploads/da3135d3-42af-409b-8a27-fee3dafb8969.png" 
+                    src="/lovable-uploads/4eb1ab2b-840d-4af3-b4bf-c47f13a76a4f.png" 
                     alt="APSCo Trusted Partner Recruitment Accreditation"
                     className="h-16 w-auto object-contain mx-auto mb-4"
                   />
