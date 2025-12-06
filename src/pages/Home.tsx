@@ -1,13 +1,16 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Users, Briefcase, Award, CheckCircle, Building2, Linkedin, Shield, ExternalLink, BadgeCheck, Users2, BookOpen, TrendingUp, Heart } from "lucide-react";
+import { ArrowRight, Users, Briefcase, Award, CheckCircle, Building2, Linkedin, Shield, ExternalLink, BadgeCheck, TrendingUp, Heart, Search, MapPin } from "lucide-react";
 import { useSEO, injectStructuredData } from "@/hooks/useSEO";
 import { StructuredData, generateOrganizationSchema, generateLocalBusinessSchema } from "@/components/SEO/StructuredData";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import heroBackground from "@/assets/hero-background.jpg";
 
 const Home = () => {
+  const [sector, setSector] = useState("");
+  const [location, setLocation] = useState("");
+
   useSEO({
     title: "MyRecruita | APSCo-Accredited Specialist Recruitment in Finance, IT & Law",
     description: "APSCo-accredited recruitment specialists connecting top talent with leading employers in Finance, IT, Legal, HR and Executive sectors across the UK. Join 500+ successful placements.",
@@ -17,7 +20,6 @@ const Home = () => {
   });
 
   useEffect(() => {
-    // Inject additional structured data for better SEO
     const webSiteSchema = {
       "@context": "https://schema.org",
       "@type": "WebSite",
@@ -88,11 +90,21 @@ const Home = () => {
     }
   ];
 
+  const sectors = ["Finance", "IT & Technology", "Legal", "HR", "Executive"];
+  const locations = ["London", "Manchester", "Birmingham", "Leeds", "Remote"];
+
+  const handleSearch = () => {
+    const params = new URLSearchParams();
+    if (sector) params.set("sector", sector);
+    if (location) params.set("location", location);
+    window.location.href = `/jobs${params.toString() ? `?${params.toString()}` : ""}`;
+  };
+
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
+      {/* Hero Section - BlueLegal style */}
       <section 
-        className="relative text-white py-20 lg:py-32 min-h-[90vh] flex items-center justify-center"
+        className="relative text-white min-h-[85vh] flex items-center"
         style={{
           backgroundImage: `url(${heroBackground})`,
           backgroundSize: 'cover',
@@ -100,27 +112,68 @@ const Home = () => {
           backgroundRepeat: 'no-repeat'
         }}
       >
-        <div className="absolute inset-0 bg-black/50"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="animate-fade-in">
-            <h1 className="text-4xl lg:text-6xl font-bold mb-6">
-              APSCo-Accredited Recruitment Specialists
-              <span className="block text-blue-400">Where Ambition Meets Opportunity</span>
+        <div className="absolute inset-0 hero-overlay"></div>
+        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="max-w-3xl">
+            <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold mb-6 leading-tight">
+              APSCo-Accredited
+              <span className="block text-accent">Recruitment Specialists</span>
             </h1>
-            <p className="text-xl lg:text-2xl mb-8 text-white/90 max-w-3xl mx-auto">
-              Connecting exceptional talent with leading employers in Finance, IT, Legal, HR & Executive sectors across the UK. Join 500+ successful career transformations.
+            <p className="text-xl lg:text-2xl mb-10 text-white/90">
+              Connecting exceptional talent with leading employers in Finance, IT, Legal, HR & Executive sectors across the UK.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-3">
-                <Link to="/jobs">
-                  Explore Live Roles
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="border-white text-primary bg-white hover:bg-white/90 hover:text-primary text-lg px-8 py-3">
+            
+            {/* Job Search Bar - BlueLegal style */}
+            <div className="bg-white rounded-lg p-2 shadow-xl">
+              <div className="flex flex-col md:flex-row gap-2">
+                <div className="flex-1 relative">
+                  <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <select 
+                    value={sector}
+                    onChange={(e) => setSector(e.target.value)}
+                    className="w-full h-12 pl-10 pr-4 rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+                  >
+                    <option value="">Select Sector</option>
+                    {sectors.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex-1 relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <select 
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    className="w-full h-12 pl-10 pr-4 rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+                  >
+                    <option value="">Select Location</option>
+                    {locations.map((l) => (
+                      <option key={l} value={l}>{l}</option>
+                    ))}
+                  </select>
+                </div>
+                <Button 
+                  onClick={handleSearch}
+                  variant="accent" 
+                  size="lg"
+                  className="h-12 px-8"
+                >
+                  <Search className="mr-2 h-5 w-5" />
+                  Search Jobs
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-8 flex flex-wrap gap-4">
+              <Button asChild variant="outline-white" size="lg">
                 <a href="https://calendly.com/zuhair-myrecruita/30min" target="_blank" rel="noopener noreferrer">
-                  Book a call with a recruiter
+                  Book a Call
                 </a>
+              </Button>
+              <Button asChild variant="solid-white" size="lg">
+                <Link to="/submit-cv">
+                  Submit Your CV
+                </Link>
               </Button>
             </div>
           </div>
@@ -128,33 +181,19 @@ const Home = () => {
       </section>
 
       {/* APSCo Accreditation Section */}
-      <section className="py-16 bg-gradient-to-br from-secondary/30 to-background relative overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 bg-pattern-dots opacity-30"></div>
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Section Header */}
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center space-x-2 bg-accent/10 text-accent px-4 py-2 rounded-full text-sm font-medium mb-4">
-              <Shield className="h-4 w-4" />
-              <span>Professional Accreditation</span>
-            </div>
-            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              Proud APSCo Member
+      <section className="py-16 bg-secondary">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-2">
+              <span className="accent-underline">Proud APSCo Member</span>
             </h2>
-            <p className="text-xl text-accent font-medium mb-2">
-              Setting the highest standard in UK recruitment
-            </p>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              MyRecruita is a certified member of APSCo UK, the leading professional body for recruitment agencies. 
-              APSCo membership demonstrates our commitment to excellence, ethics, and professionalism.
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto mt-6">
+              MyRecruita is a certified member of APSCo UK, demonstrating our commitment to excellence, ethics, and professionalism in recruitment.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-            
-            {/* APSCo Logo Card */}
-            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up bg-gradient-to-br from-white to-secondary/20">
+            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 border-0">
               <CardContent className="p-8 text-center">
                 <div className="mb-6">
                   <img 
@@ -162,8 +201,8 @@ const Home = () => {
                     alt="APSCo Trusted Partner Recruitment Accreditation"
                     className="h-16 w-auto object-contain mx-auto mb-4"
                   />
-                  <div className="inline-flex items-center bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
-                    <BadgeCheck className="h-4 w-4 mr-2" />
+                  <div className="inline-flex items-center bg-accent/10 text-accent-foreground px-3 py-1 rounded-full text-sm font-medium">
+                    <BadgeCheck className="h-4 w-4 mr-2 text-accent" />
                     Verified Member
                   </div>
                 </div>
@@ -174,19 +213,18 @@ const Home = () => {
               </CardContent>
             </Card>
 
-            {/* CTA Card */}
-            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up bg-gradient-to-br from-primary/5 to-accent/5" style={{animationDelay: '0.1s'}}>
+            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 border-0">
               <CardContent className="p-8 text-center">
                 <div className="mb-6">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <ExternalLink className="h-8 w-8 text-primary" />
+                  <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <ExternalLink className="h-8 w-8 text-accent" />
                   </div>
                 </div>
                 <h3 className="font-semibold text-foreground mb-2">View Our Profile</h3>
                 <p className="text-sm text-muted-foreground mb-4">
                   See MyRecruita's official APSCo member profile
                 </p>
-                <Button asChild className="w-full bg-primary hover:bg-primary/90">
+                <Button asChild variant="accent">
                   <a 
                     href="https://uk.apsco.org/discover-apsco/recruitment-members/myrecruita-ltd" 
                     target="_blank" 
@@ -201,111 +239,52 @@ const Home = () => {
           </div>
 
           {/* Benefits Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up" style={{animationDelay: '0.3s'}}>
-              <CardContent className="p-6">
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Shield className="h-6 w-6 text-accent" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { icon: Shield, title: "Industry Excellence", desc: "Recognised as part of a trusted global recruitment body." },
+              { icon: CheckCircle, title: "Code of Conduct", desc: "We follow APSCo's strict professional standards." },
+              { icon: Building2, title: "Client Confidence", desc: "Assurance of ethical, compliant, and high-quality service." },
+              { icon: Heart, title: "Candidate Care", desc: "Protecting candidate rights and ensuring fair processes." },
+              { icon: TrendingUp, title: "Continuous Improvement", desc: "Ongoing training, resources, and best-practice updates." },
+              { icon: Award, title: "APSCo Values", desc: "Dynamic, knowledgeable, professional, and supportive approach." },
+            ].map((item, index) => (
+              <Card key={index} className="shadow-card hover:shadow-card-lg transition-all duration-300 border-0">
+                <CardContent className="p-6">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <item.icon className="h-6 w-6 text-accent" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-2">{item.title}</h4>
+                      <p className="text-sm text-muted-foreground">{item.desc}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">Industry Excellence</h4>
-                    <p className="text-sm text-muted-foreground">Recognised as part of a trusted global recruitment body.</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up" style={{animationDelay: '0.4s'}}>
-              <CardContent className="p-6">
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <CheckCircle className="h-6 w-6 text-accent" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">Code of Conduct</h4>
-                    <p className="text-sm text-muted-foreground">We follow APSCo's strict professional standards.</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up" style={{animationDelay: '0.5s'}}>
-              <CardContent className="p-6">
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Building2 className="h-6 w-6 text-accent" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">Client Confidence</h4>
-                    <p className="text-sm text-muted-foreground">Assurance of ethical, compliant, and high-quality service.</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up" style={{animationDelay: '0.6s'}}>
-              <CardContent className="p-6">
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Heart className="h-6 w-6 text-accent" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">Candidate Care</h4>
-                    <p className="text-sm text-muted-foreground">Protecting candidate rights and ensuring fair processes.</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up" style={{animationDelay: '0.7s'}}>
-              <CardContent className="p-6">
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <TrendingUp className="h-6 w-6 text-accent" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">Continuous Improvement</h4>
-                    <p className="text-sm text-muted-foreground">Ongoing training, resources, and best-practice updates.</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up" style={{animationDelay: '0.8s'}}>
-              <CardContent className="p-6">
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Award className="h-6 w-6 text-accent" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-foreground mb-2">APSCo Values</h4>
-                    <p className="text-sm text-muted-foreground">Dynamic, knowledgeable, professional, and supportive approach to recruitment.</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-16 bg-secondary/50">
+      <section className="py-16 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              Your Career, Powered by Myrecruita
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-2">
+              <span className="accent-underline">Your Career, Powered by MyRecruita</span>
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mt-6">
               From exclusive roles and expert guidance to personalised support at every stage — MyRecruita is built to help ambitious professionals secure the jobs they deserve, faster.
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <Card key={index} className="text-center p-6 shadow-card hover:shadow-card-lg transition-all duration-300 animate-slide-up" style={{animationDelay: `${index * 0.1}s`}}>
+              <Card key={index} className="text-center p-6 shadow-card hover:shadow-card-lg transition-all duration-300 border-0">
                 <CardContent className="pt-6">
-                  <feature.icon className="h-12 w-12 text-accent mx-auto mb-4" />
+                  <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <feature.icon className="h-8 w-8 text-accent" />
+                  </div>
                   <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
                   <p className="text-muted-foreground">{feature.description}</p>
                 </CardContent>
@@ -316,43 +295,33 @@ const Home = () => {
       </section>
 
       {/* Services Highlight */}
-      <section className="py-16">
+      <section className="py-16 bg-secondary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl lg:text-4xl font-bold mb-6">
-                Your Career Partner
+              <h2 className="text-3xl lg:text-4xl font-bold mb-2">
+                <span className="accent-underline">Your Career Partner</span>
               </h2>
-              <p className="text-lg text-muted-foreground mb-6">
+              <p className="text-lg text-muted-foreground mb-6 mt-6">
                 Our comprehensive career support services are designed to elevate your professional profile and maximize your opportunities.
               </p>
               <ul className="space-y-3 mb-8">
-                <li className="flex items-center space-x-3">
-                  <CheckCircle className="h-5 w-5 text-accent" />
-                  <span>Free CV Reviews & Enhancement</span>
-                </li>
-                <li className="flex items-center space-x-3">
-                  <CheckCircle className="h-5 w-5 text-accent" />
-                  <span>LinkedIn Profile Optimization</span>
-                </li>
-                <li className="flex items-center space-x-3">
-                  <CheckCircle className="h-5 w-5 text-accent" />
-                  <span>Mock Interview Preparation</span>
-                </li>
-                <li className="flex items-center space-x-3">
-                  <CheckCircle className="h-5 w-5 text-accent" />
-                  <span>Personalized Career Coaching</span>
-                </li>
+                {["Free CV Reviews & Enhancement", "LinkedIn Profile Optimization", "Mock Interview Preparation", "Personalized Career Coaching"].map((item, i) => (
+                  <li key={i} className="flex items-center space-x-3">
+                    <CheckCircle className="h-5 w-5 text-accent" />
+                    <span>{item}</span>
+                  </li>
+                ))}
               </ul>
-              <Button asChild className="bg-accent hover:bg-accent/90 text-white">
+              <Button asChild variant="accent">
                 <Link to="/career-partner">
                   Learn More About Our Services
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
             </div>
-            <div className="relative">
-              <Card className="p-6 shadow-card-lg">
+            <div>
+              <Card className="p-6 shadow-card-lg border-0">
                 <CardContent>
                   <h3 className="text-xl font-semibold mb-4 text-primary">Featured for Employers</h3>
                   <p className="text-muted-foreground mb-4">
@@ -371,19 +340,16 @@ const Home = () => {
       </section>
 
       {/* Employer Hiring Section */}
-      <section className="py-16 bg-background">
+      <section className="py-16 bg-primary text-primary-foreground">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl lg:text-5xl font-bold mb-6">
+          <h2 className="text-4xl lg:text-5xl font-bold mb-4">
             Hiring Top Talent?
           </h2>
-          <h3 className="text-2xl lg:text-3xl font-semibold text-primary mb-8">
-            Submit Vacancy Now
-          </h3>
-          <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
             Connect with exceptional candidates across Finance, IT, and Legal sectors. 
-            Submit your job requirements and let our specialists find the perfect match for your organization.
+            Submit your job requirements and let our specialists find the perfect match.
           </p>
-          <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg px-8 py-3">
+          <Button asChild size="lg" variant="accent">
             <Link to="/post-job">
               Post a Job
               <ArrowRight className="ml-2 h-5 w-5" />
@@ -393,25 +359,25 @@ const Home = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-16 bg-secondary/50">
+      <section className="py-16 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-              Success Stories
+            <h2 className="text-3xl lg:text-4xl font-bold mb-2">
+              <span className="accent-underline">Success Stories</span>
             </h2>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-lg text-muted-foreground mt-6">
               Hear from professionals who found their dream roles through MyRecruita
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <Card key={index} className="p-6 shadow-card animate-slide-up" style={{animationDelay: `${index * 0.1}s`}}>
+              <Card key={index} className="p-6 shadow-card border-0">
                 <CardContent>
                   <p className="text-muted-foreground mb-4 italic">
                     "{testimonial.content}"
                   </p>
-                  <div className="border-t pt-4">
+                  <div className="border-t border-border pt-4">
                     <p className="font-semibold">{testimonial.name}</p>
                     <p className="text-sm text-muted-foreground">{testimonial.role}</p>
                   </div>
@@ -423,11 +389,11 @@ const Home = () => {
       </section>
 
       {/* Social Media Section */}
-      <section className="py-12 bg-background">
+      <section className="py-12 bg-secondary">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-2xl p-8">
+          <div className="bg-background rounded-lg p-8 shadow-card">
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center">
+              <div className="w-16 h-16 bg-[#0077B5] rounded-lg flex items-center justify-center">
                 <Linkedin className="h-8 w-8 text-white" />
               </div>
             </div>
@@ -435,7 +401,7 @@ const Home = () => {
             <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
               Follow our LinkedIn page to keep up to date with live roles, industry insights, and connect directly with our recruiters.
             </p>
-            <Button asChild className="bg-blue-600 hover:bg-blue-700">
+            <Button asChild className="bg-[#0077B5] hover:bg-[#005885]">
               <a 
                 href="https://www.linkedin.com/company/myrecruita" 
                 target="_blank" 
@@ -455,17 +421,17 @@ const Home = () => {
           <h2 className="text-3xl lg:text-4xl font-bold mb-4">
             Ready to Take the Next Step?
           </h2>
-          <p className="text-xl mb-8 text-primary-foreground/90">
+          <p className="text-xl mb-8 text-primary-foreground/80">
             Join thousands of professionals who have advanced their careers with MyRecruita
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="bg-accent hover:bg-accent/90">
+            <Button asChild size="lg" variant="accent">
               <Link to="/submit-cv">
                 Get Started Today
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="border-white text-primary hover:bg-white hover:text-primary">
+            <Button asChild variant="outline-white" size="lg">
               <Link to="/contact">
                 Contact Us
               </Link>
