@@ -129,10 +129,10 @@ const Home = () => {
               <div className="flex flex-col md:flex-row gap-2">
                 <div className="flex-1">
                   <Select value={sector} onValueChange={setSector}>
-                    <SelectTrigger className="w-full h-12 bg-background border-border">
+                    <SelectTrigger className="w-full h-12 bg-background border-border text-foreground">
                       <div className="flex items-center gap-3">
                         <Briefcase className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                        <SelectValue placeholder="Select Sector" />
+                        <SelectValue placeholder="Select Sector" className="text-muted-foreground" />
                       </div>
                     </SelectTrigger>
                     <SelectContent className="bg-white z-50">
@@ -144,10 +144,10 @@ const Home = () => {
                 </div>
                 <div className="flex-1">
                   <Select value={location} onValueChange={setLocation}>
-                    <SelectTrigger className="w-full h-12 bg-background border-border">
+                    <SelectTrigger className="w-full h-12 bg-background border-border text-foreground">
                       <div className="flex items-center gap-3">
                         <MapPin className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                        <SelectValue placeholder="Select Location" />
+                        <SelectValue placeholder="Select Location" className="text-muted-foreground" />
                       </div>
                     </SelectTrigger>
                     <SelectContent className="bg-white z-50">
