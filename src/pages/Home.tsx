@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowRight, Users, Briefcase, Award, CheckCircle, Building2, Linkedin, Shield, ExternalLink, BadgeCheck, TrendingUp, Heart, Search, MapPin } from "lucide-react";
 import { useSEO, injectStructuredData } from "@/hooks/useSEO";
 import { StructuredData, generateOrganizationSchema, generateLocalBusinessSchema } from "@/components/SEO/StructuredData";
@@ -126,31 +127,35 @@ const Home = () => {
             {/* Job Search Bar - BlueLegal style */}
             <div className="bg-white rounded-lg p-2 shadow-xl">
               <div className="flex flex-col md:flex-row gap-2">
-                <div className="flex-1 relative">
-                  <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <select 
-                    value={sector}
-                    onChange={(e) => setSector(e.target.value)}
-                    className="w-full h-12 pl-10 pr-4 rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
-                  >
-                    <option value="">Select Sector</option>
-                    {sectors.map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
+                <div className="flex-1">
+                  <Select value={sector} onValueChange={setSector}>
+                    <SelectTrigger className="w-full h-12 bg-background border-border">
+                      <div className="flex items-center gap-3">
+                        <Briefcase className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                        <SelectValue placeholder="Select Sector" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="bg-white z-50">
+                      {sectors.map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div className="flex-1 relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  <select 
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    className="w-full h-12 pl-10 pr-4 rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
-                  >
-                    <option value="">Select Location</option>
-                    {locations.map((l) => (
-                      <option key={l} value={l}>{l}</option>
-                    ))}
-                  </select>
+                <div className="flex-1">
+                  <Select value={location} onValueChange={setLocation}>
+                    <SelectTrigger className="w-full h-12 bg-background border-border">
+                      <div className="flex items-center gap-3">
+                        <MapPin className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                        <SelectValue placeholder="Select Location" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="bg-white z-50">
+                      {locations.map((l) => (
+                        <SelectItem key={l} value={l}>{l}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <Button 
                   onClick={handleSearch}
