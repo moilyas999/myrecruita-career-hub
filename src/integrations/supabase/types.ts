@@ -493,18 +493,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_job_reference: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_talent_reference: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      is_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      generate_job_reference: { Args: never; Returns: string }
+      generate_talent_reference: { Args: never; Returns: string }
+      is_admin: { Args: { user_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
