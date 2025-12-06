@@ -102,10 +102,10 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pt-16">
       {/* Hero Section - BlueLegal style */}
       <section 
-        className="relative text-white min-h-[85vh] flex items-center"
+        className="relative text-white min-h-[85vh] flex items-center -mt-16"
         style={{
           backgroundImage: `url(${heroBackground})`,
           backgroundSize: 'cover',
