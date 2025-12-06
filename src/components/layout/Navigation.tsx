@@ -35,7 +35,7 @@ const Navigation = () => {
       className={`sticky top-0 z-50 transition-all duration-300 ${
         isScrolled || !isHomePage
           ? "bg-background shadow-md border-b border-border"
-          : "bg-primary"
+          : "bg-transparent"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -65,7 +65,7 @@ const Navigation = () => {
                       : "text-accent"
                     : isScrolled || !isHomePage
                       ? "text-foreground hover:text-accent hover:bg-muted"
-                      : "text-primary-foreground/90 hover:text-accent"
+                      : "text-white hover:text-accent"
                 }`}
               >
                 {item.name}
@@ -87,10 +87,10 @@ const Navigation = () => {
             </Button>
             <a 
               href="tel:+442080584490" 
-              className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors ${
+              className={`flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${
                 isScrolled || !isHomePage
                   ? "bg-accent text-accent-foreground hover:bg-accent/90"
-                  : "bg-accent text-accent-foreground hover:bg-accent/90"
+                  : "border-2 border-accent bg-transparent text-accent hover:bg-accent hover:text-accent-foreground"
               }`}
               aria-label="Call us"
             >
