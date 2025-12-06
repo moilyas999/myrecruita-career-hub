@@ -2,9 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-BlueLegal-inspired theme: Deep navy + golden yellow accent
+/* 
+  Design System: BlueLegal-Inspired Professional Theme
+  Deep navy + golden yellow accent
 */
 
 @layer base {
@@ -29,7 +29,7 @@ BlueLegal-inspired theme: Deep navy + golden yellow accent
     --muted-foreground: 220 10% 45%;
 
     /* Golden yellow accent - like BlueLegal */
-    --accent: 45 95% 50%;
+    --accent: 42 90% 50%;
     --accent-foreground: 220 60% 15%;
 
     --destructive: 0 84% 60%;
@@ -37,14 +37,7 @@ BlueLegal-inspired theme: Deep navy + golden yellow accent
 
     --border: 220 20% 88%;
     --input: 220 20% 88%;
-    --ring: 220 60% 20%;
-
-    /* Custom design tokens for MyRecruita - BlueLegal style */
-    --hero-gradient: linear-gradient(135deg, hsl(220 60% 20%), hsl(220 50% 30%));
-    --hero-background: linear-gradient(135deg, hsl(220 60% 15% / 0.9), hsl(220 50% 25% / 0.85));
-    --card-shadow: 0 4px 6px -1px hsl(220 30% 15% / 0.08), 0 2px 4px -1px hsl(220 30% 15% / 0.04);
-    --card-shadow-lg: 0 10px 25px -5px hsl(220 30% 15% / 0.1), 0 4px 10px -2px hsl(220 30% 15% / 0.04);
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --ring: 42 90% 50%;
 
     --radius: 0.375rem;
 
@@ -68,7 +61,7 @@ BlueLegal-inspired theme: Deep navy + golden yellow accent
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 45 95% 50%;
+    --primary: 42 90% 50%;
     --primary-foreground: 220 60% 15%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -77,7 +70,7 @@ BlueLegal-inspired theme: Deep navy + golden yellow accent
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 45 95% 50%;
+    --accent: 42 90% 50%;
     --accent-foreground: 220 60% 15%;
 
     --destructive: 0 62.8% 30.6%;
@@ -85,7 +78,7 @@ BlueLegal-inspired theme: Deep navy + golden yellow accent
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 45 95% 50%;
+    --ring: 42 90% 50%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -107,41 +100,28 @@ BlueLegal-inspired theme: Deep navy + golden yellow accent
   }
 }
 
-/* BlueLegal-inspired Modern Enhancements */
+/* BlueLegal-inspired utilities */
 @layer utilities {
-  /* Gradient Animation */
   .animate-gradient {
     background-size: 300% 300%;
     animation: gradient 6s ease infinite;
   }
 
   @keyframes gradient {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
 
-  /* Floating Animation */
   .animate-float {
     animation: float 6s ease-in-out infinite;
   }
 
   @keyframes float {
-    0%, 100% {
-      transform: translateY(0px);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
   }
 
-  /* Glow Effects */
   .glow-primary {
     box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
   }
@@ -150,20 +130,12 @@ BlueLegal-inspired theme: Deep navy + golden yellow accent
     box-shadow: 0 0 20px hsl(var(--accent) / 0.4);
   }
 
-  /* Modern Glass Effects */
   .glass {
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
   }
 
-  .glass-dark {
-    background: rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  /* Advanced Hover Effects */
   .hover-lift {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
@@ -173,27 +145,6 @@ BlueLegal-inspired theme: Deep navy + golden yellow accent
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   }
 
-  /* Text Shimmer */
-  .text-shimmer {
-    background: linear-gradient(90deg, hsl(var(--foreground)), hsl(var(--accent)), hsl(var(--foreground)));
-    background-size: 200% auto;
-    color: transparent;
-    background-clip: text;
-    animation: shimmer 3s linear infinite;
-  }
-
-  @keyframes shimmer {
-    to {
-      background-position: 200% center;
-    }
-  }
-
-  /* Modern Scroll Effects */
-  .scroll-smooth {
-    scroll-behavior: smooth;
-  }
-
-  /* Card Hover Enhancements */
   .card-hover {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -203,16 +154,6 @@ BlueLegal-inspired theme: Deep navy + golden yellow accent
     box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.15);
   }
 
-  /* Blog Content Spacing */
-  .blog-content h2 {
-    @apply scroll-mt-20;
-  }
-
-  .blog-content h3 {
-    @apply scroll-mt-20;
-  }
-
-  /* Enhanced Gradients - BlueLegal style */
   .gradient-primary {
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(220 50% 30%));
   }
@@ -221,56 +162,12 @@ BlueLegal-inspired theme: Deep navy + golden yellow accent
     background: linear-gradient(135deg, hsl(var(--accent)), hsl(40 90% 45%));
   }
 
-  .gradient-text-primary {
-    background: linear-gradient(135deg, hsl(var(--primary)), hsl(220 50% 35%));
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-  }
-
-  .gradient-text-accent {
-    background: linear-gradient(135deg, hsl(var(--accent)), hsl(35 90% 45%));
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-  }
-
-  /* Modern Shadows */
   .shadow-soft {
     box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.05), 0 10px 20px -2px rgba(0, 0, 0, 0.03);
   }
 
   .shadow-strong {
     box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.12), 0 20px 25px -5px rgba(0, 0, 0, 0.08);
-  }
-
-  /* Pulse Animation */
-  .pulse-glow {
-    animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-
-  @keyframes pulse-glow {
-    0%, 100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.8;
-      transform: scale(1.05);
-    }
-  }
-
-  /* Background Patterns */
-  .bg-pattern-dots {
-    background-image: radial-gradient(circle, hsl(var(--muted-foreground) / 0.1) 1px, transparent 1px);
-    background-size: 20px 20px;
-  }
-
-  .bg-pattern-grid {
-    background-image: 
-      linear-gradient(hsl(var(--border) / 0.5) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(var(--border) / 0.5) 1px, transparent 1px);
-    background-size: 20px 20px;
   }
 
   /* Yellow accent underline for headings */
