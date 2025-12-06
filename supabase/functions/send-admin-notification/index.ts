@@ -127,14 +127,27 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailContent = getEmailContent(type, data);
 
+    // Using Resend account email until domain is verified at resend.com/domains
     const emailResponse = await resend.emails.send({
-      from: "onboarding@resend.dev",
-      to: ["zuhair@myrecruita.com"],
+      from: "MyRecruita <onboarding@resend.dev>",
+      to: ["iuddin200999@gmail.com"], // TODO: Change to zuhair@myrecruita.com after verifying myrecruita.com domain at resend.com/domains
       subject: emailContent.subject,
       html: emailContent.html,
     });
 
-    console.log("Admin notification sent successfully:", emailResponse);
+    console.log("Admin notification response:", emailResponse);
+
+    // Check if Resend returned an error
+    if (emailResponse.error) {
+      console.error("Resend error:", emailResponse.error);
+      return new Response(
+        JSON.stringify({ success: false, error: emailResponse.error.message }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
 
     return new Response(JSON.stringify({ success: true, messageId: emailResponse.data?.id }), {
       status: 200,
