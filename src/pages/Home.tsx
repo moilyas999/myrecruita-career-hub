@@ -1,221 +1,439 @@
-import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { ArrowRight, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useSEO } from "@/hooks/useSEO";
-import { supabase } from "@/integrations/supabase/client";
-
-const sectors = [
-  "All Sectors",
-  "Accounting & Finance",
-  "Banking",
-  "Legal",
-  "Technology",
-  "Healthcare",
-  "Engineering",
-  "Marketing",
-  "Human Resources",
-];
-
-const locations = [
-  "All Locations",
-  "London",
-  "Manchester",
-  "Birmingham",
-  "Leeds",
-  "Bristol",
-  "Edinburgh",
-  "Glasgow",
-  "Remote",
-];
-
-interface Job {
-  id: string;
-  title: string;
-  location: string;
-  sector: string;
-  salary: string | null;
-  created_at: string;
-}
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowRight, Users, Briefcase, Award, CheckCircle, Building2, Linkedin, Shield, ExternalLink, BadgeCheck, TrendingUp, Heart, Search, MapPin } from "lucide-react";
+import { useSEO, injectStructuredData } from "@/hooks/useSEO";
+import { StructuredData, generateOrganizationSchema, generateLocalBusinessSchema } from "@/components/SEO/StructuredData";
+import { useEffect, useState } from "react";
+import heroBackground from "@/assets/hero-background.jpg";
 
 const Home = () => {
-  const navigate = useNavigate();
-  const [sector, setSector] = useState("All Sectors");
-  const [location, setLocation] = useState("All Locations");
-  const [latestJobs, setLatestJobs] = useState<Job[]>([]);
+  const [sector, setSector] = useState("");
+  const [location, setLocation] = useState("");
 
   useSEO({
-    title: "MyRecruita | Expert Recruitment Agency UK",
-    description: "APSCo-accredited recruitment agency connecting exceptional talent with leading UK employers. Expert recruiters in finance, legal, technology and more.",
-    keywords: ["recruitment agency UK", "job search", "APSCo accredited", "finance jobs", "legal jobs", "technology jobs"],
+    title: "MyRecruita | APSCo-Accredited Specialist Recruitment in Finance, IT & Law",
+    description: "APSCo-accredited recruitment specialists connecting top talent with leading employers in Finance, IT, Legal, HR and Executive sectors across the UK. Join 500+ successful placements.",
+    canonical: window.location.origin,
+    keywords: ["recruitment agency UK", "finance jobs", "IT careers", "legal recruitment", "executive search", "APSCo accredited", "talent acquisition"],
+    schema: generateOrganizationSchema()
   });
 
   useEffect(() => {
-    const fetchLatestJobs = async () => {
-      const { data } = await supabase
-        .from('jobs')
-        .select('id, title, location, sector, salary, created_at')
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .limit(6);
-      
-      if (data) {
-        setLatestJobs(data);
+    const webSiteSchema = {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "MyRecruita",
+      "url": window.location.origin,
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": `${window.location.origin}/jobs?search={search_term_string}`,
+        "query-input": "required name=search_term_string"
       }
     };
-
-    fetchLatestJobs();
+    
+    const serviceSchema = {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "name": "Professional Recruitment Services",
+      "description": "Specialist recruitment and talent acquisition services for Finance, IT, Legal, HR and Executive roles",
+      "provider": {
+        "@type": "Organization",
+        "name": "MyRecruita",
+        "url": window.location.origin
+      },
+      "serviceType": "Recruitment and Staffing",
+      "areaServed": {
+        "@type": "Country",
+        "name": "United Kingdom"
+      }
+    };
+    
+    injectStructuredData(webSiteSchema, "website-schema");
+    injectStructuredData(serviceSchema, "service-schema");
+    injectStructuredData(generateLocalBusinessSchema(), "local-business-schema");
   }, []);
+
+  const testimonials = [
+    {
+      name: "Sarah Johnson",
+      role: "Senior Marketing Manager",
+      content: "MyRecruita found me the perfect role within 2 weeks. Their career support was exceptional!"
+    },
+    {
+      name: "Michael Chen",
+      role: "Finance Director",
+      content: "The team understood exactly what I was looking for and delivered beyond expectations."
+    },
+    {
+      name: "Emma Williams",
+      role: "Operations Manager",
+      content: "Outstanding service from start to finish. I couldn't have asked for better support."
+    }
+  ];
+
+  const features = [
+    {
+      icon: Users,
+      title: "Strategic Career Mentorship",
+      description: "Partner with specialists who understand your industry, your goals, and how to get you there — fast."
+    },
+    {
+      icon: Briefcase,
+      title: "Access to Hidden Roles",
+      description: "We unlock roles reserved for vetted talent — curated, confidential, career-changing."
+    },
+    {
+      icon: Award,
+      title: "Efficiency You Can Trust",
+      description: "95% of our candidates secure interviews within 14 days."
+    }
+  ];
+
+  const sectors = ["Finance", "IT & Technology", "Legal", "HR", "Executive"];
+  const locations = ["London", "Manchester", "Birmingham", "Leeds", "Remote"];
 
   const handleSearch = () => {
     const params = new URLSearchParams();
-    if (sector !== "All Sectors") params.set("sector", sector);
-    if (location !== "All Locations") params.set("location", location);
-    navigate(`/jobs?${params.toString()}`);
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    if (sector) params.set("sector", sector);
+    if (location) params.set("location", location);
+    window.location.href = `/jobs${params.toString() ? `?${params.toString()}` : ""}`;
   };
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section - Full Height BlueLegal Style */}
-      <section className="relative min-h-screen flex items-end justify-center">
-        {/* Background Image */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: `url('/lovable-uploads/ec4f6544-f68f-47e5-80eb-2cbb2b7b0790.png')`,
-          }}
-        />
-        
-        {/* Subtle Gradient Overlay - Only at bottom for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-        
-        {/* Hero Content - Positioned at bottom */}
-        <div className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
-          {/* Headline */}
-          <h1 className="text-white text-3xl md:text-4xl lg:text-5xl font-light text-center mb-10">
-            Check out the roles we're handling right now
-          </h1>
-          
-          {/* Search Bar - Floating individual elements */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <select
-              value={sector}
-              onChange={(e) => setSector(e.target.value)}
-              className="w-full sm:w-56 h-12 px-4 bg-white text-foreground rounded-lg border-0 text-sm focus:ring-2 focus:ring-accent outline-none appearance-none cursor-pointer"
-              style={{ 
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`, 
-                backgroundRepeat: 'no-repeat', 
-                backgroundPosition: 'right 12px center' 
-              }}
-            >
-              {sectors.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+      {/* Hero Section - BlueLegal style */}
+      <section 
+        className="relative text-white min-h-[85vh] flex items-center"
+        style={{
+          backgroundImage: `url(${heroBackground})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        <div className="absolute inset-0 hero-overlay"></div>
+        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="max-w-3xl">
+            <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold mb-6 leading-tight">
+              APSCo-Accredited
+              <span className="block text-accent">Recruitment Specialists</span>
+            </h1>
+            <p className="text-xl lg:text-2xl mb-10 text-white/90">
+              Connecting exceptional talent with leading employers in Finance, IT, Legal, HR & Executive sectors across the UK.
+            </p>
             
-            <select
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              className="w-full sm:w-56 h-12 px-4 bg-white text-foreground rounded-lg border-0 text-sm focus:ring-2 focus:ring-accent outline-none appearance-none cursor-pointer"
-              style={{ 
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`, 
-                backgroundRepeat: 'no-repeat', 
-                backgroundPosition: 'right 12px center' 
-              }}
-            >
-              {locations.map((l) => (
-                <option key={l} value={l}>{l}</option>
-              ))}
-            </select>
-            
-            <Button 
-              onClick={handleSearch}
-              variant="accent"
-              className="w-full sm:w-auto h-12 px-8 rounded-lg font-medium"
-            >
-              Submit
-            </Button>
+            {/* Job Search Bar - BlueLegal style */}
+            <div className="bg-white rounded-lg p-2 shadow-xl">
+              <div className="flex flex-col md:flex-row gap-2">
+                <div className="flex-1 relative">
+                  <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <select 
+                    value={sector}
+                    onChange={(e) => setSector(e.target.value)}
+                    className="w-full h-12 pl-10 pr-4 rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+                  >
+                    <option value="">Select Sector</option>
+                    {sectors.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex-1 relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <select 
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    className="w-full h-12 pl-10 pr-4 rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+                  >
+                    <option value="">Select Location</option>
+                    {locations.map((l) => (
+                      <option key={l} value={l}>{l}</option>
+                    ))}
+                  </select>
+                </div>
+                <Button 
+                  onClick={handleSearch}
+                  variant="accent" 
+                  size="lg"
+                  className="h-12 px-8"
+                >
+                  <Search className="mr-2 h-5 w-5" />
+                  Search Jobs
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-8 flex flex-wrap gap-4">
+              <Button asChild variant="outline-white" size="lg">
+                <a href="https://calendly.com/zuhair-myrecruita/30min" target="_blank" rel="noopener noreferrer">
+                  Book a Call
+                </a>
+              </Button>
+              <Button asChild variant="solid-white" size="lg">
+                <Link to="/submit-cv">
+                  Submit Your CV
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Latest Jobs Section */}
-      <section className="py-20 bg-background">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* APSCo Accreditation Section */}
+      <section className="py-16 bg-secondary">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-light text-foreground mb-3">Latest Jobs</h2>
-            <div className="w-16 h-0.5 bg-accent mx-auto" />
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-2">
+              <span className="accent-underline">Proud APSCo Member</span>
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto mt-6">
+              MyRecruita is a certified member of APSCo UK, demonstrating our commitment to excellence, ethics, and professionalism in recruitment.
+            </p>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {latestJobs.map((job) => (
-              <Link 
-                key={job.id} 
-                to={`/jobs/${job.id}`}
-                className="group bg-card border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-300"
-              >
-                <h3 className="text-lg font-semibold text-foreground group-hover:text-accent transition-colors mb-3">
-                  {job.title}
-                </h3>
-                <div className="flex items-center text-muted-foreground text-sm mb-2">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  <span>{job.location}</span>
-                  {job.salary && (
-                    <>
-                      <span className="mx-2">|</span>
-                      <span>{job.salary}</span>
-                    </>
-                  )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 border-0">
+              <CardContent className="p-8 text-center">
+                <div className="mb-6">
+                  <img 
+                    src="/lovable-uploads/4eb1ab2b-840d-4af3-b4bf-c47f13a76a4f.png" 
+                    alt="APSCo Trusted Partner Recruitment Accreditation"
+                    className="h-16 w-auto object-contain mx-auto mb-4"
+                  />
+                  <div className="inline-flex items-center bg-accent/10 text-accent-foreground px-3 py-1 rounded-full text-sm font-medium">
+                    <BadgeCheck className="h-4 w-4 mr-2 text-accent" />
+                    Verified Member
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground mb-4">{formatDate(job.created_at)}</p>
-                <span className="text-accent text-sm font-medium group-hover:underline">
-                  View more →
-                </span>
-              </Link>
+                <h3 className="font-semibold text-foreground mb-2">Official Member</h3>
+                <p className="text-sm text-muted-foreground">
+                  Certified professional staffing company recognized by APSCo UK
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card hover:shadow-card-lg transition-all duration-300 border-0">
+              <CardContent className="p-8 text-center">
+                <div className="mb-6">
+                  <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <ExternalLink className="h-8 w-8 text-accent" />
+                  </div>
+                </div>
+                <h3 className="font-semibold text-foreground mb-2">View Our Profile</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  See MyRecruita's official APSCo member profile
+                </p>
+                <Button asChild variant="accent">
+                  <a 
+                    href="https://uk.apsco.org/discover-apsco/recruitment-members/myrecruita-ltd" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
+                    View APSCo Profile
+                    <ExternalLink className="ml-2 h-4 w-4" />
+                  </a>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Benefits Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { icon: Shield, title: "Industry Excellence", desc: "Recognised as part of a trusted global recruitment body." },
+              { icon: CheckCircle, title: "Code of Conduct", desc: "We follow APSCo's strict professional standards." },
+              { icon: Building2, title: "Client Confidence", desc: "Assurance of ethical, compliant, and high-quality service." },
+              { icon: Heart, title: "Candidate Care", desc: "Protecting candidate rights and ensuring fair processes." },
+              { icon: TrendingUp, title: "Continuous Improvement", desc: "Ongoing training, resources, and best-practice updates." },
+              { icon: Award, title: "APSCo Values", desc: "Dynamic, knowledgeable, professional, and supportive approach." },
+            ].map((item, index) => (
+              <Card key={index} className="shadow-card hover:shadow-card-lg transition-all duration-300 border-0">
+                <CardContent className="p-6">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <item.icon className="h-6 w-6 text-accent" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground mb-2">{item.title}</h4>
+                      <p className="text-sm text-muted-foreground">{item.desc}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-16 bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-2">
+              <span className="accent-underline">Your Career, Powered by MyRecruita</span>
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mt-6">
+              From exclusive roles and expert guidance to personalised support at every stage — MyRecruita is built to help ambitious professionals secure the jobs they deserve, faster.
+            </p>
+          </div>
           
-          {latestJobs.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No jobs available at the moment. Check back soon!</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <Card key={index} className="text-center p-6 shadow-card hover:shadow-card-lg transition-all duration-300 border-0">
+                <CardContent className="pt-6">
+                  <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <feature.icon className="h-8 w-8 text-accent" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
+                  <p className="text-muted-foreground">{feature.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Services Highlight */}
+      <section className="py-16 bg-secondary">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-3xl lg:text-4xl font-bold mb-2">
+                <span className="accent-underline">Your Career Partner</span>
+              </h2>
+              <p className="text-lg text-muted-foreground mb-6 mt-6">
+                Our comprehensive career support services are designed to elevate your professional profile and maximize your opportunities.
+              </p>
+              <ul className="space-y-3 mb-8">
+                {["Free CV Reviews & Enhancement", "LinkedIn Profile Optimization", "Mock Interview Preparation", "Personalized Career Coaching"].map((item, i) => (
+                  <li key={i} className="flex items-center space-x-3">
+                    <CheckCircle className="h-5 w-5 text-accent" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <Button asChild variant="accent">
+                <Link to="/career-partner">
+                  Learn More About Our Services
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
             </div>
-          )}
+            <div>
+              <Card className="p-6 shadow-card-lg border-0">
+                <CardContent>
+                  <h3 className="text-xl font-semibold mb-4 text-primary">Featured for Employers</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Looking for exceptional talent? Browse our curated selection of pre-screened professionals ready for their next challenge.
+                  </p>
+                  <Button asChild variant="outline" className="w-full">
+                    <Link to="/featured-talent">
+                      View Featured Talent
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Employer Hiring Section */}
+      <section className="py-16 bg-primary text-primary-foreground">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-4xl lg:text-5xl font-bold mb-4">
+            Hiring Top Talent?
+          </h2>
+          <p className="text-xl text-primary-foreground/80 mb-8 max-w-2xl mx-auto">
+            Connect with exceptional candidates across Finance, IT, and Legal sectors. 
+            Submit your job requirements and let our specialists find the perfect match.
+          </p>
+          <Button asChild size="lg" variant="accent">
+            <Link to="/post-job">
+              Post a Job
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+          </Button>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-16 bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl lg:text-4xl font-bold mb-2">
+              <span className="accent-underline">Success Stories</span>
+            </h2>
+            <p className="text-lg text-muted-foreground mt-6">
+              Hear from professionals who found their dream roles through MyRecruita
+            </p>
+          </div>
           
-          <div className="text-center mt-10">
-            <Button asChild variant="outline" size="lg">
-              <Link to="/jobs">
-                View All Jobs
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, index) => (
+              <Card key={index} className="p-6 shadow-card border-0">
+                <CardContent>
+                  <p className="text-muted-foreground mb-4 italic">
+                    "{testimonial.content}"
+                  </p>
+                  <div className="border-t border-border pt-4">
+                    <p className="font-semibold">{testimonial.name}</p>
+                    <p className="text-sm text-muted-foreground">{testimonial.role}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Social Media Section */}
+      <section className="py-12 bg-secondary">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="bg-background rounded-lg p-8 shadow-card">
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-[#0077B5] rounded-lg flex items-center justify-center">
+                <Linkedin className="h-8 w-8 text-white" />
+              </div>
+            </div>
+            <h2 className="text-2xl font-bold mb-3">Stay Connected</h2>
+            <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
+              Follow our LinkedIn page to keep up to date with live roles, industry insights, and connect directly with our recruiters.
+            </p>
+            <Button asChild className="bg-[#0077B5] hover:bg-[#005885]">
+              <a 
+                href="https://www.linkedin.com/company/myrecruita" 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                <Linkedin className="mr-2 h-4 w-4" />
+                Follow MyRecruita
+              </a>
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Simple CTA Section */}
-      <section className="py-20 bg-primary">
+      {/* CTA Section */}
+      <section className="py-16 bg-primary text-primary-foreground">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-light text-primary-foreground mb-4">
-            Ready to take the next step in your career?
+          <h2 className="text-3xl lg:text-4xl font-bold mb-4">
+            Ready to Take the Next Step?
           </h2>
-          <p className="text-primary-foreground/70 mb-8 max-w-2xl mx-auto">
-            Whether you're looking for your next role or seeking the best talent for your team, 
-            we're here to help.
+          <p className="text-xl mb-8 text-primary-foreground/80">
+            Join thousands of professionals who have advanced their careers with MyRecruita
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button asChild variant="accent" size="lg">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild size="lg" variant="accent">
               <Link to="/submit-cv">
-                Submit Your CV
+                Get Started Today
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
-              <Link to="/post-job">
-                Post a Job
+            <Button asChild variant="outline-white" size="lg">
+              <Link to="/contact">
+                Contact Us
               </Link>
             </Button>
           </div>
