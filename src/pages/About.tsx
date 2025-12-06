@@ -56,26 +56,6 @@ const About = () => {
     { number: "24hrs", label: "Average Response Time" }
   ];
 
-  const team = [
-    {
-      name: "Zuhair Nadeem",
-      role: "Founder & Managing Director",
-      description: "With 5 years of experience in audit and accountancy — including time at Grant Thornton — Zuhair brings technical precision and commercial insight to every hiring conversation. After launching Kingsley Hart, a finance-specialist recruitment firm, he expanded into multi-sector hiring through MyRecruita, now serving industries across Tech, Legal, HR, Finance, and Executive Search.",
-      specialties: ["Finance & Accountancy", "Executive Search", "Strategic Partnerships", "Multi-Sector Recruitment"]
-    },
-    {
-      name: "Seaneen Ahmed",
-      role: "Co-Founder & Director",
-      description: "Seaneen brings a wealth of experience in healthcare recruitment, having spent several years building trusted partnerships with providers across the UK. As Co-Founder of MyRecruita, he plays a central role in shaping strategy, nurturing client relationships, and driving candidate-first delivery across all sectors.",
-      specialties: ["Client Relationships", "Healthcare Recruitment", "Executive Search", "Business Development & Partnerships"]
-    },
-    {
-      name: "Shamsul Islam",
-      role: "Head of Candidate Engagement & Client Success",
-      description: "With over a decade of experience in operations, project delivery, and stakeholder engagement, Shamsul brings a unique perspective to the recruitment process. He previously managed multi-agency partnerships on high-profile projects such as the Grenfell Tower Recovery, and led operational delivery at national charities and service centres. At MyRecruita, Shamsul ensures seamless candidate experiences, leads interview support workshops, and supports relationship-building with both clients and community networks.",
-      specialties: ["Candidate Experience & Onboarding", "Client Engagement & Retention", "Interview Support & Workshops"]
-    }
-  ];
 
   return (
     <>
@@ -212,54 +192,6 @@ const About = () => {
               </div>
             </div>
 
-            {/* Team Section */}
-            <div className="mb-20">
-              <div className="text-center mb-16 animate-fade-in" style={{animationDelay: '0.8s'}}>
-                <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
-                  <Users className="h-4 w-4" />
-                  Meet Our Team
-                </div>
-                <h2 className="text-4xl lg:text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  Expert Professionals
-                </h2>
-                <p className="text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto">
-                  Experienced professionals dedicated to your success, bringing together expertise from across industries.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {team.map((member, index) => (
-                  <Card key={index} className="group bg-gradient-to-br from-card to-card/50 border-primary/20 hover:border-primary/40 transition-all duration-500 hover-scale animate-fade-in overflow-hidden relative" style={{animationDelay: `${index * 0.2 + 0.9}s`}}>
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <CardHeader className="relative z-10 text-center pb-4">
-                      <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                        <Users className="h-12 w-12 text-primary" />
-                      </div>
-                      <CardTitle className="text-xl font-bold mb-2 group-hover:text-primary transition-colors duration-300">
-                        {member.name}
-                      </CardTitle>
-                      <p className="text-accent font-semibold text-lg">{member.role}</p>
-                    </CardHeader>
-                    <CardContent className="relative z-10">
-                      <p className="text-muted-foreground mb-6 leading-relaxed text-center">
-                        {member.description}
-                      </p>
-                      <div className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-lg p-4">
-                        <p className="text-sm font-semibold mb-3 text-center">Specialties:</p>
-                        <div className="space-y-2">
-                          {member.specialties.map((specialty, specialtyIndex) => (
-                            <div key={specialtyIndex} className="flex items-center space-x-3">
-                              <CheckCircle className="h-4 w-4 text-accent flex-shrink-0" />
-                              <span className="text-sm text-muted-foreground">{specialty}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
 
             {/* CTA Section */}
             <div className="animate-fade-in" style={{animationDelay: '1.2s'}}>
