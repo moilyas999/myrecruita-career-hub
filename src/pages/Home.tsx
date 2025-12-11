@@ -117,8 +117,8 @@ const Home = () => {
         <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="max-w-3xl">
             <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold mb-6 leading-tight">
-              APSCo-Accredited
-              <span className="block text-accent">Recruitment Specialists</span>
+              Find Your Next
+              <span className="block text-accent">Career Opportunity</span>
             </h1>
             <p className="text-xl lg:text-2xl mb-10 text-white/90">
               Connecting exceptional talent with leading employers in Finance, IT, Legal, HR & Executive sectors across the UK.
