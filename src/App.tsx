@@ -44,8 +44,16 @@ const App = () => (
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />} />
             
-            {/* Auth page without main layout */}
-            <Route path="/auth" element={<Auth />} />
+            {/* Auth page with main layout */}
+            <Route path="/auth" element={
+              <div className="min-h-screen flex flex-col">
+                <Navigation />
+                <main className="flex-1">
+                  <Auth />
+                </main>
+                <Footer />
+              </div>
+            } />
             
             {/* User dashboard routes without footer */}
             <Route path="/dashboard" element={<Dashboard />} />

@@ -135,25 +135,20 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background flex items-center justify-center py-12 px-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-[calc(100vh-200px)] pt-24 pb-16 px-4">
+      <div className="max-w-md mx-auto">
+        {/* Hero Section */}
         <div className="text-center mb-8">
-          <Link to="/" className="inline-block">
-            <h1 className="text-3xl font-bold text-primary">MyRecruita</h1>
-          </Link>
-          <p className="text-muted-foreground mt-2">
-            Your career journey starts here
+          <h1 className="text-3xl font-bold text-primary mb-2">
+            Welcome to MyRecruita
+          </h1>
+          <p className="text-muted-foreground">
+            Your career journey starts here. Login or create an account to track your applications.
           </p>
         </div>
 
-        <Card className="border-border/50 shadow-lg">
-          <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-2xl text-center">Welcome</CardTitle>
-            <CardDescription className="text-center">
-              Login or create an account to track your applications
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        <Card className="border-border shadow-card">
+          <CardContent className="pt-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="login">Login</TabsTrigger>
@@ -212,7 +207,7 @@ const Auth = () => {
                     </Label>
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button type="submit" variant="accent" className="w-full" disabled={isLoading}>
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -300,7 +295,7 @@ const Auth = () => {
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button type="submit" variant="accent" className="w-full" disabled={isLoading}>
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -313,25 +308,41 @@ const Auth = () => {
 
                   <p className="text-xs text-center text-muted-foreground">
                     By signing up, you agree to our{' '}
-                    <Link to="/privacy" className="underline hover:text-primary">
+                    <Link to="/privacy" className="underline hover:text-accent">
                       Privacy Policy
                     </Link>{' '}
                     and{' '}
-                    <Link to="/terms" className="underline hover:text-primary">
+                    <Link to="/terms" className="underline hover:text-accent">
                       Terms of Service
                     </Link>
                   </p>
                 </form>
               </TabsContent>
             </Tabs>
-
-            <div className="mt-6 text-center text-sm text-muted-foreground">
-              <Link to="/admin/login" className="hover:text-primary">
-                Admin Login →
-              </Link>
-            </div>
           </CardContent>
         </Card>
+
+        {/* Benefits Section */}
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+          <div className="p-4">
+            <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-2">
+              <Mail className="h-5 w-5 text-accent" />
+            </div>
+            <p className="text-sm text-muted-foreground">Track all your applications</p>
+          </div>
+          <div className="p-4">
+            <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-2">
+              <User className="h-5 w-5 text-accent" />
+            </div>
+            <p className="text-sm text-muted-foreground">Save your CV for quick apply</p>
+          </div>
+          <div className="p-4">
+            <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-2">
+              <Lock className="h-5 w-5 text-accent" />
+            </div>
+            <p className="text-sm text-muted-foreground">Secure & private</p>
+          </div>
+        </div>
       </div>
     </div>
   );
