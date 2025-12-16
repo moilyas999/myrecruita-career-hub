@@ -8,6 +8,7 @@ interface AuthContextType {
   session: Session | null;
   isAdmin: boolean;
   loading: boolean;
+  isAdminLoading: boolean;
   signIn: (email: string, password: string, rememberMe?: boolean) => Promise<{ error?: string }>;
   signUp: (email: string, password: string) => Promise<{ error?: string }>;
   createAdminUser: (email: string, password: string) => Promise<{ error?: string }>;
@@ -21,31 +22,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isAdminLoading, setIsAdminLoading] = useState(true);
+
+  const checkAdminStatus = async (userId: string) => {
+    setIsAdminLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('admin_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      setIsAdmin(!error && !!data);
+    } catch (error) {
+      setIsAdmin(false);
+    } finally {
+      setIsAdminLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Check if user is admin
-          setTimeout(async () => {
-            try {
-              const { data, error } = await supabase
-                .from('admin_profiles')
-                .select('*')
-                .eq('user_id', session.user.id)
-                .single();
-              
-              setIsAdmin(!error && !!data);
-            } catch (error) {
-              setIsAdmin(false);
-            }
+          // Check if user is admin using setTimeout to avoid deadlock
+          setTimeout(() => {
+            checkAdminStatus(session.user.id);
           }, 0);
         } else {
           setIsAdmin(false);
+          setIsAdminLoading(false);
         }
         
         setLoading(false);
@@ -57,6 +67,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      if (session?.user) {
+        checkAdminStatus(session.user.id);
+      } else {
+        setIsAdminLoading(false);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -153,6 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       isAdmin,
       loading,
+      isAdminLoading,
       signIn,
       signUp,
       signOut,

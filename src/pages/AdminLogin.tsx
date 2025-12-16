@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -6,33 +6,48 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const { signIn } = useAuth();
+  const { user, isAdmin, loading, isAdminLoading, signIn } = useAuth();
   const navigate = useNavigate();
+
+  // Auto-redirect if already logged in as admin
+  useEffect(() => {
+    if (!loading && !isAdminLoading && user && isAdmin) {
+      navigate('/admin');
+    }
+  }, [user, isAdmin, loading, isAdminLoading, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setIsSubmitting(true);
 
     const { error } = await signIn(email.toLowerCase(), password, rememberMe);
     
     if (error) {
       toast.error(error);
+      setIsSubmitting(false);
     } else {
       toast.success('Signed in successfully');
-      navigate('/admin');
+      // Navigation will happen via useEffect when isAdmin becomes true
     }
-    
-    setLoading(false);
   };
+
+  // Show loading while checking auth state
+  if (loading || isAdminLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-subtle">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-subtle p-4">
@@ -88,8 +103,8 @@ export default function AdminLogin() {
                 Remember me
               </Label>
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign In'}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
         </CardContent>
