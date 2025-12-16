@@ -150,6 +150,13 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
     }
   };
 
+  const getStoragePathFromUrl = (url: string) => {
+    const marker = '/cv-uploads/';
+    const idx = url.indexOf(marker);
+    if (idx === -1) return '';
+    return decodeURIComponent(url.slice(idx + marker.length));
+  };
+
   const parseAllFiles = async () => {
     const pendingFiles = files.filter(f => f.status === 'pending' || f.status === 'error');
     
@@ -166,8 +173,10 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
       ));
       
       try {
+        const filePathToSend = file.filePath || (file.fileUrl ? getStoragePathFromUrl(file.fileUrl) : '');
+
         const response = await supabase.functions.invoke('parse-cv', {
-          body: { filePath: file.filePath, fileName: file.fileName }
+          body: { filePath: filePathToSend, fileName: file.fileName },
         });
         
         if (response.error) {
