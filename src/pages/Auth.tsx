@@ -8,7 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Mail, Lock, User, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Loader2, Linkedin } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 import { useSEO } from '@/hooks/useSEO';
 
 const Auth = () => {
@@ -134,6 +135,21 @@ const Auth = () => {
     }
   };
 
+  const handleLinkedInLogin = async () => {
+    setIsLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'linkedin_oidc',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`
+      }
+    });
+    
+    if (error) {
+      toast.error('Failed to sign in with LinkedIn');
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-[calc(100vh-200px)] pt-24 pb-16 px-4">
       <div className="max-w-md mx-auto">
@@ -216,6 +232,24 @@ const Auth = () => {
                     ) : (
                       'Login'
                     )}
+                  </Button>
+
+                  <div className="relative my-6">
+                    <Separator />
+                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs text-muted-foreground">
+                      or continue with
+                    </span>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full bg-[#0A66C2] hover:bg-[#004182] text-white border-[#0A66C2] hover:border-[#004182]"
+                    onClick={handleLinkedInLogin}
+                    disabled={isLoading}
+                  >
+                    <Linkedin className="mr-2 h-4 w-4" />
+                    Continue with LinkedIn
                   </Button>
                 </form>
               </TabsContent>
@@ -304,6 +338,24 @@ const Auth = () => {
                     ) : (
                       'Create Account'
                     )}
+                  </Button>
+
+                  <div className="relative my-6">
+                    <Separator />
+                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs text-muted-foreground">
+                      or continue with
+                    </span>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full bg-[#0A66C2] hover:bg-[#004182] text-white border-[#0A66C2] hover:border-[#004182]"
+                    onClick={handleLinkedInLogin}
+                    disabled={isLoading}
+                  >
+                    <Linkedin className="mr-2 h-4 w-4" />
+                    Continue with LinkedIn
                   </Button>
 
                   <p className="text-xs text-center text-muted-foreground">
