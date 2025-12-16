@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { LogOut, Users, Briefcase, FileText, Star, MessageSquare, BarChart3, UserPlus, RefreshCw } from 'lucide-react';
+import { LogOut, Users, Briefcase, FileText, Star, MessageSquare, BarChart3, UserPlus, RefreshCw, Loader2 } from 'lucide-react';
 import JobsManagement from '@/components/admin/JobsManagement';
 import SubmissionsManagement from '@/components/admin/SubmissionsManagement';
 import TalentManagement from '@/components/admin/TalentManagement';
@@ -12,19 +12,21 @@ import AdminManagement from '@/components/admin/AdminManagement';
 import { BUILD_VERSION, forceRefresh } from '@/lib/version';
 
 export default function AdminDashboard() {
-  const { user, isAdmin, loading, signOut } = useAuth();
+  const { user, isAdmin, loading, isAdminLoading, signOut } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && (!user || !isAdmin)) {
+    // Only redirect after both loading states are complete
+    if (!loading && !isAdminLoading && (!user || !isAdmin)) {
       navigate('/admin/login');
     }
-  }, [user, isAdmin, loading, navigate]);
+  }, [user, isAdmin, loading, isAdminLoading, navigate]);
 
-  if (loading) {
+  // Show loading while checking auth or admin status
+  if (loading || isAdminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
