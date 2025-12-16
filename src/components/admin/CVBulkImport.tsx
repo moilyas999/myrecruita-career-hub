@@ -12,6 +12,7 @@ import { Progress } from '@/components/ui/progress';
 interface ParsedCV {
   id: string;
   fileName: string;
+  filePath: string;
   fileUrl: string;
   status: 'pending' | 'parsing' | 'parsed' | 'error';
   error?: string;
@@ -121,6 +122,7 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
         newFiles.push({
           id,
           fileName: file.name,
+          filePath: filePath,
           fileUrl: urlData.publicUrl,
           status: 'pending',
           data: {
@@ -165,7 +167,7 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
       
       try {
         const response = await supabase.functions.invoke('parse-cv', {
-          body: { fileUrl: file.fileUrl, fileName: file.fileName }
+          body: { filePath: file.filePath, fileName: file.fileName }
         });
         
         if (response.error) {

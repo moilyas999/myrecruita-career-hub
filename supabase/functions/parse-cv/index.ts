@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,31 +24,43 @@ serve(async (req) => {
   }
 
   try {
-    const { fileUrl, fileName } = await req.json();
+    const { filePath, fileName } = await req.json();
     
-    if (!fileUrl) {
+    if (!filePath) {
       return new Response(
-        JSON.stringify({ error: 'File URL is required' }),
+        JSON.stringify({ error: 'File path is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Fetching file:', fileUrl);
+    console.log('Downloading file from storage:', filePath);
     
-    // Fetch the file content
-    const fileResponse = await fetch(fileUrl);
-    if (!fileResponse.ok) {
-      throw new Error(`Failed to fetch file: ${fileResponse.status}`);
+    // Create Supabase client with service role key to access private storage
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+
+    // Download file directly from private storage
+    const { data: fileData, error: downloadError } = await supabaseAdmin.storage
+      .from('cv-uploads')
+      .download(filePath);
+
+    if (downloadError) {
+      console.error('Storage download error:', downloadError);
+      throw new Error(`Failed to download file: ${downloadError.message}`);
     }
 
-    const contentType = fileResponse.headers.get('content-type') || '';
+    console.log('File downloaded, size:', fileData.size);
+
+    const contentType = fileData.type || '';
     let textContent = '';
 
     // Handle different file types
     if (contentType.includes('pdf') || fileName?.toLowerCase().endsWith('.pdf')) {
       // For PDF files, we'll extract raw text using a simple approach
       // The AI will do its best to parse the content
-      const arrayBuffer = await fileResponse.arrayBuffer();
+      const arrayBuffer = await fileData.arrayBuffer();
       const bytes = new Uint8Array(arrayBuffer);
       
       // Simple PDF text extraction - look for text between stream markers
@@ -90,7 +103,7 @@ serve(async (req) => {
       fileName?.toLowerCase().endsWith('.doc')
     ) {
       // For DOCX files (which are ZIP archives)
-      const arrayBuffer = await fileResponse.arrayBuffer();
+      const arrayBuffer = await fileData.arrayBuffer();
       const bytes = new Uint8Array(arrayBuffer);
       
       try {
@@ -116,7 +129,7 @@ serve(async (req) => {
       }
     } else {
       // Plain text or other
-      textContent = await fileResponse.text();
+      textContent = await fileData.text();
     }
 
     console.log('Extracted text length:', textContent.length);
