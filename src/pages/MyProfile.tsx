@@ -148,6 +148,24 @@ const MyProfile = () => {
 
       if (updateError) throw updateError;
 
+      // Create CV submission record so it appears in admin submissions
+      const { error: submissionError } = await supabase
+        .from('cv_submissions')
+        .insert({
+          user_id: profile.user_id,
+          name: profile.full_name || 'Unknown',
+          email: profile.email,
+          phone: profile.phone || '',
+          cv_file_url: urlData.publicUrl,
+          source: 'profile',
+          message: 'Uploaded via user profile'
+        });
+
+      if (submissionError) {
+        console.error('Error creating CV submission:', submissionError);
+        // Don't block - profile update already succeeded
+      }
+
       setProfile(prev => prev ? { ...prev, cv_file_url: urlData.publicUrl } : null);
       toast.success('CV uploaded successfully');
     } catch (error: any) {
