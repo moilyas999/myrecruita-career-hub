@@ -70,6 +70,7 @@ export default function SubmissionsManagement() {
   const [employerJobSubmissions, setEmployerJobSubmissions] = useState<any[]>([]);
   const [contactSubmissions, setContactSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cvSubTab, setCvSubTab] = useState('all-cvs');
 
   useEffect(() => {
     fetchAllSubmissions();
@@ -335,7 +336,31 @@ export default function SubmissionsManagement() {
         </TabsContent>
 
         <TabsContent value="cv-submissions" className="space-y-4">
-          <Tabs defaultValue="all-cvs" className="space-y-4">
+          {/* Prominent Action Buttons */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-muted/50 rounded-lg border">
+            <div>
+              <h3 className="font-semibold text-lg">CV Database</h3>
+              <p className="text-sm text-muted-foreground">{cvSubmissions.length} CVs in database</p>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => setCvSubTab('add-single')}
+                className="bg-accent text-accent-foreground hover:bg-accent/90"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add CV
+              </Button>
+              <Button 
+                onClick={() => setCvSubTab('bulk-import')}
+                variant="outline"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Bulk Import
+              </Button>
+            </div>
+          </div>
+
+          <Tabs value={cvSubTab} onValueChange={setCvSubTab} className="space-y-4">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="all-cvs" className="flex items-center gap-2">
                 <List className="w-4 h-4" />
