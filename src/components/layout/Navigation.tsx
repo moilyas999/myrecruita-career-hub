@@ -1,12 +1,24 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Menu, X, Phone } from "lucide-react";
+import { Menu, X, Phone, User, LogOut, LayoutDashboard, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -15,6 +27,47 @@ const Navigation = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        checkAdminStatus(session.user.id);
+      }
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          setTimeout(() => {
+            checkAdminStatus(session.user.id);
+          }, 0);
+        } else {
+          setIsAdmin(false);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const checkAdminStatus = async (userId: string) => {
+    const { data } = await supabase
+      .from('admin_profiles')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+    setIsAdmin(!!data);
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    toast.success('Signed out successfully');
+    navigate('/');
+  };
 
   const navItems = [
     { name: "Home", path: "/" },
@@ -75,6 +128,71 @@ const Navigation = () => {
 
           {/* CTA Buttons */}
           <div className="hidden xl:flex items-center space-x-3">
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className={`rounded-md ${
+                      isScrolled || !isHomePage
+                        ? ""
+                        : "border-white/50 text-white hover:bg-white/10"
+                    }`}
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    My Account
+                    <ChevronDown className="h-4 w-4 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  {isAdmin ? (
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin" className="flex items-center">
+                        <LayoutDashboard className="h-4 w-4 mr-2" />
+                        Admin Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                  ) : (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link to="/dashboard" className="flex items-center">
+                          <LayoutDashboard className="h-4 w-4 mr-2" />
+                          Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/dashboard/profile" className="flex items-center">
+                          <User className="h-4 w-4 mr-2" />
+                          My Profile
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button 
+                asChild 
+                variant="outline" 
+                size="sm"
+                className={`rounded-md ${
+                  isScrolled || !isHomePage
+                    ? ""
+                    : "border-white/50 text-white hover:bg-white/10"
+                }`}
+              >
+                <Link to="/auth">
+                  <User className="h-4 w-4 mr-2" />
+                  Login
+                </Link>
+              </Button>
+            )}
             <Button 
               asChild 
               size="sm" 
@@ -137,6 +255,63 @@ const Navigation = () => {
                   {item.name}
                 </Link>
               ))}
+              
+              {/* Mobile Account Section */}
+              <div className="border-t border-border mt-2 pt-2">
+                {user ? (
+                  <>
+                    {isAdmin ? (
+                      <Link
+                        to="/admin"
+                        className="block px-3 py-2 text-base font-medium text-foreground hover:text-accent hover:bg-muted rounded-md"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <LayoutDashboard className="h-4 w-4 inline mr-2" />
+                        Admin Dashboard
+                      </Link>
+                    ) : (
+                      <>
+                        <Link
+                          to="/dashboard"
+                          className="block px-3 py-2 text-base font-medium text-foreground hover:text-accent hover:bg-muted rounded-md"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <LayoutDashboard className="h-4 w-4 inline mr-2" />
+                          Dashboard
+                        </Link>
+                        <Link
+                          to="/dashboard/profile"
+                          className="block px-3 py-2 text-base font-medium text-foreground hover:text-accent hover:bg-muted rounded-md"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <User className="h-4 w-4 inline mr-2" />
+                          My Profile
+                        </Link>
+                      </>
+                    )}
+                    <button
+                      onClick={() => {
+                        handleSignOut();
+                        setIsOpen(false);
+                      }}
+                      className="block w-full text-left px-3 py-2 text-base font-medium text-destructive hover:bg-muted rounded-md"
+                    >
+                      <LogOut className="h-4 w-4 inline mr-2" />
+                      Sign Out
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    to="/auth"
+                    className="block px-3 py-2 text-base font-medium text-foreground hover:text-accent hover:bg-muted rounded-md"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <User className="h-4 w-4 inline mr-2" />
+                    Login / Sign Up
+                  </Link>
+                )}
+              </div>
+
               <div className="px-3 py-2">
                 <Button asChild size="sm" variant="accent" className="w-full">
                   <Link to="/post-job" onClick={() => setIsOpen(false)}>

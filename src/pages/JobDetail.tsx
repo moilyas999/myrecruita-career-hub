@@ -7,10 +7,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, MapPin, Clock, Building2, Phone, Mail, CheckCircle, Loader2, Upload, FileText } from "lucide-react";
+import { ArrowLeft, MapPin, Clock, Building2, Phone, Mail, CheckCircle, Loader2, Upload, FileText, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO, createJobSchema, injectStructuredData } from "@/hooks/useSEO";
+
+interface UserProfile {
+  id: string;
+  user_id: string;
+  email: string;
+  full_name: string | null;
+  phone: string | null;
+  cv_file_url: string | null;
+}
 
 const JobDetail = () => {
   const { referenceId, jobId } = useParams();
@@ -18,6 +27,8 @@ const JobDetail = () => {
   const navigate = useNavigate();
   const [isApplying, setIsApplying] = useState(false);
   const [job, setJob] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   // Dynamic SEO based on job data
   useSEO({
@@ -32,13 +43,41 @@ const JobDetail = () => {
     email: "",
     phone: "",
     message: "",
-    cv: null as File | null
+    cv: null as File | null,
+    useStoredCV: false
   });
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     fetchJob();
+    checkAuthAndProfile();
   }, [referenceId, jobId]);
+
+  const checkAuthAndProfile = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      setUser(session.user);
+      
+      // Fetch user profile
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+      
+      if (profile) {
+        setUserProfile(profile);
+        // Auto-fill form with profile data
+        setFormData(prev => ({
+          ...prev,
+          name: profile.full_name || '',
+          email: profile.email || '',
+          phone: profile.phone || '',
+          useStoredCV: !!profile.cv_file_url
+        }));
+      }
+    }
+  };
 
   const fetchJob = async () => {
     try {
@@ -128,48 +167,66 @@ const JobDetail = () => {
   };
 
   const handleApply = async () => {
-    if (!job || !formData.cv) return;
+    // Either need a CV file or use stored CV
+    if (!job || (!formData.cv && !formData.useStoredCV)) return;
     
     setIsApplying(true);
     setIsUploading(true);
     
     try {
-      // Upload CV file to Supabase Storage
-      const fileExt = formData.cv.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-      const filePath = `job-applications/${fileName}`;
+      let cvUrl = '';
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('cv-uploads')
-        .upload(filePath, formData.cv);
+      // If using stored CV from profile
+      if (formData.useStoredCV && userProfile?.cv_file_url) {
+        cvUrl = userProfile.cv_file_url;
+        setIsUploading(false);
+      } else if (formData.cv) {
+        // Upload new CV file to Supabase Storage
+        const fileExt = formData.cv.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+        const filePath = `job-applications/${fileName}`;
 
-      if (uploadError) {
-        toast({
-          title: "Upload Error",
-          description: "Failed to upload CV. Please try again.",
-          variant: "destructive",
-        });
-        return;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('cv-uploads')
+          .upload(filePath, formData.cv);
+
+        if (uploadError) {
+          toast({
+            title: "Upload Error",
+            description: "Failed to upload CV. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        setIsUploading(false);
+
+        // Get the file URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('cv-uploads')
+          .getPublicUrl(filePath);
+        
+        cvUrl = publicUrl;
       }
 
-      setIsUploading(false);
+      // Submit application with CV URL and user_id if logged in
+      const applicationData: any = {
+        job_id: job.id,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        message: formData.message,
+        cv_file_url: cvUrl
+      };
 
-      // Get the file URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('cv-uploads')
-        .getPublicUrl(filePath);
+      // Link to user account if logged in
+      if (user) {
+        applicationData.user_id = user.id;
+      }
 
-      // Submit application with CV URL
       const { error } = await supabase
         .from('job_applications')
-        .insert({
-          job_id: job.id,
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          message: formData.message,
-          cv_file_url: publicUrl
-        });
+        .insert(applicationData);
 
       if (error) {
         toast({
@@ -196,7 +253,7 @@ const JobDetail = () => {
               email: formData.email,
               phone: formData.phone,
               message: formData.message,
-              cv_file_url: publicUrl
+              cv_file_url: cvUrl
             }
           }
         });
@@ -361,36 +418,74 @@ const JobDetail = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="cv">Upload CV *</Label>
-                  <div className="mt-2">
-                    <label htmlFor="cv" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer bg-muted/30 hover:bg-muted/50 transition-colors">
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        {formData.cv ? (
-                          <>
-                            <FileText className="w-8 h-8 mb-2 text-accent" />
-                            <p className="mb-2 text-sm text-foreground font-semibold">{formData.cv.name}</p>
-                            <p className="text-xs text-muted-foreground">Click to change file</p>
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
-                            <p className="mb-2 text-sm text-muted-foreground">
-                              <span className="font-semibold">Click to upload</span> or drag and drop
-                            </p>
-                            <p className="text-xs text-muted-foreground">PDF, DOC, DOCX (MAX. 5MB)</p>
-                          </>
-                        )}
+                  <Label htmlFor="cv">CV *</Label>
+                  
+                  {/* Option to use stored CV if logged in and has one */}
+                  {userProfile?.cv_file_url && (
+                    <div className="mt-2 mb-3">
+                      <div 
+                        className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
+                          formData.useStoredCV 
+                            ? 'border-accent bg-accent/10' 
+                            : 'border-border hover:bg-muted/50'
+                        }`}
+                        onClick={() => setFormData(prev => ({ ...prev, useStoredCV: !prev.useStoredCV, cv: null }))}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={formData.useStoredCV}
+                          onChange={(e) => setFormData(prev => ({ ...prev, useStoredCV: e.target.checked, cv: null }))}
+                          className="mr-3"
+                        />
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-5 w-5 text-accent" />
+                          <div>
+                            <p className="text-sm font-medium">Use my stored CV</p>
+                            <p className="text-xs text-muted-foreground">From your profile</p>
+                          </div>
+                        </div>
                       </div>
-                      <input
-                        id="cv"
-                        type="file"
-                        className="hidden"
-                        accept=".pdf,.doc,.docx"
-                        onChange={handleFileChange}
-                        required
-                      />
-                    </label>
-                  </div>
+                    </div>
+                  )}
+
+                  {/* Upload new CV option */}
+                  {!formData.useStoredCV && (
+                    <div className="mt-2">
+                      <label htmlFor="cv" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer bg-muted/30 hover:bg-muted/50 transition-colors">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          {formData.cv ? (
+                            <>
+                              <FileText className="w-8 h-8 mb-2 text-accent" />
+                              <p className="mb-2 text-sm text-foreground font-semibold">{formData.cv.name}</p>
+                              <p className="text-xs text-muted-foreground">Click to change file</p>
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
+                              <p className="mb-2 text-sm text-muted-foreground">
+                                <span className="font-semibold">Click to upload</span> or drag and drop
+                              </p>
+                              <p className="text-xs text-muted-foreground">PDF, DOC, DOCX (MAX. 5MB)</p>
+                            </>
+                          )}
+                        </div>
+                        <input
+                          id="cv"
+                          type="file"
+                          className="hidden"
+                          accept=".pdf,.doc,.docx"
+                          onChange={handleFileChange}
+                        />
+                      </label>
+                    </div>
+                  )}
+
+                  {/* Login prompt for non-logged-in users */}
+                  {!user && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      <Link to="/auth" className="text-accent hover:underline">Login</Link> to save your CV and auto-fill applications
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="message">Cover Message (Optional)</Label>
@@ -405,7 +500,7 @@ const JobDetail = () => {
                 </div>
                 <Button 
                   onClick={handleApply} 
-                  disabled={isApplying || isUploading || !formData.name || !formData.email || !formData.phone || !formData.cv}
+                  disabled={isApplying || isUploading || !formData.name || !formData.email || !formData.phone || (!formData.cv && !formData.useStoredCV)}
                   className="w-full"
                 >
                   {isUploading ? "Uploading CV..." : isApplying ? "Submitting..." : "Submit Application"}
