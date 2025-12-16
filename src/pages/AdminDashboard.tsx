@@ -3,12 +3,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { LogOut, Users, Briefcase, FileText, Star, MessageSquare, BarChart3, UserPlus } from 'lucide-react';
+import { LogOut, Users, Briefcase, FileText, Star, MessageSquare, BarChart3, UserPlus, RefreshCw } from 'lucide-react';
 import JobsManagement from '@/components/admin/JobsManagement';
 import SubmissionsManagement from '@/components/admin/SubmissionsManagement';
 import TalentManagement from '@/components/admin/TalentManagement';
 import StatsDashboard from '@/components/admin/StatsDashboard';
 import AdminManagement from '@/components/admin/AdminManagement';
+import { BUILD_VERSION, forceRefresh } from '@/lib/version';
 
 export default function AdminDashboard() {
   const { user, isAdmin, loading, signOut } = useAuth();
@@ -38,10 +39,22 @@ export default function AdminDashboard() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <h1 className="text-xl sm:text-2xl font-bold text-primary">MyRecruita Admin Dashboard</h1>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <span className="text-[10px] text-muted-foreground/60 hidden lg:inline font-mono">
+                {BUILD_VERSION}
+              </span>
               <span className="text-xs sm:text-sm text-muted-foreground hidden sm:inline">
                 Welcome, {user.email}
               </span>
+              <Button 
+                variant="ghost" 
+                onClick={forceRefresh} 
+                size="sm"
+                title="Force refresh to clear cache"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </Button>
               <Button variant="outline" onClick={signOut} size="sm">
                 <LogOut className="w-4 h-4 mr-1 sm:mr-2" />
                 <span className="hidden sm:inline">Sign Out</span>
