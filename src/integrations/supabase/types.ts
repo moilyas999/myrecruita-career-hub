@@ -257,9 +257,12 @@ export type Database = {
         Row: {
           added_by: string | null
           admin_notes: string | null
+          ai_profile: Json | null
           created_at: string
           cv_file_url: string | null
+          education_level: string | null
           email: string
+          experience_summary: string | null
           id: string
           job_title: string | null
           location: string | null
@@ -267,15 +270,21 @@ export type Database = {
           name: string
           phone: string
           sector: string | null
+          seniority_level: string | null
+          skills: string | null
           source: string | null
           user_id: string | null
+          years_experience: number | null
         }
         Insert: {
           added_by?: string | null
           admin_notes?: string | null
+          ai_profile?: Json | null
           created_at?: string
           cv_file_url?: string | null
+          education_level?: string | null
           email: string
+          experience_summary?: string | null
           id?: string
           job_title?: string | null
           location?: string | null
@@ -283,15 +292,21 @@ export type Database = {
           name: string
           phone: string
           sector?: string | null
+          seniority_level?: string | null
+          skills?: string | null
           source?: string | null
           user_id?: string | null
+          years_experience?: number | null
         }
         Update: {
           added_by?: string | null
           admin_notes?: string | null
+          ai_profile?: Json | null
           created_at?: string
           cv_file_url?: string | null
+          education_level?: string | null
           email?: string
+          experience_summary?: string | null
           id?: string
           job_title?: string | null
           location?: string | null
@@ -299,8 +314,11 @@ export type Database = {
           name?: string
           phone?: string
           sector?: string | null
+          seniority_level?: string | null
+          skills?: string | null
           source?: string | null
           user_id?: string | null
+          years_experience?: number | null
         }
         Relationships: []
       }
