@@ -255,33 +255,51 @@ export type Database = {
       }
       cv_submissions: {
         Row: {
+          added_by: string | null
+          admin_notes: string | null
           created_at: string
           cv_file_url: string | null
           email: string
           id: string
+          job_title: string | null
+          location: string | null
           message: string | null
           name: string
           phone: string
+          sector: string | null
+          source: string | null
           user_id: string | null
         }
         Insert: {
+          added_by?: string | null
+          admin_notes?: string | null
           created_at?: string
           cv_file_url?: string | null
           email: string
           id?: string
+          job_title?: string | null
+          location?: string | null
           message?: string | null
           name: string
           phone: string
+          sector?: string | null
+          source?: string | null
           user_id?: string | null
         }
         Update: {
+          added_by?: string | null
+          admin_notes?: string | null
           created_at?: string
           cv_file_url?: string | null
           email?: string
           id?: string
+          job_title?: string | null
+          location?: string | null
           message?: string | null
           name?: string
           phone?: string
+          sector?: string | null
+          source?: string | null
           user_id?: string | null
         }
         Relationships: []
