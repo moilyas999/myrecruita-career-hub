@@ -27,6 +27,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import MyApplications from "./pages/MyApplications";
 import MyProfile from "./pages/MyProfile";
+import CompleteProfile from "./pages/CompleteProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -59,6 +60,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/applications" element={<MyApplications />} />
             <Route path="/dashboard/profile" element={<MyProfile />} />
+            <Route path="/complete-profile" element={<CompleteProfile />} />
             
             {/* Main site routes with layout */}
             <Route path="/*" element={
