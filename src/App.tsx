@@ -56,18 +56,19 @@ const App = () => (
               </div>
             } />
             
-            {/* User dashboard routes without footer */}
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/dashboard/applications" element={<MyApplications />} />
-            <Route path="/dashboard/profile" element={<MyProfile />} />
-            <Route path="/complete-profile" element={<CompleteProfile />} />
-            
             {/* Main site routes with layout */}
             <Route path="/*" element={
               <div className="min-h-screen flex flex-col">
                 <Navigation />
                 <main className="flex-1">
                   <Routes>
+                    {/* User dashboard routes - now with header/footer */}
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/dashboard/applications" element={<MyApplications />} />
+                    <Route path="/dashboard/profile" element={<MyProfile />} />
+                    <Route path="/complete-profile" element={<CompleteProfile />} />
+                    
+                    {/* Main site routes */}
                     <Route path="/" element={<Home />} />
                     <Route path="/jobs" element={<Jobs />} />
                     <Route path="/explore-roles" element={<Jobs />} />
