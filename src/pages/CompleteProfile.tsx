@@ -5,37 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { Loader2, User, Phone, Briefcase, MapPin, Building } from 'lucide-react';
+import { Loader2, Phone } from 'lucide-react';
 import { useSEO } from '@/hooks/useSEO';
-
-const SECTORS = [
-  'Accounting & Finance',
-  'Banking & Financial Services',
-  'Human Resources',
-  'Information Technology',
-  'Legal',
-  'Marketing & Communications',
-  'Operations & Administration',
-  'Sales & Business Development',
-  'Other'
-];
-
-const LOCATIONS = [
-  'London',
-  'Manchester',
-  'Birmingham',
-  'Leeds',
-  'Bristol',
-  'Edinburgh',
-  'Glasgow',
-  'Liverpool',
-  'Newcastle',
-  'Remote',
-  'Other'
-];
 
 const CompleteProfile = () => {
   const navigate = useNavigate();
@@ -48,12 +21,7 @@ const CompleteProfile = () => {
     phone: string;
   } | null>(null);
   
-  const [formData, setFormData] = useState({
-    phone: '',
-    job_title: '',
-    sector: '',
-    location: ''
-  });
+  const [phone, setPhone] = useState('');
 
   useSEO({
     title: 'Complete Your Profile | MyRecruita',
@@ -97,7 +65,7 @@ const CompleteProfile = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.phone) {
+    if (!phone) {
       toast.error('Please enter your phone number');
       return;
     }
@@ -113,9 +81,7 @@ const CompleteProfile = () => {
 
     const { error } = await supabase
       .from('user_profiles')
-      .update({
-        phone: formData.phone
-      })
+      .update({ phone })
       .eq('user_id', session.user.id);
 
     if (error) {
@@ -123,22 +89,6 @@ const CompleteProfile = () => {
       toast.error('Failed to update profile');
       setIsSaving(false);
       return;
-    }
-
-    // Also create a CV submission entry with the additional info
-    if (formData.job_title || formData.sector || formData.location) {
-      await supabase
-        .from('cv_submissions')
-        .insert({
-          user_id: session.user.id,
-          name: profile?.full_name || '',
-          email: profile?.email || session.user.email || '',
-          phone: formData.phone,
-          job_title: formData.job_title || null,
-          sector: formData.sector || null,
-          location: formData.location || null,
-          source: 'linkedin_signup'
-        });
     }
 
     toast.success('Profile completed successfully!');
@@ -175,7 +125,7 @@ const CompleteProfile = () => {
             <div>
               <CardTitle className="text-2xl">Welcome, {profile?.full_name?.split(' ')[0] || 'there'}!</CardTitle>
               <CardDescription className="text-base mt-2">
-                Complete your profile to help us find the perfect opportunities for you
+                Please add your phone number to complete your profile
               </CardDescription>
             </div>
           </CardHeader>
@@ -191,68 +141,10 @@ const CompleteProfile = () => {
                   id="phone"
                   type="tel"
                   placeholder="+44 7XXX XXXXXX"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
                   required
                 />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="job_title" className="flex items-center gap-2">
-                  <Briefcase className="h-4 w-4 text-muted-foreground" />
-                  Current/Desired Job Title
-                </Label>
-                <Input
-                  id="job_title"
-                  type="text"
-                  placeholder="e.g. Financial Analyst, Accountant"
-                  value={formData.job_title}
-                  onChange={(e) => setFormData({ ...formData, job_title: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="sector" className="flex items-center gap-2">
-                  <Building className="h-4 w-4 text-muted-foreground" />
-                  Preferred Sector
-                </Label>
-                <Select
-                  value={formData.sector}
-                  onValueChange={(value) => setFormData({ ...formData, sector: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a sector" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SECTORS.map((sector) => (
-                      <SelectItem key={sector} value={sector}>
-                        {sector}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="location" className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  Preferred Location
-                </Label>
-                <Select
-                  value={formData.location}
-                  onValueChange={(value) => setFormData({ ...formData, location: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LOCATIONS.map((location) => (
-                      <SelectItem key={location} value={location}>
-                        {location}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
 
               <Button 
