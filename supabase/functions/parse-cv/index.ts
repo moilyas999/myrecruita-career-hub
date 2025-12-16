@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import JSZip from 'https://esm.sh/jszip@3.10.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,6 +16,31 @@ interface ExtractedCVData {
   location: string;
   skills: string;
   experience_summary: string;
+}
+
+// Extract text content from DOCX files
+async function extractTextFromDocx(arrayBuffer: ArrayBuffer): Promise<string> {
+  console.log('Extracting text from DOCX file...');
+  
+  const zip = await JSZip.loadAsync(arrayBuffer);
+  const documentXml = await zip.file('word/document.xml')?.async('string');
+  
+  if (!documentXml) {
+    throw new Error('Could not find document.xml in DOCX file');
+  }
+  
+  // Extract text from <w:t> tags (Word text content)
+  const textMatches = documentXml.match(/<w:t[^>]*>([^<]*)<\/w:t>/g) || [];
+  const text = textMatches
+    .map(match => match.replace(/<[^>]+>/g, ''))
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  console.log('Extracted text length:', text.length, 'characters');
+  console.log('Text preview:', text.substring(0, 500));
+  
+  return text;
 }
 
 serve(async (req) => {
@@ -61,31 +87,11 @@ serve(async (req) => {
 
     console.log('File downloaded, size:', fileData.size, 'bytes');
 
-    // Determine MIME type from file extension
+    // Determine file type from extension
     const extension = filePath.toLowerCase().split('.').pop();
-    let mimeType = 'application/octet-stream';
-    if (extension === 'pdf') {
-      mimeType = 'application/pdf';
-    } else if (extension === 'docx') {
-      mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-    } else if (extension === 'doc') {
-      mimeType = 'application/msword';
-    }
+    console.log('File extension:', extension);
 
-    console.log('File MIME type:', mimeType);
-
-    // Convert file to base64 for multimodal input
     const arrayBuffer = await fileData.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
-    let base64 = '';
-    const chunkSize = 8192;
-    for (let i = 0; i < uint8Array.length; i += chunkSize) {
-      const chunk = uint8Array.slice(i, i + chunkSize);
-      base64 += String.fromCharCode.apply(null, Array.from(chunk));
-    }
-    base64 = btoa(base64);
-
-    console.log('Base64 encoded, length:', base64.length);
 
     // Get Lovable AI API key
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -154,7 +160,58 @@ REQUIREMENTS:
 
 DO NOT return empty fields. Extract or infer everything.`;
 
-    console.log('Calling Gemini 2.5 Pro with multimodal document input...');
+    // Build message content based on file type
+    let messageContent: any[];
+
+    if (extension === 'pdf') {
+      // PDF: Use multimodal approach (Gemini can read PDFs directly)
+      console.log('Using multimodal approach for PDF...');
+      
+      const uint8Array = new Uint8Array(arrayBuffer);
+      let base64 = '';
+      const chunkSize = 8192;
+      for (let i = 0; i < uint8Array.length; i += chunkSize) {
+        const chunk = uint8Array.slice(i, i + chunkSize);
+        base64 += String.fromCharCode.apply(null, Array.from(chunk));
+      }
+      base64 = btoa(base64);
+      console.log('Base64 encoded PDF, length:', base64.length);
+
+      messageContent = [
+        {
+          type: 'file',
+          file: {
+            filename: filePath.split('/').pop() || 'document.pdf',
+            file_data: `data:application/pdf;base64,${base64}`
+          }
+        },
+        { type: 'text', text: userPrompt }
+      ];
+    } else if (extension === 'docx') {
+      // DOCX: Extract text first, then send text to AI
+      console.log('Using text extraction approach for DOCX...');
+      
+      const textContent = await extractTextFromDocx(arrayBuffer);
+      
+      if (!textContent || textContent.length < 50) {
+        throw new Error('Could not extract sufficient text from DOCX file');
+      }
+
+      messageContent = [{
+        type: 'text',
+        text: `${userPrompt}
+
+--- CV DOCUMENT CONTENT ---
+
+${textContent}`
+      }];
+    } else if (extension === 'doc') {
+      throw new Error('Legacy .doc format is not supported. Please convert to .docx or .pdf');
+    } else {
+      throw new Error(`Unsupported file type: ${extension}`);
+    }
+
+    console.log('Calling Gemini 2.5 Pro...');
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -166,22 +223,7 @@ DO NOT return empty fields. Extract or infer everything.`;
         model: 'google/gemini-2.5-pro',
         messages: [
           { role: 'system', content: systemPrompt },
-          { 
-            role: 'user', 
-            content: [
-              {
-                type: 'file',
-                file: {
-                  filename: filePath.split('/').pop() || 'document',
-                  file_data: `data:${mimeType};base64,${base64}`
-                }
-              },
-              {
-                type: 'text',
-                text: userPrompt
-              }
-            ]
-          }
+          { role: 'user', content: messageContent }
         ],
         tools: [{
           type: 'function',
