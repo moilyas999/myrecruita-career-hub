@@ -262,6 +262,7 @@ export type Database = {
           message: string | null
           name: string
           phone: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -271,6 +272,7 @@ export type Database = {
           message?: string | null
           name: string
           phone: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -280,6 +282,7 @@ export type Database = {
           message?: string | null
           name?: string
           phone?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -335,6 +338,7 @@ export type Database = {
           message: string | null
           name: string
           phone: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -345,6 +349,7 @@ export type Database = {
           message?: string | null
           name: string
           phone: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -355,6 +360,7 @@ export type Database = {
           message?: string | null
           name?: string
           phone?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -487,6 +493,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_profiles: {
+        Row: {
+          created_at: string
+          cv_file_url: string | null
+          email: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          cv_file_url?: string | null
+          email: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          cv_file_url?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {

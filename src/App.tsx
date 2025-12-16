@@ -23,6 +23,10 @@ import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import Auth from "./pages/Auth";
+import Dashboard from "./pages/Dashboard";
+import MyApplications from "./pages/MyApplications";
+import MyProfile from "./pages/MyProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +43,14 @@ const App = () => (
             {/* Admin routes without main layout */}
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            
+            {/* Auth page without main layout */}
+            <Route path="/auth" element={<Auth />} />
+            
+            {/* User dashboard routes without footer */}
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/applications" element={<MyApplications />} />
+            <Route path="/dashboard/profile" element={<MyProfile />} />
             
             {/* Main site routes with layout */}
             <Route path="/*" element={
