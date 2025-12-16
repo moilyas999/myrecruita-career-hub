@@ -1,7 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import JSZip from 'https://esm.sh/jszip@3.10.1';
-import pdf from 'https://esm.sh/pdf-parse@1.1.1/lib/pdf-parse.js';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -45,7 +43,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('Downloading file from storage:', filePath);
+    console.log('Processing CV file:', filePath);
     
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -61,118 +59,102 @@ serve(async (req) => {
       throw new Error(`Failed to download file: ${downloadError.message}`);
     }
 
-    console.log('File downloaded, size:', fileData.size);
+    console.log('File downloaded, size:', fileData.size, 'bytes');
 
-    const contentType = fileData.type || '';
-    const lowerFileName = (fileName || filePath || '').toLowerCase();
-    let textContent = '';
-
-    // Handle PDF files
-    if (contentType.includes('pdf') || lowerFileName.endsWith('.pdf')) {
-      console.log('Parsing PDF file...');
-      try {
-        const arrayBuffer = await fileData.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer);
-        
-        const pdfData = await pdf(uint8Array);
-        textContent = pdfData.text || '';
-        console.log('PDF parsed successfully, text length:', textContent.length);
-      } catch (pdfError) {
-        console.error('PDF parse error:', pdfError);
-        // Fallback: try basic text extraction
-        const arrayBuffer = await fileData.arrayBuffer();
-        const decoder = new TextDecoder('utf-8', { fatal: false });
-        const rawText = decoder.decode(new Uint8Array(arrayBuffer));
-        textContent = rawText.replace(/[^\x20-\x7E\s]/g, ' ').replace(/\s+/g, ' ').trim();
-        console.log('PDF fallback extraction, text length:', textContent.length);
-      }
-    }
-    // Handle DOCX files
-    else if (
-      contentType.includes('wordprocessingml') || 
-      contentType.includes('msword') ||
-      lowerFileName.endsWith('.docx') ||
-      lowerFileName.endsWith('.doc')
-    ) {
-      console.log('Parsing DOCX file...');
-      try {
-        const arrayBuffer = await fileData.arrayBuffer();
-        const zip = await JSZip.loadAsync(arrayBuffer);
-        
-        // Get the main document content
-        const documentXml = await zip.file('word/document.xml')?.async('string');
-        
-        if (documentXml) {
-          // Extract text from <w:t> tags (Word text elements)
-          const textMatches = documentXml.match(/<w:t[^>]*>([^<]*)<\/w:t>/g);
-          if (textMatches) {
-            textContent = textMatches
-              .map(match => match.replace(/<[^>]+>/g, ''))
-              .join(' ')
-              .replace(/\s+/g, ' ')
-              .trim();
-          }
-          console.log('DOCX parsed successfully, text length:', textContent.length);
-        } else {
-          console.log('No document.xml found in DOCX');
-        }
-        
-        // If still no content, try other XML files
-        if (textContent.length < 50) {
-          const files = Object.keys(zip.files);
-          console.log('DOCX files:', files.join(', '));
-          
-          for (const file of files) {
-            if (file.endsWith('.xml') && !file.includes('rels')) {
-              const xmlContent = await zip.file(file)?.async('string');
-              if (xmlContent) {
-                const matches = xmlContent.match(/>([^<]+)</g);
-                if (matches) {
-                  const extracted = matches
-                    .map(m => m.slice(1, -1).trim())
-                    .filter(t => t.length > 2 && /[a-zA-Z]/.test(t))
-                    .join(' ');
-                  if (extracted.length > textContent.length) {
-                    textContent = extracted;
-                  }
-                }
-              }
-            }
-          }
-        }
-      } catch (docxError) {
-        console.error('DOCX parse error:', docxError);
-        // Fallback for .doc files (older format, not ZIP-based)
-        const arrayBuffer = await fileData.arrayBuffer();
-        const decoder = new TextDecoder('utf-8', { fatal: false });
-        const rawText = decoder.decode(new Uint8Array(arrayBuffer));
-        textContent = rawText.replace(/[^\x20-\x7E\s]/g, ' ').replace(/\s+/g, ' ').trim();
-        console.log('DOCX fallback extraction, text length:', textContent.length);
-      }
-    } else {
-      // Plain text
-      textContent = await fileData.text();
+    // Determine MIME type from file extension
+    const extension = filePath.toLowerCase().split('.').pop();
+    let mimeType = 'application/octet-stream';
+    if (extension === 'pdf') {
+      mimeType = 'application/pdf';
+    } else if (extension === 'docx') {
+      mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    } else if (extension === 'doc') {
+      mimeType = 'application/msword';
     }
 
-    console.log('Final extracted text length:', textContent.length);
-    console.log('Text preview (first 1000 chars):', textContent.substring(0, 1000));
+    console.log('File MIME type:', mimeType);
 
-    if (textContent.length < 20) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'Could not extract sufficient text from file',
-          extracted: textContent,
-          hint: 'The file may be image-based or password protected'
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // Convert file to base64 for multimodal input
+    const arrayBuffer = await fileData.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+    let base64 = '';
+    const chunkSize = 8192;
+    for (let i = 0; i < uint8Array.length; i += chunkSize) {
+      const chunk = uint8Array.slice(i, i + chunkSize);
+      base64 += String.fromCharCode.apply(null, Array.from(chunk));
     }
+    base64 = btoa(base64);
 
-    // Use Lovable AI to extract structured data
+    console.log('Base64 encoded, length:', base64.length);
+
+    // Get Lovable AI API key
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
+
+    const systemPrompt = `You are an EXPERT CV/Resume parser with 100% accuracy. Your job is to extract ALL information from CV documents.
+
+CRITICAL RULES - YOU MUST FOLLOW:
+1. EVERY field MUST be filled - no empty strings, no "N/A", no "Not provided"
+2. Extract EXACT information when clearly visible
+3. Make INTELLIGENT INFERENCES when information is implicit or partially visible
+4. Look EVERYWHERE in the document - headers, footers, contact sections, signatures
+
+FIELD EXTRACTION GUIDE:
+
+NAME: Look for the largest/boldest text at the top, or after "Name:", or in email addresses (john.smith@ = John Smith)
+
+EMAIL: Find @ symbol. Common patterns: name@domain.com, first.last@company.com
+
+PHONE: Look for numbers with 7+ digits. Formats include:
+- +44 7XXX XXX XXX (UK mobile)
+- 07XXX XXXXXX (UK)
+- +1 (XXX) XXX-XXXX (US)
+- Any number near "Tel:", "Phone:", "Mobile:", "Cell:", "Contact:"
+
+JOB TITLE: Use the MOST RECENT job title. Look for:
+- Current role at top of experience section
+- "Current Position:", "Role:", job titles in bold
+- If unclear, use the most senior/recent sounding title
+
+SECTOR: Infer from company types, job titles, skills. Choose from:
+- Finance & Accounting (banks, accountants, financial services)
+- Technology & IT (software, tech companies, developers)
+- Healthcare & Medical (hospitals, clinics, medical roles)
+- Legal (law firms, solicitors, legal roles)
+- Marketing & Sales (marketing agencies, sales roles)
+- Human Resources (HR roles, recruitment)
+- Engineering (engineers, manufacturing)
+- Construction & Property (builders, real estate)
+- Retail & Hospitality (shops, restaurants, hotels)
+- Education (schools, universities, teaching)
+- Manufacturing (factories, production)
+- Other (if none fit)
+
+LOCATION: Look for city names, addresses, "Based in:", "Location:". Extract the city/region name.
+
+SKILLS: List ALL mentioned skills, technologies, certifications, languages, tools. Comma-separated.
+
+EXPERIENCE SUMMARY: Write 2-3 sentences summarizing their career, seniority level, and key achievements.
+
+REMEMBER: A blank field is FAILURE. Every CV has a name, email, and enough context to fill ALL fields.`;
+
+    const userPrompt = `Analyze this CV document and extract ALL candidate information.
+
+REQUIREMENTS:
+- Name: Full name (REQUIRED - every CV has this)
+- Email: Email address (REQUIRED - look carefully)
+- Phone: Phone number (look for any number format)
+- Job Title: Current/recent title (infer from experience if needed)
+- Sector: Industry (infer from companies/roles)
+- Location: City/region (look for addresses)
+- Skills: All skills mentioned (comma-separated)
+- Experience Summary: 2-3 sentence career overview
+
+DO NOT return empty fields. Extract or infer everything.`;
+
+    console.log('Calling Gemini 2.5 Pro with multimodal document input...');
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -181,46 +163,68 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'google/gemini-2.5-pro',
         messages: [
-          {
-            role: 'system',
-            content: `You are a CV/resume parser. Extract candidate information from the provided CV text. 
-Be thorough and look for:
-- Full name (usually at the top)
-- Email address (look for @ symbol)
-- Phone number (various formats including international)
-- Current or most recent job title
-- Industry/sector they work in
-- Location/city
-- Key skills (technical and soft skills)
-- Brief summary of their work experience
-
-If information is not clearly available, make reasonable inferences from context or leave empty.`
-          },
-          {
-            role: 'user',
-            content: `Extract candidate information from this CV:\n\n${textContent.substring(0, 15000)}`
+          { role: 'system', content: systemPrompt },
+          { 
+            role: 'user', 
+            content: [
+              {
+                type: 'file',
+                file: {
+                  filename: filePath.split('/').pop() || 'document',
+                  file_data: `data:${mimeType};base64,${base64}`
+                }
+              },
+              {
+                type: 'text',
+                text: userPrompt
+              }
+            ]
           }
         ],
         tools: [{
           type: 'function',
           function: {
             name: 'extract_cv_data',
-            description: 'Extract structured candidate data from a CV/resume',
+            description: 'Extract ALL structured data from a CV. Every field is REQUIRED.',
             parameters: {
               type: 'object',
               properties: {
-                name: { type: 'string', description: 'Full name of the candidate' },
-                email: { type: 'string', description: 'Email address' },
-                phone: { type: 'string', description: 'Phone number' },
-                job_title: { type: 'string', description: 'Current or most recent job title' },
-                sector: { type: 'string', description: 'Industry or sector (e.g., Finance, Technology, Healthcare)' },
-                location: { type: 'string', description: 'City or location' },
-                skills: { type: 'string', description: 'Key skills, comma-separated' },
-                experience_summary: { type: 'string', description: 'Brief summary of work experience (2-3 sentences)' }
+                name: { 
+                  type: 'string', 
+                  description: 'Full name of the candidate - REQUIRED' 
+                },
+                email: { 
+                  type: 'string', 
+                  description: 'Email address - REQUIRED' 
+                },
+                phone: { 
+                  type: 'string', 
+                  description: 'Phone number (any format) - REQUIRED' 
+                },
+                job_title: { 
+                  type: 'string', 
+                  description: 'Current or most recent job title - REQUIRED' 
+                },
+                sector: { 
+                  type: 'string', 
+                  description: 'Industry sector - REQUIRED' 
+                },
+                location: { 
+                  type: 'string', 
+                  description: 'City/region/country - REQUIRED' 
+                },
+                skills: { 
+                  type: 'string', 
+                  description: 'All skills comma-separated - REQUIRED' 
+                },
+                experience_summary: { 
+                  type: 'string', 
+                  description: '2-3 sentence career summary - REQUIRED' 
+                }
               },
-              required: ['name', 'email'],
+              required: ['name', 'email', 'phone', 'job_title', 'sector', 'location', 'skills', 'experience_summary'],
               additionalProperties: false
             }
           }
@@ -246,25 +250,31 @@ If information is not clearly available, make reasonable inferences from context
         );
       }
       
-      throw new Error(`AI API error: ${aiResponse.status}`);
+      throw new Error(`AI API error: ${aiResponse.status} - ${errorText}`);
     }
 
     const aiData = await aiResponse.json();
-    console.log('AI response:', JSON.stringify(aiData, null, 2));
+    console.log('AI response received:', JSON.stringify(aiData, null, 2));
 
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall || toolCall.function.name !== 'extract_cv_data') {
+      console.error('Unexpected AI response format:', aiData);
       throw new Error('Unexpected AI response format');
     }
 
     const extractedData: ExtractedCVData = JSON.parse(toolCall.function.arguments);
-    console.log('Extracted data:', extractedData);
+    console.log('Extracted CV data:', JSON.stringify(extractedData, null, 2));
+
+    // Validate extraction quality
+    const fields = ['name', 'email', 'phone', 'job_title', 'sector', 'location', 'skills', 'experience_summary'];
+    const filledFields = fields.filter(f => extractedData[f as keyof ExtractedCVData]?.trim());
+    console.log(`Extraction quality: ${filledFields.length}/${fields.length} fields filled`);
 
     return new Response(
       JSON.stringify({
         success: true,
         data: extractedData,
-        textLength: textContent.length
+        quality: `${filledFields.length}/${fields.length}`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
