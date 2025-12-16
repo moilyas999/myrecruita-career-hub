@@ -24,7 +24,19 @@ serve(async (req) => {
   }
 
   try {
-    const { filePath, fileName } = await req.json();
+    const body = await req.json();
+    const { fileName, fileUrl } = body as { fileName?: string; fileUrl?: string };
+
+    let filePath = (body as any)?.filePath as string | undefined;
+
+    // Backwards compatibility: if the client still sends fileUrl, derive the storage path.
+    if (!filePath && typeof fileUrl === 'string') {
+      const marker = '/cv-uploads/';
+      const idx = fileUrl.indexOf(marker);
+      if (idx !== -1) {
+        filePath = decodeURIComponent(fileUrl.slice(idx + marker.length));
+      }
+    }
     
     if (!filePath) {
       return new Response(
