@@ -24,6 +24,7 @@ interface UserProfile {
   full_name: string | null;
   phone: string | null;
   cv_file_url: string | null;
+  avatar_url: string | null;
 }
 
 interface JobApplication {
@@ -80,6 +81,11 @@ const Dashboard = () => {
       if (profileError) {
         console.error('Error fetching profile:', profileError);
       } else {
+        // Check if profile is incomplete (new LinkedIn user without phone)
+        if (profileData && !profileData.phone) {
+          navigate('/complete-profile');
+          return;
+        }
         setProfile(profileData);
       }
 
