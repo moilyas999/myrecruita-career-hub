@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import JSZip from 'https://esm.sh/jszip@3.10.1';
+import pdf from 'https://esm.sh/pdf-parse@1.1.1/lib/pdf-parse.js';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,7 +20,6 @@ interface ExtractedCVData {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -29,7 +30,6 @@ serve(async (req) => {
 
     let filePath = (body as any)?.filePath as string | undefined;
 
-    // Backwards compatibility: if the client still sends fileUrl, derive the storage path.
     if (!filePath && typeof fileUrl === 'string') {
       const marker = '/cv-uploads/';
       const idx = fileUrl.indexOf(marker);
@@ -47,13 +47,11 @@ serve(async (req) => {
 
     console.log('Downloading file from storage:', filePath);
     
-    // Create Supabase client with service role key to access private storage
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Download file directly from private storage
     const { data: fileData, error: downloadError } = await supabaseAdmin.storage
       .from('cv-uploads')
       .download(filePath);
@@ -66,92 +64,105 @@ serve(async (req) => {
     console.log('File downloaded, size:', fileData.size);
 
     const contentType = fileData.type || '';
+    const lowerFileName = (fileName || filePath || '').toLowerCase();
     let textContent = '';
 
-    // Handle different file types
-    if (contentType.includes('pdf') || fileName?.toLowerCase().endsWith('.pdf')) {
-      // For PDF files, we'll extract raw text using a simple approach
-      // The AI will do its best to parse the content
-      const arrayBuffer = await fileData.arrayBuffer();
-      const bytes = new Uint8Array(arrayBuffer);
-      
-      // Simple PDF text extraction - look for text between stream markers
-      // This is a basic approach; the AI will handle the messy text
-      let rawText = '';
+    // Handle PDF files
+    if (contentType.includes('pdf') || lowerFileName.endsWith('.pdf')) {
+      console.log('Parsing PDF file...');
       try {
+        const arrayBuffer = await fileData.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        
+        const pdfData = await pdf(uint8Array);
+        textContent = pdfData.text || '';
+        console.log('PDF parsed successfully, text length:', textContent.length);
+      } catch (pdfError) {
+        console.error('PDF parse error:', pdfError);
+        // Fallback: try basic text extraction
+        const arrayBuffer = await fileData.arrayBuffer();
         const decoder = new TextDecoder('utf-8', { fatal: false });
-        rawText = decoder.decode(bytes);
-        
-        // Try to extract readable text from PDF structure
-        const textMatches = rawText.match(/\(([^)]+)\)/g);
-        if (textMatches) {
-          textContent = textMatches
-            .map(m => m.slice(1, -1))
-            .filter(t => t.length > 1 && /[a-zA-Z]/.test(t))
-            .join(' ');
-        }
-        
-        // If no good text found, try another approach
-        if (textContent.length < 50) {
-          // Look for BT...ET text blocks
-          const btMatches = rawText.match(/BT[\s\S]*?ET/g);
-          if (btMatches) {
-            textContent = btMatches.join(' ').replace(/[^\x20-\x7E\s]/g, ' ');
-          }
-        }
-        
-        // Final fallback - just filter for readable characters
-        if (textContent.length < 50) {
-          textContent = rawText.replace(/[^\x20-\x7E\s]/g, ' ').replace(/\s+/g, ' ');
-        }
-      } catch (e) {
-        console.log('PDF parsing fallback:', e);
-        textContent = 'PDF content could not be fully extracted. Filename: ' + (fileName || 'unknown');
+        const rawText = decoder.decode(new Uint8Array(arrayBuffer));
+        textContent = rawText.replace(/[^\x20-\x7E\s]/g, ' ').replace(/\s+/g, ' ').trim();
+        console.log('PDF fallback extraction, text length:', textContent.length);
       }
-    } else if (
+    }
+    // Handle DOCX files
+    else if (
       contentType.includes('wordprocessingml') || 
       contentType.includes('msword') ||
-      fileName?.toLowerCase().endsWith('.docx') ||
-      fileName?.toLowerCase().endsWith('.doc')
+      lowerFileName.endsWith('.docx') ||
+      lowerFileName.endsWith('.doc')
     ) {
-      // For DOCX files (which are ZIP archives)
-      const arrayBuffer = await fileData.arrayBuffer();
-      const bytes = new Uint8Array(arrayBuffer);
-      
+      console.log('Parsing DOCX file...');
       try {
-        // DOCX is a ZIP file, look for the document.xml content
-        const decoder = new TextDecoder('utf-8', { fatal: false });
-        const rawContent = decoder.decode(bytes);
+        const arrayBuffer = await fileData.arrayBuffer();
+        const zip = await JSZip.loadAsync(arrayBuffer);
         
-        // Try to extract text from XML tags
-        const textMatches = rawContent.match(/<w:t[^>]*>([^<]+)<\/w:t>/g);
-        if (textMatches) {
-          textContent = textMatches
-            .map(m => m.replace(/<[^>]+>/g, ''))
-            .join(' ');
+        // Get the main document content
+        const documentXml = await zip.file('word/document.xml')?.async('string');
+        
+        if (documentXml) {
+          // Extract text from <w:t> tags (Word text elements)
+          const textMatches = documentXml.match(/<w:t[^>]*>([^<]*)<\/w:t>/g);
+          if (textMatches) {
+            textContent = textMatches
+              .map(match => match.replace(/<[^>]+>/g, ''))
+              .join(' ')
+              .replace(/\s+/g, ' ')
+              .trim();
+          }
+          console.log('DOCX parsed successfully, text length:', textContent.length);
+        } else {
+          console.log('No document.xml found in DOCX');
         }
         
-        // Fallback: extract any readable text
+        // If still no content, try other XML files
         if (textContent.length < 50) {
-          textContent = rawContent.replace(/<[^>]+>/g, ' ').replace(/[^\x20-\x7E\s]/g, ' ').replace(/\s+/g, ' ');
+          const files = Object.keys(zip.files);
+          console.log('DOCX files:', files.join(', '));
+          
+          for (const file of files) {
+            if (file.endsWith('.xml') && !file.includes('rels')) {
+              const xmlContent = await zip.file(file)?.async('string');
+              if (xmlContent) {
+                const matches = xmlContent.match(/>([^<]+)</g);
+                if (matches) {
+                  const extracted = matches
+                    .map(m => m.slice(1, -1).trim())
+                    .filter(t => t.length > 2 && /[a-zA-Z]/.test(t))
+                    .join(' ');
+                  if (extracted.length > textContent.length) {
+                    textContent = extracted;
+                  }
+                }
+              }
+            }
+          }
         }
-      } catch (e) {
-        console.log('DOCX parsing fallback:', e);
-        textContent = 'DOCX content could not be fully extracted. Filename: ' + (fileName || 'unknown');
+      } catch (docxError) {
+        console.error('DOCX parse error:', docxError);
+        // Fallback for .doc files (older format, not ZIP-based)
+        const arrayBuffer = await fileData.arrayBuffer();
+        const decoder = new TextDecoder('utf-8', { fatal: false });
+        const rawText = decoder.decode(new Uint8Array(arrayBuffer));
+        textContent = rawText.replace(/[^\x20-\x7E\s]/g, ' ').replace(/\s+/g, ' ').trim();
+        console.log('DOCX fallback extraction, text length:', textContent.length);
       }
     } else {
-      // Plain text or other
+      // Plain text
       textContent = await fileData.text();
     }
 
-    console.log('Extracted text length:', textContent.length);
-    console.log('Text preview:', textContent.substring(0, 500));
+    console.log('Final extracted text length:', textContent.length);
+    console.log('Text preview (first 1000 chars):', textContent.substring(0, 1000));
 
-    if (textContent.length < 10) {
+    if (textContent.length < 20) {
       return new Response(
         JSON.stringify({ 
-          error: 'Could not extract text from file',
-          extracted: textContent 
+          error: 'Could not extract sufficient text from file',
+          extracted: textContent,
+          hint: 'The file may be image-based or password protected'
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -178,15 +189,14 @@ serve(async (req) => {
 Be thorough and look for:
 - Full name (usually at the top)
 - Email address (look for @ symbol)
-- Phone number (various formats)
+- Phone number (various formats including international)
 - Current or most recent job title
 - Industry/sector they work in
 - Location/city
 - Key skills (technical and soft skills)
 - Brief summary of their work experience
 
-If information is not clearly available, make reasonable inferences from context or leave empty.
-The text may be messy due to PDF extraction - do your best to identify the relevant information.`
+If information is not clearly available, make reasonable inferences from context or leave empty.`
           },
           {
             role: 'user',
@@ -242,7 +252,6 @@ The text may be messy due to PDF extraction - do your best to identify the relev
     const aiData = await aiResponse.json();
     console.log('AI response:', JSON.stringify(aiData, null, 2));
 
-    // Extract the tool call result
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall || toolCall.function.name !== 'extract_cv_data') {
       throw new Error('Unexpected AI response format');
