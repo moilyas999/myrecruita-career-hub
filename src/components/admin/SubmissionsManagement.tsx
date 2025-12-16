@@ -4,9 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Mail, Phone, Calendar, FileText, User, Briefcase, Download, ExternalLink, RefreshCw } from 'lucide-react';
+import { Mail, Phone, Calendar, FileText, User, Briefcase, Download, ExternalLink, RefreshCw, Plus, Upload, List, MapPin, Building } from 'lucide-react';
 import { toast } from 'sonner';
-
+import CVManualEntry from './CVManualEntry';
+import CVBulkImport from './CVBulkImport';
 interface JobApplication {
   id: string;
   job_id: string;
@@ -30,6 +31,11 @@ interface CVSubmission {
   cv_file_url: string;
   message: string;
   created_at: string;
+  source?: string;
+  job_title?: string;
+  sector?: string;
+  location?: string;
+  admin_notes?: string;
 }
 
 interface CareerPartnerRequest {
@@ -329,77 +335,133 @@ export default function SubmissionsManagement() {
         </TabsContent>
 
         <TabsContent value="cv-submissions" className="space-y-4">
-          {cvSubmissions.length === 0 ? (
-            <Card>
-              <CardContent className="py-8 text-center text-muted-foreground">
-                No CV submissions yet.
-              </CardContent>
-            </Card>
-          ) : (
-            cvSubmissions.map((submission) => (
-              <Card key={submission.id}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <FileText className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-                    <span className="break-words">{submission.name}</span>
-                  </CardTitle>
-                  <CardDescription>CV Submission</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="flex items-start gap-2 text-sm">
-                      <Mail className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs text-muted-foreground mb-1">Email:</p>
-                        <a href={`mailto:${submission.email}`} className="text-primary hover:underline break-all">
-                          {submission.email}
-                        </a>
+          <Tabs defaultValue="all-cvs" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="all-cvs" className="flex items-center gap-2">
+                <List className="w-4 h-4" />
+                <span className="hidden sm:inline">All CVs</span>
+                <span className="sm:hidden">All</span>
+              </TabsTrigger>
+              <TabsTrigger value="add-single" className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Add Single</span>
+                <span className="sm:hidden">Add</span>
+              </TabsTrigger>
+              <TabsTrigger value="bulk-import" className="flex items-center gap-2">
+                <Upload className="w-4 h-4" />
+                <span className="hidden sm:inline">Bulk Import</span>
+                <span className="sm:hidden">Bulk</span>
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="all-cvs" className="space-y-4">
+              {cvSubmissions.length === 0 ? (
+                <Card>
+                  <CardContent className="py-8 text-center text-muted-foreground">
+                    No CV submissions yet.
+                  </CardContent>
+                </Card>
+              ) : (
+                cvSubmissions.map((submission) => (
+                  <Card key={submission.id}>
+                    <CardHeader className="pb-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                          <FileText className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                          <span className="break-words">{submission.name}</span>
+                        </CardTitle>
+                        <div className="flex gap-2 flex-wrap">
+                          {submission.source && (
+                            <Badge variant={submission.source === 'website' ? 'default' : submission.source === 'admin_manual' ? 'secondary' : 'outline'}>
+                              {submission.source === 'website' ? 'Website' : submission.source === 'admin_manual' ? 'Manual' : 'Bulk'}
+                            </Badge>
+                          )}
+                          {submission.sector && (
+                            <Badge variant="outline">{submission.sector}</Badge>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-start gap-2 text-sm">
-                      <Phone className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs text-muted-foreground mb-1">Phone:</p>
-                        <a href={`tel:${submission.phone}`} className="text-primary hover:underline break-all">
-                          {submission.phone}
-                        </a>
+                      <CardDescription className="flex flex-wrap gap-2">
+                        {submission.job_title && <span>{submission.job_title}</span>}
+                        {submission.location && (
+                          <span className="flex items-center gap-1 text-xs">
+                            <MapPin className="w-3 h-3" />
+                            {submission.location}
+                          </span>
+                        )}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="flex items-start gap-2 text-sm">
+                          <Mail className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs text-muted-foreground mb-1">Email:</p>
+                            <a href={`mailto:${submission.email}`} className="text-primary hover:underline break-all">
+                              {submission.email}
+                            </a>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2 text-sm">
+                          <Phone className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs text-muted-foreground mb-1">Phone:</p>
+                            <a href={`tel:${submission.phone}`} className="text-primary hover:underline break-all">
+                              {submission.phone || '-'}
+                            </a>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2 text-sm">
-                    <Calendar className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs text-muted-foreground mb-1">Submitted:</p>
-                      <p>{new Date(submission.created_at).toLocaleString()}</p>
-                    </div>
-                  </div>
-                  {submission.cv_file_url && (
-                    <div className="flex items-start gap-2 text-sm">
-                      <FileText className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs text-muted-foreground mb-1">CV File:</p>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDownloadCV(submission.cv_file_url, submission.name)}
-                          className="h-8"
-                        >
-                          <Download className="w-3 h-3 mr-1" />
-                          Download CV
-                        </Button>
+                      <div className="flex items-start gap-2 text-sm">
+                        <Calendar className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs text-muted-foreground mb-1">Submitted:</p>
+                          <p>{new Date(submission.created_at).toLocaleString()}</p>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  {submission.message && (
-                    <div className="pt-2 border-t">
-                      <p className="text-sm text-muted-foreground mb-2">Message:</p>
-                      <p className="text-sm break-words bg-muted/50 p-3 rounded-md">{submission.message}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))
-          )}
+                      {submission.cv_file_url && (
+                        <div className="flex items-start gap-2 text-sm">
+                          <FileText className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs text-muted-foreground mb-1">CV File:</p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownloadCV(submission.cv_file_url, submission.name)}
+                              className="h-8"
+                            >
+                              <Download className="w-3 h-3 mr-1" />
+                              Download CV
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                      {submission.message && (
+                        <div className="pt-2 border-t">
+                          <p className="text-sm text-muted-foreground mb-2">Message:</p>
+                          <p className="text-sm break-words bg-muted/50 p-3 rounded-md">{submission.message}</p>
+                        </div>
+                      )}
+                      {submission.admin_notes && (
+                        <div className="pt-2 border-t border-dashed">
+                          <p className="text-sm text-muted-foreground mb-2">Admin Notes:</p>
+                          <p className="text-sm break-words bg-yellow-50 dark:bg-yellow-950/20 p-3 rounded-md border border-dashed border-yellow-200 dark:border-yellow-800">{submission.admin_notes}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </TabsContent>
+
+            <TabsContent value="add-single">
+              <CVManualEntry onSuccess={fetchAllSubmissions} />
+            </TabsContent>
+
+            <TabsContent value="bulk-import">
+              <CVBulkImport onSuccess={fetchAllSubmissions} />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         <TabsContent value="career-requests" className="space-y-4">
