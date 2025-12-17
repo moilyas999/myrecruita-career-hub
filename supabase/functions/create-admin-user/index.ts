@@ -63,38 +63,66 @@ Deno.serve(async (req) => {
       )
     }
 
-    console.log('Creating new admin user:', email, 'with role:', role)
+    console.log('Creating/promoting admin user:', email, 'with role:', role)
 
-    // Create the new user with admin API
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true
-    })
+    let userId: string;
 
-    if (userError) {
-      console.error('User creation error:', userError)
-      return new Response(
-        JSON.stringify({ error: userError.message }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+    // First check if user already exists
+    const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers()
+    const existingUser = existingUsers?.users?.find(u => u.email === email)
+
+    if (existingUser) {
+      console.log('User already exists:', existingUser.id)
+      userId = existingUser.id
+
+      // Check if already an admin
+      const { data: existingAdmin } = await supabaseAdmin
+        .from('admin_profiles')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle()
+
+      if (existingAdmin) {
+        return new Response(
+          JSON.stringify({ error: 'This user is already a staff member' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+    } else {
+      // Create new user
+      const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true
+      })
+
+      if (userError) {
+        console.error('User creation error:', userError)
+        return new Response(
+          JSON.stringify({ error: userError.message }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      console.log('User created:', userData.user.id)
+      userId = userData.user.id
     }
-
-    console.log('User created:', userData.user.id)
 
     // Insert admin profile with service role (bypasses RLS)
     const { error: profileError } = await supabaseAdmin
       .from('admin_profiles')
       .insert({
-        user_id: userData.user.id,
+        user_id: userId,
         email,
         role
       })
 
     if (profileError) {
       console.error('Profile creation error:', profileError)
-      // Try to clean up the created user
-      await supabaseAdmin.auth.admin.deleteUser(userData.user.id)
+      // Only delete user if we just created them
+      if (!existingUser) {
+        await supabaseAdmin.auth.admin.deleteUser(userId)
+      }
       return new Response(
         JSON.stringify({ error: 'Failed to create admin profile: ' + profileError.message }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
