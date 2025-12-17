@@ -5,6 +5,18 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Decode JWT to extract user ID (sub claim)
+function decodeJwt(token: string): { sub?: string } | null {
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return null
+    const payload = JSON.parse(atob(parts[1]))
+    return payload
+  } catch {
+    return null
+  }
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -28,7 +40,7 @@ Deno.serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     )
 
-    // Verify the caller is a full admin
+    // Verify the caller is authenticated
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
       return new Response(
@@ -37,30 +49,30 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Create a client with the user's auth token to validate it
-    const supabaseAuth = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      {
-        global: {
-          headers: { Authorization: authHeader }
-        },
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
-
-    const { data: { user: callerUser }, error: authError } = await supabaseAuth.auth.getUser()
+    const token = authHeader.replace('Bearer ', '')
+    const decoded = decodeJwt(token)
     
-    if (authError || !callerUser) {
-      console.error('Auth error:', authError)
+    if (!decoded?.sub) {
+      console.error('Failed to decode JWT')
       return new Response(
         JSON.stringify({ error: 'Invalid authorization token' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
+
+    // Verify the user exists using admin API
+    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(decoded.sub)
+    
+    if (userError || !userData?.user) {
+      console.error('User verification error:', userError)
+      return new Response(
+        JSON.stringify({ error: 'Invalid authorization token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const callerUser = userData.user
+    console.log('Verified caller:', callerUser.email)
 
     // Check if caller is a full admin
     const { data: callerAdmin, error: callerError } = await supabaseAdmin
