@@ -573,7 +573,9 @@ export type Database = {
     Functions: {
       generate_job_reference: { Args: never; Returns: string }
       generate_talent_reference: { Args: never; Returns: string }
+      get_admin_role: { Args: { user_id: string }; Returns: string }
       is_admin: { Args: { user_id: string }; Returns: boolean }
+      is_full_admin: { Args: { user_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

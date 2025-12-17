@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { UserPlus, Eye, EyeOff } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { UserPlus, Eye, EyeOff, Shield, Upload } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -25,6 +26,7 @@ export default function AdminManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [newAdminPassword, setNewAdminPassword] = useState('');
+  const [newAdminRole, setNewAdminRole] = useState('admin');
   const [showPassword, setShowPassword] = useState(false);
   const [creating, setCreating] = useState(false);
   const { createAdminUser } = useAuth();
@@ -58,19 +60,32 @@ export default function AdminManagement() {
     e.preventDefault();
     setCreating(true);
 
-    const { error } = await createAdminUser(newAdminEmail.toLowerCase(), newAdminPassword);
+    const { error } = await createAdminUser(newAdminEmail.toLowerCase(), newAdminPassword, newAdminRole);
     
     if (error) {
       toast.error(error);
     } else {
-      toast.success('Admin account created successfully!');
+      toast.success(`${newAdminRole === 'admin' ? 'Admin' : 'CV Uploader'} account created successfully!`);
       setNewAdminEmail('');
       setNewAdminPassword('');
+      setNewAdminRole('admin');
       setIsDialogOpen(false);
-      fetchAdmins(); // Refresh the list
+      fetchAdmins();
     }
     
     setCreating(false);
+  };
+
+  const getRoleBadgeVariant = (role: string) => {
+    return role === 'admin' ? 'default' : 'secondary';
+  };
+
+  const getRoleIcon = (role: string) => {
+    return role === 'admin' ? <Shield className="w-3 h-3" /> : <Upload className="w-3 h-3" />;
+  };
+
+  const getRoleLabel = (role: string) => {
+    return role === 'admin' ? 'Full Admin' : 'CV Uploader';
   };
 
   if (loading) {
@@ -85,25 +100,52 @@ export default function AdminManagement() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-primary">Admin Management</h2>
-          <p className="text-muted-foreground">Manage admin accounts and permissions</p>
+          <h2 className="text-2xl font-bold text-primary">Staff Management</h2>
+          <p className="text-muted-foreground">Manage staff accounts and permissions</p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <UserPlus className="w-4 h-4 mr-2" />
-              Add Admin
+              Add Staff
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create New Admin</DialogTitle>
+              <DialogTitle>Create New Staff Account</DialogTitle>
               <DialogDescription>
-                Create a new admin account that will have full access to the admin panel.
+                Create a new staff account. Choose the role to control their access level.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleCreateAdmin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="admin-role">Role</Label>
+                <Select value={newAdminRole} onValueChange={setNewAdminRole}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">
+                      <div className="flex items-center gap-2">
+                        <Shield className="w-4 h-4" />
+                        <span>Full Admin</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="cv_uploader">
+                      <div className="flex items-center gap-2">
+                        <Upload className="w-4 h-4" />
+                        <span>CV Uploader (Limited)</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                {newAdminRole === 'cv_uploader' && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    CV Uploaders can only see their own CV submissions from the last 3 days. They cannot access other data or export emails.
+                  </p>
+                )}
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="admin-email">Email</Label>
                 <Input
@@ -150,7 +192,7 @@ export default function AdminManagement() {
                   Cancel
                 </Button>
                 <Button type="submit" disabled={creating}>
-                  {creating ? 'Creating...' : 'Create Admin'}
+                  {creating ? 'Creating...' : 'Create Account'}
                 </Button>
               </div>
             </form>
@@ -160,15 +202,15 @@ export default function AdminManagement() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Admin Accounts</CardTitle>
+          <CardTitle>Staff Accounts</CardTitle>
           <CardDescription>
-            All admin accounts with access to this panel
+            All staff accounts with access to this panel
           </CardDescription>
         </CardHeader>
         <CardContent>
           {adminProfiles.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
-              No admin accounts found.
+              No staff accounts found.
             </p>
           ) : (
             <Table>
@@ -184,8 +226,9 @@ export default function AdminManagement() {
                   <TableRow key={admin.id}>
                     <TableCell className="font-medium">{admin.email}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary">
-                        {admin.role}
+                      <Badge variant={getRoleBadgeVariant(admin.role)} className="flex items-center gap-1 w-fit">
+                        {getRoleIcon(admin.role)}
+                        {getRoleLabel(admin.role)}
                       </Badge>
                     </TableCell>
                     <TableCell>
