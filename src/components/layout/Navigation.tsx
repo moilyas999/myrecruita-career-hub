@@ -184,7 +184,7 @@ const Navigation = () => {
                 className={`rounded-md ${
                   isScrolled || !isHomePage
                     ? ""
-                    : "border-white/50 text-white hover:bg-white/10"
+                    : "border-white bg-white text-foreground hover:bg-white/90"
                 }`}
               >
                 <Link to="/auth">
