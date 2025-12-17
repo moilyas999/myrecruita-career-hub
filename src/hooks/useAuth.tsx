@@ -130,29 +130,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const createAdminUser = async (email: string, password: string, role: string = 'admin') => {
     try {
-      // First create the user account
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-      
-      if (signUpError) {
-        return { error: signUpError.message };
-      }
-      
-      if (data.user) {
-        // Add the user to admin_profiles table
-        const { error: adminError } = await supabase
-          .from('admin_profiles')
-          .insert({
-            user_id: data.user.id,
-            email: email,
-            role: role
-          });
-        
-        if (adminError) {
-          return { error: 'Failed to create admin profile: ' + adminError.message };
+      const response = await fetch(
+        'https://yoegksjmdtubnkgdtttj.supabase.co/functions/v1/create-admin-user',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token}`
+          },
+          body: JSON.stringify({ email, password, role })
         }
+      );
+
+      const data = await response.json();
+      
+      if (!response.ok || data.error) {
+        return { error: data.error || 'Failed to create admin user' };
       }
       
       return {};
