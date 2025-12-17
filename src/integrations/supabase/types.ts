@@ -260,6 +260,8 @@ export type Database = {
           ai_profile: Json | null
           created_at: string
           cv_file_url: string | null
+          cv_score: number | null
+          cv_score_breakdown: Json | null
           education_level: string | null
           email: string
           experience_summary: string | null
@@ -269,6 +271,7 @@ export type Database = {
           message: string | null
           name: string
           phone: string
+          scored_at: string | null
           sector: string | null
           seniority_level: string | null
           skills: string | null
@@ -282,6 +285,8 @@ export type Database = {
           ai_profile?: Json | null
           created_at?: string
           cv_file_url?: string | null
+          cv_score?: number | null
+          cv_score_breakdown?: Json | null
           education_level?: string | null
           email: string
           experience_summary?: string | null
@@ -291,6 +296,7 @@ export type Database = {
           message?: string | null
           name: string
           phone: string
+          scored_at?: string | null
           sector?: string | null
           seniority_level?: string | null
           skills?: string | null
@@ -304,6 +310,8 @@ export type Database = {
           ai_profile?: Json | null
           created_at?: string
           cv_file_url?: string | null
+          cv_score?: number | null
+          cv_score_breakdown?: Json | null
           education_level?: string | null
           email?: string
           experience_summary?: string | null
@@ -313,6 +321,7 @@ export type Database = {
           message?: string | null
           name?: string
           phone?: string
+          scored_at?: string | null
           sector?: string | null
           seniority_level?: string | null
           skills?: string | null

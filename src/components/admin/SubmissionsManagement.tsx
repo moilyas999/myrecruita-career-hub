@@ -9,6 +9,7 @@ import { Mail, Phone, Calendar, FileText, User, Briefcase, Download, ExternalLin
 import { toast } from 'sonner';
 import CVManualEntry from './CVManualEntry';
 import CVBulkImport from './CVBulkImport';
+import CVScoreBadge, { CVScoreBreakdown } from './CVScoreBadge';
 
 interface JobApplication {
   id: string;
@@ -38,6 +39,9 @@ interface CVSubmission {
   sector?: string;
   location?: string;
   admin_notes?: string;
+  seniority_level?: string;
+  cv_score?: number | null;
+  cv_score_breakdown?: any;
 }
 
 interface CareerPartnerRequest {
@@ -376,7 +380,14 @@ export default function SubmissionsManagement() {
                           <User className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                           <span className="break-words">{submission.name}</span>
                         </CardTitle>
-                        <div className="flex items-center gap-2 self-start sm:self-auto">
+                        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                          {submission.cv_score !== null && submission.cv_score !== undefined && (
+                            <CVScoreBadge 
+                              score={submission.cv_score} 
+                              breakdown={submission.cv_score_breakdown}
+                              size="sm"
+                            />
+                          )}
                           {submission.source && (
                             <Badge variant="outline" className="text-xs">
                               {submission.source}
@@ -639,6 +650,13 @@ export default function SubmissionsManagement() {
                           <span className="break-words">{submission.name}</span>
                         </CardTitle>
                         <div className="flex gap-2 flex-wrap">
+                          {submission.cv_score !== null && submission.cv_score !== undefined && (
+                            <CVScoreBadge 
+                              score={submission.cv_score} 
+                              breakdown={submission.cv_score_breakdown}
+                              size="sm"
+                            />
+                          )}
                           {submission.source && (
                             <Badge variant={submission.source === 'website' ? 'default' : submission.source === 'admin_manual' ? 'secondary' : 'outline'}>
                               {submission.source === 'website' ? 'Website' : submission.source === 'admin_manual' ? 'Manual' : 'Bulk'}

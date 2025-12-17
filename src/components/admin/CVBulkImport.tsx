@@ -10,6 +10,7 @@ import { Upload, FileText, Loader2, Check, X, AlertCircle, Brain, Trash2, Chevro
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import CVScoreBadge, { CVScoreBreakdown, CVScoreBreakdownCard } from './CVScoreBadge';
 
 interface AIProfile {
   hard_skills: string[];
@@ -49,6 +50,8 @@ interface ParsedCV {
     education_level: string;
     seniority_level: string;
     ai_profile: AIProfile | null;
+    cv_score: number | null;
+    cv_score_breakdown: CVScoreBreakdown | null;
   };
 }
 
@@ -186,7 +189,9 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
             years_experience: null,
             education_level: '',
             seniority_level: '',
-            ai_profile: null
+            ai_profile: null,
+            cv_score: null,
+            cv_score_breakdown: null
           }
         });
       } catch (error: any) {
@@ -259,7 +264,9 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
                   years_experience: extractedData.years_experience || null,
                   education_level: extractedData.education_level || '',
                   seniority_level: extractedData.seniority_level || '',
-                  ai_profile: extractedData.ai_profile || null
+                  ai_profile: extractedData.ai_profile || null,
+                  cv_score: extractedData.cv_score || null,
+                  cv_score_breakdown: extractedData.cv_score_breakdown || null
                 }
               } 
             : f
@@ -331,6 +338,9 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
         education_level: file.data.education_level || null,
         seniority_level: file.data.seniority_level || null,
         ai_profile: file.data.ai_profile || null,
+        cv_score: file.data.cv_score || null,
+        cv_score_breakdown: file.data.cv_score_breakdown || null,
+        scored_at: file.data.cv_score ? new Date().toISOString() : null,
         admin_notes: null,
         source: 'admin_bulk_parsed',
         added_by: user?.id || null,
@@ -527,6 +537,13 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
                             {file.data.seniority_level}
                           </Badge>
                         )}
+                        {file.status === 'parsed' && (
+                          <CVScoreBadge 
+                            score={file.data.cv_score} 
+                            breakdown={file.data.cv_score_breakdown}
+                            size="sm"
+                          />
+                        )}
                       </div>
                       <Button
                         variant="ghost"
@@ -659,6 +676,14 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
                           </Button>
                         </CollapsibleTrigger>
                         <CollapsibleContent className="mt-4 space-y-4">
+                          {/* CV Score Breakdown */}
+                          {file.data.cv_score !== null && file.data.cv_score_breakdown && (
+                            <CVScoreBreakdownCard 
+                              score={file.data.cv_score} 
+                              breakdown={file.data.cv_score_breakdown}
+                            />
+                          )}
+
                           {/* Summary for Matching */}
                           {file.data.ai_profile.summary_for_matching && (
                             <div className="p-3 bg-muted rounded-lg">

@@ -25,6 +25,16 @@ interface AIProfile {
   summary_for_matching: string;
 }
 
+interface CVScoreBreakdown {
+  completeness: number;
+  skills_relevance: number;
+  experience_depth: number;
+  achievements: number;
+  education: number;
+  presentation: number;
+  summary: string;
+}
+
 interface ExtractedCVData {
   name: string;
   email: string;
@@ -38,6 +48,8 @@ interface ExtractedCVData {
   education_level: string;
   seniority_level: string;
   ai_profile: AIProfile;
+  cv_score: number;
+  cv_score_breakdown: CVScoreBreakdown;
 }
 
 // Extract text content from DOCX files
@@ -121,7 +133,10 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    const systemPrompt = `You are an EXPERT CV/Resume parser with 100% accuracy. Your job is to extract ALL information from CV documents and create a comprehensive candidate profile for AI-powered job matching.
+    const systemPrompt = `You are an EXPERT CV/Resume parser and evaluator with 100% accuracy. Your job is to:
+1. Extract ALL information from CV documents
+2. Create a comprehensive candidate profile for AI-powered job matching
+3. SCORE the CV quality on a 0-100 scale with detailed breakdown
 
 CRITICAL RULES - YOU MUST FOLLOW:
 1. EVERY field MUST be filled - no empty strings, no "N/A", no "Not provided"
@@ -129,6 +144,7 @@ CRITICAL RULES - YOU MUST FOLLOW:
 3. Make INTELLIGENT INFERENCES when information is implicit or partially visible
 4. Look EVERYWHERE in the document - headers, footers, contact sections, signatures
 5. Create a RICH AI PROFILE for accurate job matching
+6. SCORE the CV objectively based on quality criteria
 
 FIELD EXTRACTION GUIDE:
 
@@ -177,9 +193,51 @@ AI PROFILE EXTRACTION (for job matching):
 - ideal_roles: 3-5 job titles they'd be perfect for based on experience (array)
 - summary_for_matching: A 50-100 word summary optimized for keyword matching with job descriptions
 
+CV SCORING GUIDE (0-100 scale):
+Score the CV quality across these categories:
+
+1. COMPLETENESS (20% weight): Are all key sections present?
+   - Contact info, summary/objective, experience, education, skills
+   - 100 = All sections complete and detailed
+   - 50 = Missing some sections or sparse content
+   - 0 = Severely incomplete
+
+2. SKILLS_RELEVANCE (20% weight): Quality and specificity of skills
+   - 100 = Specific, relevant, up-to-date skills with proficiency levels
+   - 50 = Generic skills, no specificity
+   - 0 = Missing or irrelevant skills
+
+3. EXPERIENCE_DEPTH (25% weight): Quality of work experience descriptions
+   - 100 = Detailed responsibilities, achievements, progression shown
+   - 50 = Basic job descriptions without impact
+   - 0 = Missing dates, vague descriptions
+
+4. ACHIEVEMENTS (15% weight): Quantified accomplishments with metrics
+   - 100 = Multiple quantified achievements (%, $, numbers)
+   - 50 = Some achievements but not quantified
+   - 0 = No achievements mentioned
+
+5. EDUCATION (10% weight): Relevant qualifications and certifications
+   - 100 = Relevant degree + professional certifications
+   - 50 = Basic education without certifications
+   - 0 = No education information
+
+6. PRESENTATION (10% weight): Structure, clarity, professionalism
+   - 100 = Clean format, consistent, well-organized, no errors
+   - 50 = Acceptable but room for improvement
+   - 0 = Poor formatting, errors, hard to read
+
+Calculate OVERALL SCORE as weighted average:
+cv_score = (completeness*0.2 + skills_relevance*0.2 + experience_depth*0.25 + achievements*0.15 + education*0.1 + presentation*0.1)
+
+Also provide a 1-2 sentence summary explaining the score.
+
 REMEMBER: A blank field is FAILURE. Every CV has enough context to fill ALL fields with intelligent extraction and inference.`;
 
-    const userPrompt = `Analyze this CV document and extract ALL candidate information plus create a comprehensive AI profile for job matching.
+    const userPrompt = `Analyze this CV document and:
+1. Extract ALL candidate information
+2. Create a comprehensive AI profile for job matching
+3. SCORE the CV quality (0-100) with detailed breakdown
 
 REQUIREMENTS:
 - Name: Full name (REQUIRED - every CV has this)
@@ -204,6 +262,11 @@ AI PROFILE (for job matching):
 - Assess career progression
 - Suggest ideal job titles
 - Write a matching-optimized summary
+
+CV QUALITY SCORE:
+- Score each category (0-100): completeness, skills_relevance, experience_depth, achievements, education, presentation
+- Calculate overall weighted score
+- Provide a brief summary explaining the score
 
 DO NOT return empty fields. Extract or infer everything.`;
 
@@ -258,7 +321,7 @@ ${textContent}`
       throw new Error(`Unsupported file type: ${extension}`);
     }
 
-    console.log('Calling Gemini 2.5 Pro for enhanced CV extraction...');
+    console.log('Calling Gemini 2.5 Pro for enhanced CV extraction and scoring...');
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -275,8 +338,8 @@ ${textContent}`
         tools: [{
           type: 'function',
           function: {
-            name: 'extract_cv_data',
-            description: 'Extract ALL structured data from a CV including a comprehensive AI profile for job matching. Every field is REQUIRED.',
+            name: 'extract_and_score_cv',
+            description: 'Extract ALL structured data from a CV including a comprehensive AI profile for job matching AND score the CV quality. Every field is REQUIRED.',
             parameters: {
               type: 'object',
               properties: {
@@ -384,14 +447,53 @@ ${textContent}`
                     }
                   },
                   required: ['hard_skills', 'soft_skills', 'certifications', 'industries', 'experience_years', 'seniority', 'education', 'key_achievements', 'career_progression', 'ideal_roles', 'summary_for_matching']
+                },
+                cv_score: {
+                  type: 'number',
+                  description: 'Overall CV quality score (0-100) calculated as weighted average of all category scores'
+                },
+                cv_score_breakdown: {
+                  type: 'object',
+                  description: 'Detailed breakdown of CV quality scores by category',
+                  properties: {
+                    completeness: {
+                      type: 'number',
+                      description: 'Score for completeness of all sections (0-100)'
+                    },
+                    skills_relevance: {
+                      type: 'number',
+                      description: 'Score for quality and relevance of skills (0-100)'
+                    },
+                    experience_depth: {
+                      type: 'number',
+                      description: 'Score for depth and detail of experience (0-100)'
+                    },
+                    achievements: {
+                      type: 'number',
+                      description: 'Score for quantified achievements (0-100)'
+                    },
+                    education: {
+                      type: 'number',
+                      description: 'Score for education and qualifications (0-100)'
+                    },
+                    presentation: {
+                      type: 'number',
+                      description: 'Score for structure and clarity (0-100)'
+                    },
+                    summary: {
+                      type: 'string',
+                      description: '1-2 sentence summary explaining the overall score'
+                    }
+                  },
+                  required: ['completeness', 'skills_relevance', 'experience_depth', 'achievements', 'education', 'presentation', 'summary']
                 }
               },
-              required: ['name', 'email', 'phone', 'job_title', 'sector', 'location', 'skills', 'experience_summary', 'years_experience', 'education_level', 'seniority_level', 'ai_profile'],
+              required: ['name', 'email', 'phone', 'job_title', 'sector', 'location', 'skills', 'experience_summary', 'years_experience', 'education_level', 'seniority_level', 'ai_profile', 'cv_score', 'cv_score_breakdown'],
               additionalProperties: false
             }
           }
         }],
-        tool_choice: { type: 'function', function: { name: 'extract_cv_data' } }
+        tool_choice: { type: 'function', function: { name: 'extract_and_score_cv' } }
       }),
     });
 
@@ -419,13 +521,13 @@ ${textContent}`
     console.log('AI response received:', JSON.stringify(aiData, null, 2));
 
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall || toolCall.function.name !== 'extract_cv_data') {
+    if (!toolCall || toolCall.function.name !== 'extract_and_score_cv') {
       console.error('Unexpected AI response format:', aiData);
       throw new Error('Unexpected AI response format');
     }
 
     const extractedData: ExtractedCVData = JSON.parse(toolCall.function.arguments);
-    console.log('Extracted CV data:', JSON.stringify(extractedData, null, 2));
+    console.log('Extracted CV data with scoring:', JSON.stringify(extractedData, null, 2));
 
     // Validate extraction quality
     const basicFields = ['name', 'email', 'phone', 'job_title', 'sector', 'location', 'skills', 'experience_summary'];
@@ -434,6 +536,7 @@ ${textContent}`
     const profileFields = extractedData.ai_profile ? Object.keys(extractedData.ai_profile).length : 0;
     
     console.log(`Extraction quality: ${filledBasicFields.length}/${basicFields.length} basic fields, ${profileFields} profile fields`);
+    console.log(`CV Score: ${extractedData.cv_score}/100`);
 
     return new Response(
       JSON.stringify({
@@ -442,7 +545,8 @@ ${textContent}`
         quality: {
           basic: `${filledBasicFields.length}/${basicFields.length}`,
           profile_fields: profileFields,
-          has_ai_profile: !!extractedData.ai_profile
+          has_ai_profile: !!extractedData.ai_profile,
+          has_scoring: !!extractedData.cv_score
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -451,7 +555,10 @@ ${textContent}`
   } catch (error) {
     console.error('Error in parse-cv function:', error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : 'Failed to parse CV',
+        details: error instanceof Error ? error.stack : undefined
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
