@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
     console.log('Admin profile created successfully')
 
     return new Response(
-      JSON.stringify({ success: true, user_id: userData.user.id }),
+      JSON.stringify({ success: true, user_id: userId }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
