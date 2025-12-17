@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Mail, Phone, Calendar, FileText, User, Briefcase, Download, ExternalLink, RefreshCw, Plus, Upload, List, MapPin, Building } from 'lucide-react';
+import { Mail, Phone, Calendar, FileText, User, Briefcase, Download, ExternalLink, RefreshCw, Plus, Upload, List, MapPin, Building, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import CVManualEntry from './CVManualEntry';
 import CVBulkImport from './CVBulkImport';
@@ -213,6 +213,27 @@ export default function SubmissionsManagement() {
     }
   };
 
+  const handleDeleteCV = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete the CV submission for "${name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('cv_submissions')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setCvSubmissions(prev => prev.filter(cv => cv.id !== id));
+      toast.success('CV submission deleted successfully');
+    } catch (error: any) {
+      console.error('Delete error:', error);
+      toast.error('Failed to delete CV submission: ' + error.message);
+    }
+  };
+
   const exportAllEmails = () => {
     const allEmails: Array<{
       email: string;
@@ -381,13 +402,6 @@ export default function SubmissionsManagement() {
                           <span className="break-words">{submission.name}</span>
                         </CardTitle>
                         <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-                          {submission.cv_score !== null && submission.cv_score !== undefined && (
-                            <CVScoreBadge 
-                              score={submission.cv_score} 
-                              breakdown={submission.cv_score_breakdown}
-                              size="sm"
-                            />
-                          )}
                           {submission.source && (
                             <Badge variant="outline" className="text-xs">
                               {submission.source}
@@ -650,7 +664,7 @@ export default function SubmissionsManagement() {
                           <span className="break-words">{submission.name}</span>
                         </CardTitle>
                         <div className="flex gap-2 flex-wrap">
-                          {submission.cv_score !== null && submission.cv_score !== undefined && (
+                          {isFullAdmin && submission.cv_score !== null && submission.cv_score !== undefined && (
                             <CVScoreBadge 
                               score={submission.cv_score} 
                               breakdown={submission.cv_score_breakdown}
@@ -664,6 +678,16 @@ export default function SubmissionsManagement() {
                           )}
                           {submission.sector && (
                             <Badge variant="outline">{submission.sector}</Badge>
+                          )}
+                          {isFullAdmin && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteCV(submission.id, submission.name)}
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                           )}
                         </div>
                       </div>

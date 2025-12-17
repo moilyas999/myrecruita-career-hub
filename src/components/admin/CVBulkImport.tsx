@@ -81,7 +81,8 @@ const SENIORITY_LEVELS = [
 ];
 
 export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) {
-  const { user } = useAuth();
+  const { user, adminRole } = useAuth();
+  const isFullAdmin = adminRole === 'admin';
   const [files, setFiles] = useState<ParsedCV[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -537,7 +538,7 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
                             {file.data.seniority_level}
                           </Badge>
                         )}
-                        {file.status === 'parsed' && (
+                        {isFullAdmin && file.status === 'parsed' && (
                           <CVScoreBadge 
                             score={file.data.cv_score} 
                             breakdown={file.data.cv_score_breakdown}
@@ -545,14 +546,16 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
                           />
                         )}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeFile(file.id)}
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      {isFullAdmin && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeFile(file.id)}
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
 
                     {file.status === 'error' && file.error && (
@@ -676,8 +679,8 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
                           </Button>
                         </CollapsibleTrigger>
                         <CollapsibleContent className="mt-4 space-y-4">
-                          {/* CV Score Breakdown */}
-                          {file.data.cv_score !== null && file.data.cv_score_breakdown && (
+                          {/* CV Score Breakdown - Only visible to full admins */}
+                          {isFullAdmin && file.data.cv_score !== null && file.data.cv_score_breakdown && (
                             <CVScoreBreakdownCard 
                               score={file.data.cv_score} 
                               breakdown={file.data.cv_score_breakdown}
