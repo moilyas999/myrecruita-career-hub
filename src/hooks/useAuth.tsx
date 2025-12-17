@@ -7,11 +7,12 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isAdmin: boolean;
+  adminRole: string | null;
   loading: boolean;
   isAdminLoading: boolean;
   signIn: (email: string, password: string, rememberMe?: boolean) => Promise<{ error?: string }>;
   signUp: (email: string, password: string) => Promise<{ error?: string }>;
-  createAdminUser: (email: string, password: string) => Promise<{ error?: string }>;
+  createAdminUser: (email: string, password: string, role?: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
 }
 
@@ -21,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminRole, setAdminRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdminLoading, setIsAdminLoading] = useState(true);
 
@@ -29,13 +31,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('admin_profiles')
-        .select('*')
+        .select('role')
         .eq('user_id', userId)
         .single();
       
       setIsAdmin(!error && !!data);
+      setAdminRole(data?.role || null);
     } catch (error) {
       setIsAdmin(false);
+      setAdminRole(null);
     } finally {
       setIsAdminLoading(false);
     }
@@ -124,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const createAdminUser = async (email: string, password: string) => {
+  const createAdminUser = async (email: string, password: string, role: string = 'admin') => {
     try {
       // First create the user account
       const { data, error: signUpError } = await supabase.auth.signUp({
@@ -143,7 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .insert({
             user_id: data.user.id,
             email: email,
-            role: 'admin'
+            role: role
           });
         
         if (adminError) {
@@ -160,6 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setIsAdmin(false);
+    setAdminRole(null);
     toast.success('Signed out successfully');
   };
 
@@ -168,6 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       session,
       isAdmin,
+      adminRole,
       loading,
       isAdminLoading,
       signIn,

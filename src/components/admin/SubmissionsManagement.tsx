@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,6 +9,7 @@ import { Mail, Phone, Calendar, FileText, User, Briefcase, Download, ExternalLin
 import { toast } from 'sonner';
 import CVManualEntry from './CVManualEntry';
 import CVBulkImport from './CVBulkImport';
+
 interface JobApplication {
   id: string;
   job_id: string;
@@ -63,6 +65,10 @@ interface TalentRequest {
 }
 
 export default function SubmissionsManagement() {
+  const { adminRole } = useAuth();
+  const isFullAdmin = adminRole === 'admin';
+  const isCvUploader = adminRole === 'cv_uploader';
+
   const [jobApplications, setJobApplications] = useState<JobApplication[]>([]);
   const [cvSubmissions, setCvSubmissions] = useState<CVSubmission[]>([]);
   const [careerRequests, setCareerRequests] = useState<CareerPartnerRequest[]>([]);
@@ -287,14 +293,20 @@ export default function SubmissionsManagement() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Submissions Management</h2>
-          <p className="text-muted-foreground">View and manage all form submissions</p>
+          <h2 className="text-2xl font-bold">{isCvUploader ? 'CV Submissions' : 'Submissions Management'}</h2>
+          <p className="text-muted-foreground">
+            {isCvUploader 
+              ? 'View and manage your CV submissions from the last 3 days' 
+              : 'View and manage all form submissions'}
+          </p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={exportAllEmails} size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            Export All Emails
-          </Button>
+          {isFullAdmin && (
+            <Button onClick={exportAllEmails} size="sm">
+              <Download className="w-4 h-4 mr-2" />
+              Export All Emails
+            </Button>
+          )}
           <Button onClick={fetchAllSubmissions} variant="outline" size="sm">
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
@@ -302,52 +314,201 @@ export default function SubmissionsManagement() {
         </div>
       </div>
 
-      <Tabs defaultValue="job-applications" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6 gap-1">
-          <TabsTrigger value="job-applications" className="text-xs sm:text-sm">
-            <span className="hidden sm:inline">Job Applications</span>
-            <span className="sm:hidden">Jobs</span>
-            <span className="ml-1">({jobApplications.length})</span>
-          </TabsTrigger>
-          <TabsTrigger value="cv-submissions" className="text-xs sm:text-sm">
-            <span className="hidden sm:inline">CV Submissions</span>
-            <span className="sm:hidden">CVs</span>
-            <span className="ml-1">({cvSubmissions.length})</span>
-          </TabsTrigger>
-          <TabsTrigger value="career-requests" className="text-xs sm:text-sm">
-            <span className="hidden sm:inline">Career Requests</span>
-            <span className="sm:hidden">Career</span>
-            <span className="ml-1">({careerRequests.length})</span>
-          </TabsTrigger>
-          <TabsTrigger value="talent-requests" className="text-xs sm:text-sm">
-            <span className="hidden sm:inline">Talent Requests</span>
-            <span className="sm:hidden">Talent</span>
-            <span className="ml-1">({talentRequests.length})</span>
-          </TabsTrigger>
-          <TabsTrigger value="employer-jobs" className="text-xs sm:text-sm">
-            <span className="hidden sm:inline">Employer Posts</span>
-            <span className="sm:hidden">Employer</span>
-            <span className="ml-1">({employerJobSubmissions.length})</span>
-          </TabsTrigger>
-          <TabsTrigger value="contact-submissions" className="text-xs sm:text-sm">
-            <span className="hidden sm:inline">Contact Forms</span>
-            <span className="sm:hidden">Contact</span>
-            <span className="ml-1">({contactSubmissions.length})</span>
-          </TabsTrigger>
-        </TabsList>
+      {isCvUploader ? (
+        // CV Uploader only sees CV submissions
+        <div className="space-y-4">
+          {/* CV Action Buttons */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-muted/50 rounded-lg border">
+            <div>
+              <h3 className="font-semibold text-lg">CV Database</h3>
+              <p className="text-sm text-muted-foreground">{cvSubmissions.length} CVs visible (your submissions from last 3 days)</p>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => setCvSubTab('add-single')}
+                className="bg-accent text-accent-foreground hover:bg-accent/90"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add CV
+              </Button>
+              <Button 
+                onClick={() => setCvSubTab('bulk-import')}
+                variant="outline"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Bulk Import
+              </Button>
+            </div>
+          </div>
 
-        <TabsContent value="job-applications" className="space-y-4">
-          {jobApplications.length === 0 ? (
-            <Card>
-              <CardContent className="py-8 text-center text-muted-foreground">
-                No job applications yet.
-              </CardContent>
-            </Card>
-          ) : (
-            jobApplications.map((app) => (
-              <Card key={app.id}>
-                <CardHeader className="pb-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <Tabs value={cvSubTab} onValueChange={setCvSubTab} className="space-y-4">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="all-cvs" className="flex items-center gap-2">
+                <List className="w-4 h-4" />
+                <span className="hidden sm:inline">My CVs</span>
+                <span className="sm:hidden">CVs</span>
+              </TabsTrigger>
+              <TabsTrigger value="add-single" className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Add Single</span>
+                <span className="sm:hidden">Add</span>
+              </TabsTrigger>
+              <TabsTrigger value="bulk-import" className="flex items-center gap-2">
+                <Upload className="w-4 h-4" />
+                <span className="hidden sm:inline">Bulk Import</span>
+                <span className="sm:hidden">Bulk</span>
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="all-cvs" className="space-y-4">
+              {cvSubmissions.length === 0 ? (
+                <Card>
+                  <CardContent className="py-8 text-center text-muted-foreground">
+                    No CV submissions found. Add some CVs to get started.
+                  </CardContent>
+                </Card>
+              ) : (
+                cvSubmissions.map((submission) => (
+                  <Card key={submission.id}>
+                    <CardHeader className="pb-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                          <User className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                          <span className="break-words">{submission.name}</span>
+                        </CardTitle>
+                        <div className="flex items-center gap-2 self-start sm:self-auto">
+                          {submission.source && (
+                            <Badge variant="outline" className="text-xs">
+                              {submission.source}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      {(submission.job_title || submission.sector) && (
+                        <CardDescription className="break-words">
+                          {submission.job_title && <span>{submission.job_title}</span>}
+                          {submission.job_title && submission.sector && <span> • </span>}
+                          {submission.sector && <span>{submission.sector}</span>}
+                        </CardDescription>
+                      )}
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="flex items-start gap-2 text-sm">
+                          <Mail className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs text-muted-foreground mb-1">Email:</p>
+                            <a href={`mailto:${submission.email}`} className="text-primary hover:underline break-all">
+                              {submission.email}
+                            </a>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2 text-sm">
+                          <Phone className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs text-muted-foreground mb-1">Phone:</p>
+                            <a href={`tel:${submission.phone}`} className="text-primary hover:underline break-all">
+                              {submission.phone}
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                      {submission.location && (
+                        <div className="flex items-start gap-2 text-sm">
+                          <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs text-muted-foreground mb-1">Location:</p>
+                            <p>{submission.location}</p>
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex items-start gap-2 text-sm">
+                        <Calendar className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs text-muted-foreground mb-1">Submitted:</p>
+                          <p>{new Date(submission.created_at).toLocaleString()}</p>
+                        </div>
+                      </div>
+                      {submission.cv_file_url && (
+                        <div className="flex items-start gap-2 text-sm">
+                          <FileText className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs text-muted-foreground mb-1">CV File:</p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownloadCV(submission.cv_file_url, submission.name)}
+                              className="h-8"
+                            >
+                              <Download className="w-3 h-3 mr-1" />
+                              Download CV
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </TabsContent>
+
+            <TabsContent value="add-single">
+              <CVManualEntry onSuccess={fetchAllSubmissions} />
+            </TabsContent>
+
+            <TabsContent value="bulk-import">
+              <CVBulkImport onSuccess={fetchAllSubmissions} />
+            </TabsContent>
+          </Tabs>
+        </div>
+      ) : (
+        // Full admin sees all tabs
+        <Tabs defaultValue="job-applications" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6 gap-1">
+            <TabsTrigger value="job-applications" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Job Applications</span>
+              <span className="sm:hidden">Jobs</span>
+              <span className="ml-1">({jobApplications.length})</span>
+            </TabsTrigger>
+            <TabsTrigger value="cv-submissions" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">CV Submissions</span>
+              <span className="sm:hidden">CVs</span>
+              <span className="ml-1">({cvSubmissions.length})</span>
+            </TabsTrigger>
+            <TabsTrigger value="career-requests" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Career Requests</span>
+              <span className="sm:hidden">Career</span>
+              <span className="ml-1">({careerRequests.length})</span>
+            </TabsTrigger>
+            <TabsTrigger value="talent-requests" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Talent Requests</span>
+              <span className="sm:hidden">Talent</span>
+              <span className="ml-1">({talentRequests.length})</span>
+            </TabsTrigger>
+            <TabsTrigger value="employer-jobs" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Employer Posts</span>
+              <span className="sm:hidden">Employer</span>
+              <span className="ml-1">({employerJobSubmissions.length})</span>
+            </TabsTrigger>
+            <TabsTrigger value="contact-submissions" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Contact Forms</span>
+              <span className="sm:hidden">Contact</span>
+              <span className="ml-1">({contactSubmissions.length})</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="job-applications" className="space-y-4">
+            {jobApplications.length === 0 ? (
+              <Card>
+                <CardContent className="py-8 text-center text-muted-foreground">
+                  No job applications yet.
+                </CardContent>
+              </Card>
+            ) : (
+              jobApplications.map((app) => (
+                <Card key={app.id}>
+                  <CardHeader className="pb-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <CardTitle className="flex items-center gap-2 text-lg">
                       <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                       <span className="break-words">{app.name}</span>
@@ -853,7 +1014,8 @@ export default function SubmissionsManagement() {
             ))
           )}
         </TabsContent>
-      </Tabs>
+        </Tabs>
+      )}
     </div>
   );
 }
