@@ -277,9 +277,9 @@ export default function SubmissionsManagement() {
         });
 
         if (error) throw error;
-        if (!data || !data.extracted) throw new Error('No extraction data returned');
+        if (!data || !data.data) throw new Error('No extraction data returned');
 
-        const extracted = data.extracted;
+        const extracted = data.data;
 
         // Update the CV submission with the score
         const { error: updateError } = await supabase
