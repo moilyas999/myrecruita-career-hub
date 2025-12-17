@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Mail, Phone, Calendar, FileText, User, Briefcase, Download, ExternalLink, RefreshCw, Plus, Upload, List, MapPin, Building, Trash2 } from 'lucide-react';
+import { Mail, Phone, Calendar, FileText, User, Briefcase, Download, ExternalLink, RefreshCw, Plus, Upload, List, MapPin, Building, Trash2, Zap, Loader2 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import CVManualEntry from './CVManualEntry';
 import CVBulkImport from './CVBulkImport';
@@ -81,6 +82,8 @@ export default function SubmissionsManagement() {
   const [contactSubmissions, setContactSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [cvSubTab, setCvSubTab] = useState('all-cvs');
+  const [isRescoring, setIsRescoring] = useState(false);
+  const [rescoreProgress, setRescoreProgress] = useState({ current: 0, total: 0 });
 
   useEffect(() => {
     fetchAllSubmissions();
@@ -231,6 +234,93 @@ export default function SubmissionsManagement() {
     } catch (error: any) {
       console.error('Delete error:', error);
       toast.error('Failed to delete CV submission: ' + error.message);
+    }
+  };
+
+  const handleRescoreAllCVs = async () => {
+    const unscoredCVs = cvSubmissions.filter(cv => 
+      (cv.cv_score === null || cv.cv_score === undefined) && cv.cv_file_url
+    );
+
+    if (unscoredCVs.length === 0) {
+      toast.info('All CVs with files already have scores');
+      return;
+    }
+
+    if (!confirm(`This will re-score ${unscoredCVs.length} CVs without scores. This may take a few minutes. Continue?`)) {
+      return;
+    }
+
+    setIsRescoring(true);
+    setRescoreProgress({ current: 0, total: unscoredCVs.length });
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < unscoredCVs.length; i++) {
+      const cv = unscoredCVs[i];
+      setRescoreProgress({ current: i + 1, total: unscoredCVs.length });
+
+      try {
+        // Extract file path from URL
+        let filePath = cv.cv_file_url;
+        if (filePath.includes('cv-uploads/')) {
+          filePath = filePath.split('/cv-uploads/')[1];
+        }
+
+        // Call the parse-cv edge function
+        const { data, error } = await supabase.functions.invoke('parse-cv', {
+          body: { 
+            filePath: filePath,
+            fileName: cv.name + '.pdf'
+          }
+        });
+
+        if (error) throw error;
+        if (!data || !data.extracted) throw new Error('No extraction data returned');
+
+        const extracted = data.extracted;
+
+        // Update the CV submission with the score
+        const { error: updateError } = await supabase
+          .from('cv_submissions')
+          .update({
+            cv_score: extracted.cv_score || null,
+            cv_score_breakdown: extracted.cv_score_breakdown || null,
+            scored_at: new Date().toISOString(),
+            // Also update other AI-extracted fields if they're empty
+            ...(extracted.job_title && !cv.job_title ? { job_title: extracted.job_title } : {}),
+            ...(extracted.sector && !cv.sector ? { sector: extracted.sector } : {}),
+            ...(extracted.location && !cv.location ? { location: extracted.location } : {}),
+            ...(extracted.skills && { skills: extracted.skills }),
+            ...(extracted.experience_summary && { experience_summary: extracted.experience_summary }),
+            ...(extracted.education_level && { education_level: extracted.education_level }),
+            ...(extracted.seniority_level && { seniority_level: extracted.seniority_level }),
+            ...(extracted.years_experience && { years_experience: extracted.years_experience }),
+            ...(extracted.ai_profile && { ai_profile: extracted.ai_profile }),
+          })
+          .eq('id', cv.id);
+
+        if (updateError) throw updateError;
+
+        successCount++;
+        console.log(`Scored CV ${i + 1}/${unscoredCVs.length}: ${cv.name} - Score: ${extracted.cv_score}`);
+      } catch (error: any) {
+        console.error(`Failed to score CV for ${cv.name}:`, error);
+        failCount++;
+      }
+    }
+
+    setIsRescoring(false);
+    setRescoreProgress({ current: 0, total: 0 });
+    
+    // Refresh the data
+    await fetchAllSubmissions();
+    
+    if (failCount === 0) {
+      toast.success(`Successfully scored ${successCount} CVs`);
+    } else {
+      toast.warning(`Scored ${successCount} CVs, ${failCount} failed`);
     }
   };
 
@@ -608,9 +698,40 @@ export default function SubmissionsManagement() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-muted/50 rounded-lg border">
             <div>
               <h3 className="font-semibold text-lg">CV Database</h3>
-              <p className="text-sm text-muted-foreground">{cvSubmissions.length} CVs in database</p>
+              <p className="text-sm text-muted-foreground">
+                {cvSubmissions.length} CVs in database
+                {cvSubmissions.filter(cv => cv.cv_score === null || cv.cv_score === undefined).length > 0 && (
+                  <span className="text-amber-600 ml-2">
+                    ({cvSubmissions.filter(cv => (cv.cv_score === null || cv.cv_score === undefined) && cv.cv_file_url).length} unscored)
+                  </span>
+                )}
+              </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
+              {isRescoring ? (
+                <div className="flex items-center gap-3 px-4 py-2 bg-background rounded-md border">
+                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm font-medium">
+                      Scoring {rescoreProgress.current}/{rescoreProgress.total}
+                    </span>
+                    <Progress 
+                      value={(rescoreProgress.current / rescoreProgress.total) * 100} 
+                      className="w-32 h-2"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <Button 
+                  onClick={handleRescoreAllCVs}
+                  variant="outline"
+                  className="border-amber-500 text-amber-600 hover:bg-amber-50 hover:text-amber-700"
+                  disabled={cvSubmissions.filter(cv => (cv.cv_score === null || cv.cv_score === undefined) && cv.cv_file_url).length === 0}
+                >
+                  <Zap className="w-4 h-4 mr-2" />
+                  Re-score CVs
+                </Button>
+              )}
               <Button 
                 onClick={() => setCvSubTab('add-single')}
                 className="bg-accent text-accent-foreground hover:bg-accent/90"
