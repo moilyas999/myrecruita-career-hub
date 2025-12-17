@@ -238,89 +238,33 @@ export default function SubmissionsManagement() {
   };
 
   const handleRescoreAllCVs = async () => {
-    const unscoredCVs = cvSubmissions.filter(cv => 
+    const unscoredCount = cvSubmissions.filter(cv => 
       (cv.cv_score === null || cv.cv_score === undefined) && cv.cv_file_url
-    );
+    ).length;
 
-    if (unscoredCVs.length === 0) {
+    if (unscoredCount === 0) {
       toast.info('All CVs with files already have scores');
       return;
     }
 
-    if (!confirm(`This will re-score ${unscoredCVs.length} CVs without scores. This may take a few minutes. Continue?`)) {
+    if (!confirm(`This will re-score ${unscoredCount} CVs without scores in the background. You can navigate away - scores will appear when ready. Continue?`)) {
       return;
     }
 
     setIsRescoring(true);
-    setRescoreProgress({ current: 0, total: unscoredCVs.length });
 
-    let successCount = 0;
-    let failCount = 0;
+    try {
+      const { data, error } = await supabase.functions.invoke('rescore-cvs');
 
-    for (let i = 0; i < unscoredCVs.length; i++) {
-      const cv = unscoredCVs[i];
-      setRescoreProgress({ current: i + 1, total: unscoredCVs.length });
+      if (error) throw error;
 
-      try {
-        // Extract file path from URL
-        let filePath = cv.cv_file_url;
-        if (filePath.includes('cv-uploads/')) {
-          filePath = filePath.split('/cv-uploads/')[1];
-        }
-
-        // Call the parse-cv edge function
-        const { data, error } = await supabase.functions.invoke('parse-cv', {
-          body: { 
-            filePath: filePath,
-            fileName: cv.name + '.pdf'
-          }
-        });
-
-        if (error) throw error;
-        if (!data || !data.data) throw new Error('No extraction data returned');
-
-        const extracted = data.data;
-
-        // Update the CV submission with the score
-        const { error: updateError } = await supabase
-          .from('cv_submissions')
-          .update({
-            cv_score: extracted.cv_score || null,
-            cv_score_breakdown: extracted.cv_score_breakdown || null,
-            scored_at: new Date().toISOString(),
-            // Also update other AI-extracted fields if they're empty
-            ...(extracted.job_title && !cv.job_title ? { job_title: extracted.job_title } : {}),
-            ...(extracted.sector && !cv.sector ? { sector: extracted.sector } : {}),
-            ...(extracted.location && !cv.location ? { location: extracted.location } : {}),
-            ...(extracted.skills && { skills: extracted.skills }),
-            ...(extracted.experience_summary && { experience_summary: extracted.experience_summary }),
-            ...(extracted.education_level && { education_level: extracted.education_level }),
-            ...(extracted.seniority_level && { seniority_level: extracted.seniority_level }),
-            ...(extracted.years_experience && { years_experience: extracted.years_experience }),
-            ...(extracted.ai_profile && { ai_profile: extracted.ai_profile }),
-          })
-          .eq('id', cv.id);
-
-        if (updateError) throw updateError;
-
-        successCount++;
-        console.log(`Scored CV ${i + 1}/${unscoredCVs.length}: ${cv.name} - Score: ${extracted.cv_score}`);
-      } catch (error: any) {
-        console.error(`Failed to score CV for ${cv.name}:`, error);
-        failCount++;
-      }
-    }
-
-    setIsRescoring(false);
-    setRescoreProgress({ current: 0, total: 0 });
-    
-    // Refresh the data
-    await fetchAllSubmissions();
-    
-    if (failCount === 0) {
-      toast.success(`Successfully scored ${successCount} CVs`);
-    } else {
-      toast.warning(`Scored ${successCount} CVs, ${failCount} failed`);
+      toast.success(`Started re-scoring ${data.count} CVs in background. You can navigate away - refresh to see updated scores.`);
+      console.log('Background rescoring started:', data);
+    } catch (error: any) {
+      console.error('Failed to start background rescoring:', error);
+      toast.error('Failed to start re-scoring: ' + error.message);
+    } finally {
+      setIsRescoring(false);
     }
   };
 
