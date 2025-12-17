@@ -203,6 +203,82 @@ export default function SubmissionsManagement() {
     }
   };
 
+  const exportAllEmails = () => {
+    const allEmails: Array<{
+      email: string;
+      name: string;
+      source: string;
+      date: string;
+    }> = [];
+
+    // Collect from all sources
+    jobApplications.forEach(app => allEmails.push({
+      email: app.email,
+      name: app.name,
+      source: 'Job Application',
+      date: app.created_at
+    }));
+
+    cvSubmissions.forEach(cv => allEmails.push({
+      email: cv.email,
+      name: cv.name,
+      source: 'CV Submission',
+      date: cv.created_at
+    }));
+
+    careerRequests.forEach(req => allEmails.push({
+      email: req.email,
+      name: req.name,
+      source: 'Career Partner Request',
+      date: req.created_at
+    }));
+
+    talentRequests.forEach(req => allEmails.push({
+      email: req.email,
+      name: req.contact_name,
+      source: 'Talent Request',
+      date: req.created_at
+    }));
+
+    employerJobSubmissions.forEach(sub => allEmails.push({
+      email: sub.email,
+      name: sub.contact_name,
+      source: 'Employer Job Post',
+      date: sub.created_at
+    }));
+
+    contactSubmissions.forEach(sub => allEmails.push({
+      email: sub.email,
+      name: sub.name,
+      source: 'Contact Form',
+      date: sub.created_at
+    }));
+
+    // De-duplicate by email (keep first occurrence)
+    const uniqueEmails = Array.from(
+      new Map(allEmails.map(e => [e.email.toLowerCase(), e])).values()
+    );
+
+    // Generate CSV
+    const csvContent = [
+      ['Email', 'Name', 'Source', 'Submission Date'].join(','),
+      ...uniqueEmails.map(e => 
+        [`"${e.email}"`, `"${e.name.replace(/"/g, '""')}"`, `"${e.source}"`, `"${new Date(e.date).toLocaleDateString()}"`].join(',')
+      )
+    ].join('\n');
+
+    // Download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `myrecruita-emails-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    toast.success(`Exported ${uniqueEmails.length} unique emails`);
+  };
+
   if (loading) {
     return <div className="text-center py-8">Loading submissions...</div>;
   }
@@ -214,10 +290,16 @@ export default function SubmissionsManagement() {
           <h2 className="text-2xl font-bold">Submissions Management</h2>
           <p className="text-muted-foreground">View and manage all form submissions</p>
         </div>
-        <Button onClick={fetchAllSubmissions} variant="outline" size="sm">
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={exportAllEmails} size="sm">
+            <Download className="w-4 h-4 mr-2" />
+            Export All Emails
+          </Button>
+          <Button onClick={fetchAllSubmissions} variant="outline" size="sm">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="job-applications" className="space-y-6">
