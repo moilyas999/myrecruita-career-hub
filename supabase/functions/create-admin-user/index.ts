@@ -37,8 +37,22 @@ Deno.serve(async (req) => {
       )
     }
 
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user: callerUser }, error: authError } = await supabaseAdmin.auth.getUser(token)
+    // Create a client with the user's auth token to validate it
+    const supabaseAuth = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      {
+        global: {
+          headers: { Authorization: authHeader }
+        },
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
+    const { data: { user: callerUser }, error: authError } = await supabaseAuth.auth.getUser()
     
     if (authError || !callerUser) {
       console.error('Auth error:', authError)
