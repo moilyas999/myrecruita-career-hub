@@ -75,16 +75,23 @@ Deno.serve(async (req) => {
       console.log('User already exists:', existingUser.id)
       userId = existingUser.id
 
-      // Check if already an admin
+      // Check if already a staff member
       const { data: existingAdmin } = await supabaseAdmin
         .from('admin_profiles')
-        .select('id')
+        .select('id, role')
         .eq('user_id', userId)
         .maybeSingle()
 
       if (existingAdmin) {
+        if (existingAdmin.role === role) {
+          return new Response(
+            JSON.stringify({ success: true, user_id: userId, already_staff: true }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+
         return new Response(
-          JSON.stringify({ error: 'This user is already a staff member' }),
+          JSON.stringify({ error: `This user is already a staff member (${existingAdmin.role})` }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
