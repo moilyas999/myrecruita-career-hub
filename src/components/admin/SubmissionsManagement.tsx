@@ -5,12 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Mail, Phone, Calendar, FileText, User, Briefcase, Download, ExternalLink, RefreshCw, Plus, Upload, List, MapPin, Building, Trash2, Zap, Loader2 } from 'lucide-react';
+import { Mail, Phone, Calendar, FileText, User, Briefcase, Download, ExternalLink, RefreshCw, Plus, Upload, List, MapPin, Building, Trash2, Zap, Loader2, Activity } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import CVManualEntry from './CVManualEntry';
 import CVBulkImport from './CVBulkImport';
 import CVScoreBadge, { CVScoreBreakdown } from './CVScoreBadge';
+import CVUploaderActivityLog from './CVUploaderActivityLog';
 
 interface JobApplication {
   id: string;
@@ -694,7 +695,7 @@ export default function SubmissionsManagement() {
           </div>
 
           <Tabs value={cvSubTab} onValueChange={setCvSubTab} className="space-y-4">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="all-cvs" className="flex items-center gap-2">
                 <List className="w-4 h-4" />
                 <span className="hidden sm:inline">All CVs</span>
@@ -709,6 +710,11 @@ export default function SubmissionsManagement() {
                 <Upload className="w-4 h-4" />
                 <span className="hidden sm:inline">Bulk Import</span>
                 <span className="sm:hidden">Bulk</span>
+              </TabsTrigger>
+              <TabsTrigger value="activity-log" className="flex items-center gap-2">
+                <Activity className="w-4 h-4" />
+                <span className="hidden sm:inline">Activity Log</span>
+                <span className="sm:hidden">Log</span>
               </TabsTrigger>
             </TabsList>
 
@@ -835,6 +841,10 @@ export default function SubmissionsManagement() {
 
             <TabsContent value="bulk-import">
               <CVBulkImport onSuccess={fetchAllSubmissions} />
+            </TabsContent>
+
+            <TabsContent value="activity-log">
+              <CVUploaderActivityLog />
             </TabsContent>
           </Tabs>
         </TabsContent>
