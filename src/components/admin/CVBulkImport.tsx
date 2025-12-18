@@ -94,6 +94,22 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
 
   const generateId = () => Math.random().toString(36).substring(2, 9);
 
+  // Log activity to the activity log table
+  const logActivity = async (action: string, details: Record<string, any>) => {
+    if (!user?.email) return;
+    
+    try {
+      await supabase.from('cv_upload_activity_log').insert({
+        user_id: user.id,
+        user_email: user.email,
+        action,
+        details
+      });
+    } catch (error) {
+      console.error('Failed to log activity:', error);
+    }
+  };
+
   const toggleProfileExpand = (fileId: string) => {
     setExpandedProfiles(prev => {
       const newSet = new Set(prev);
@@ -206,6 +222,12 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
     
     if (newFiles.length > 0) {
       toast.success(`Uploaded ${newFiles.length} file(s). Click "Parse with AI" to extract data.`);
+      
+      // Log upload activity
+      await logActivity('files_uploaded', {
+        file_count: newFiles.length,
+        file_names: newFiles.map(f => f.fileName)
+      });
     }
   };
 
@@ -287,6 +309,15 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
     }
     
     setIsParsing(false);
+    
+    // Log parse activity
+    const parsedCount = files.filter(f => f.status === 'parsed').length;
+    if (parsedCount > 0) {
+      await logActivity('cv_parsed', {
+        file_count: parsedCount
+      });
+    }
+    
     toast.success('Parsing complete! Review and edit the extracted data before importing.');
   };
 
@@ -361,6 +392,13 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
     
     setImportResults({ success, failed });
     setIsImporting(false);
+    
+    // Log import activity
+    await logActivity('cvs_imported', {
+      success_count: success,
+      failed_count: failed,
+      file_names: parsedFiles.map(f => f.fileName)
+    });
     
     if (success > 0) {
       toast.success(`Successfully imported ${success} CV entries`);

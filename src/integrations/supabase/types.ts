@@ -331,6 +331,33 @@ export type Database = {
         }
         Relationships: []
       }
+      cv_upload_activity_log: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          user_email: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          user_email: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          user_email?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       employer_job_submissions: {
         Row: {
           company_name: string
