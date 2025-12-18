@@ -47,27 +47,27 @@ export function getScoreLabel(score: number): string {
   return 'Poor';
 }
 
-function getBarColor(score: number): string {
-  if (score >= 80) return 'bg-emerald-500';
-  if (score >= 60) return 'bg-green-500';
-  if (score >= 40) return 'bg-yellow-500';
+function getBarColor(percentage: number): string {
+  if (percentage >= 80) return 'bg-emerald-500';
+  if (percentage >= 60) return 'bg-green-500';
+  if (percentage >= 40) return 'bg-yellow-500';
   return 'bg-red-500';
 }
 
-// Helper to extract score value from either number or CategoryScore object
-function getScoreValue(value: CategoryScore | number | undefined): number {
-  if (value === undefined) return 0;
-  if (typeof value === 'number') return value;
-  return value.score ?? 0;
+// Helper to extract score data from either number or CategoryScore object
+function getCategoryData(value: CategoryScore | number | undefined): { score: number; max: number; notes?: string } {
+  if (value === undefined) return { score: 0, max: 0 };
+  if (typeof value === 'number') return { score: value, max: value }; // Legacy: assume max equals score
+  return { score: value.score ?? 0, max: value.max ?? 0, notes: value.notes };
 }
 
 const categories = [
-  { key: 'completeness', label: 'Completeness', description: 'All required sections present', weight: '20%' },
-  { key: 'skills_relevance', label: 'Skills Relevance', description: 'Quality & relevance of listed skills', weight: '20%' },
-  { key: 'experience_depth', label: 'Experience Depth', description: 'Detail level and career progression', weight: '25%' },
-  { key: 'achievements', label: 'Achievements', description: 'Quantifiable accomplishments listed', weight: '15%' },
-  { key: 'education', label: 'Education', description: 'Qualifications & certifications', weight: '10%' },
-  { key: 'presentation', label: 'Presentation', description: 'Structure, formatting & clarity', weight: '10%' },
+  { key: 'completeness', label: 'Completeness', description: 'All required sections present' },
+  { key: 'skills_relevance', label: 'Skills Relevance', description: 'Quality & relevance of listed skills' },
+  { key: 'experience_depth', label: 'Experience Depth', description: 'Detail level and career progression' },
+  { key: 'achievements', label: 'Achievements', description: 'Quantifiable accomplishments listed' },
+  { key: 'education', label: 'Education', description: 'Qualifications & certifications' },
+  { key: 'presentation', label: 'Presentation', description: 'Structure, formatting & clarity' },
 ] as const;
 
 export default function CVScoreBadge({ score, breakdown, showBreakdown = true, size = 'md' }: CVScoreBadgeProps) {
@@ -100,6 +100,15 @@ export default function CVScoreBadge({ score, breakdown, showBreakdown = true, s
     return badge;
   }
 
+  // Calculate category scores for the sum display
+  const categoryScores = categories.map(cat => {
+    const data = getCategoryData(breakdown[cat.key as keyof Omit<CVScoreBreakdown, 'summary'>]);
+    return { ...cat, ...data };
+  });
+
+  const calculatedTotal = categoryScores.reduce((sum, cat) => sum + cat.score, 0);
+  const maxTotal = categoryScores.reduce((sum, cat) => sum + cat.max, 0);
+
   return (
     <>
       <TooltipProvider>
@@ -114,56 +123,67 @@ export default function CVScoreBadge({ score, breakdown, showBreakdown = true, s
       </TooltipProvider>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>CV Quality Score Breakdown</DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-6">
+          <div className="space-y-5">
             {/* Overall Score */}
             <div className="flex flex-col items-center py-4 bg-muted/50 rounded-lg">
               <div className={`text-4xl font-bold ${score >= 60 ? 'text-green-600' : 'text-orange-600'}`}>
                 {score}/100
               </div>
-              <Badge className={`${getScoreColor(score)} mt-2`}>
-                {getScoreLabel(score)}
-              </Badge>
+              <div className="text-sm text-muted-foreground mt-1">{getScoreLabel(score)}</div>
             </div>
 
             {/* Category Breakdown */}
             <div className="space-y-4">
-              {categories.map((cat) => {
-                const value = getScoreValue(breakdown[cat.key as keyof Omit<CVScoreBreakdown, 'summary'>]);
+              {categoryScores.map((cat) => {
+                const percentage = cat.max > 0 ? Math.round((cat.score / cat.max) * 100) : 0;
                 return (
                   <div key={cat.key} className="space-y-1.5">
                     <div className="flex justify-between items-center">
                       <div>
                         <span className="font-medium text-sm">{cat.label}</span>
-                        <span className="text-xs text-muted-foreground ml-2">({cat.weight})</span>
+                        <span className="text-xs text-muted-foreground ml-2">{cat.description}</span>
                       </div>
-                      <span className={`text-sm font-semibold ${value >= 60 ? 'text-green-600' : 'text-orange-600'}`}>
-                        {value}%
-                      </span>
+                      <div className="text-right">
+                        <span className="font-semibold text-sm">{cat.score}/{cat.max} pts</span>
+                        <span className="text-xs text-muted-foreground ml-1">({percentage}%)</span>
+                      </div>
                     </div>
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
                       <div 
-                        className={`h-full ${getBarColor(value)} transition-all duration-300`}
-                        style={{ width: `${value}%` }}
+                        className={`h-full ${getBarColor(percentage)} transition-all`}
+                        style={{ width: `${percentage}%` }}
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground">{cat.description}</p>
+                    {cat.notes && (
+                      <p className="text-xs text-muted-foreground italic pl-1">"{cat.notes}"</p>
+                    )}
                   </div>
                 );
               })}
             </div>
 
+            {/* Sum Calculation */}
+            <div className="pt-3 border-t border-border">
+              <div className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground justify-center">
+                {categoryScores.map((cat, index) => (
+                  <span key={cat.key}>
+                    {cat.score}{index < categoryScores.length - 1 && ' + '}
+                  </span>
+                ))}
+                <span className="font-semibold text-foreground ml-1">= {calculatedTotal}/{maxTotal}</span>
+              </div>
+            </div>
+
             {/* AI Summary */}
             {breakdown.summary && (
-              <div className="border-t pt-4">
+              <div className="pt-3 border-t border-border">
                 <h4 className="font-medium text-sm mb-2">AI Assessment</h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {breakdown.summary}
-                </p>
+                <p className="text-sm text-muted-foreground">{breakdown.summary}</p>
               </div>
             )}
           </div>
@@ -174,37 +194,31 @@ export default function CVScoreBadge({ score, breakdown, showBreakdown = true, s
 }
 
 export function CVScoreBreakdownCard({ score, breakdown }: { score: number; breakdown: CVScoreBreakdown }) {
-  const cardCategories = [
-    { label: 'Completeness', key: 'completeness' as const, description: 'All sections present', weight: '20%' },
-    { label: 'Skills Relevance', key: 'skills_relevance' as const, description: 'Quality of listed skills', weight: '20%' },
-    { label: 'Experience Depth', key: 'experience_depth' as const, description: 'Detail & progression', weight: '25%' },
-    { label: 'Achievements', key: 'achievements' as const, description: 'Quantified accomplishments', weight: '15%' },
-    { label: 'Education', key: 'education' as const, description: 'Qualifications', weight: '10%' },
-    { label: 'Presentation', key: 'presentation' as const, description: 'Structure & clarity', weight: '10%' },
-  ];
+  const categoryScores = categories.map(cat => {
+    const data = getCategoryData(breakdown[cat.key as keyof Omit<CVScoreBreakdown, 'summary'>]);
+    return { ...cat, ...data };
+  });
 
   return (
-    <div className="bg-muted/50 rounded-lg p-4 space-y-4">
+    <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <span className="font-semibold text-sm">CV Quality Score</span>
-        <Badge className={`${getScoreColor(score)} text-sm font-bold`}>
-          {score}/100 • {getScoreLabel(score)}
-        </Badge>
+        <h4 className="font-medium">CV Quality Score</h4>
+        <Badge className={getScoreColor(score)}>{score}/100 • {getScoreLabel(score)}</Badge>
       </div>
       
       <div className="grid grid-cols-2 gap-3">
-        {cardCategories.map((cat) => {
-          const value = getScoreValue(breakdown[cat.key]);
+        {categoryScores.map((cat) => {
+          const percentage = cat.max > 0 ? Math.round((cat.score / cat.max) * 100) : 0;
           return (
             <div key={cat.label} className="space-y-1">
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">{cat.label}</span>
-                <span className="font-medium">{value}%</span>
+                <span className="font-medium">{cat.score}/{cat.max}</span>
               </div>
               <div className="h-2 bg-background rounded-full overflow-hidden">
                 <div 
-                  className={`h-full ${getBarColor(value)} transition-all`}
-                  style={{ width: `${value}%` }}
+                  className={`h-full ${getBarColor(percentage)} transition-all`}
+                  style={{ width: `${percentage}%` }}
                 />
               </div>
             </div>
@@ -213,9 +227,7 @@ export function CVScoreBreakdownCard({ score, breakdown }: { score: number; brea
       </div>
       
       {breakdown.summary && (
-        <p className="text-xs text-muted-foreground border-t border-border pt-3">
-          <strong>AI Summary:</strong> {breakdown.summary}
-        </p>
+        <p className="text-xs text-muted-foreground border-t border-border pt-3">{breakdown.summary}</p>
       )}
     </div>
   );
