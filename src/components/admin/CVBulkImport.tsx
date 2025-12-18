@@ -400,6 +400,18 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
     return colors[seniority] || 'bg-muted text-muted-foreground';
   };
 
+  const docFileCount = files.filter(f => f.fileName.toLowerCase().endsWith('.doc')).length;
+  const hasDocFiles = docFileCount > 0;
+
+  // Determine current workflow step
+  const getWorkflowStep = () => {
+    if (files.length === 0) return 1; // Upload
+    if (pendingCount > 0 || errorCount > 0) return 2; // Parse
+    if (parsedCount > 0) return 3; // Import
+    return 1;
+  };
+  const currentStep = getWorkflowStep();
+
   return (
     <Card>
       <CardHeader>
@@ -412,6 +424,30 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Workflow Steps Indicator */}
+        <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+          <div className={`flex items-center gap-2 ${currentStep === 1 ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${currentStep === 1 ? 'bg-primary text-primary-foreground' : currentStep > 1 ? 'bg-green-500 text-white' : 'bg-muted'}`}>
+              {currentStep > 1 ? <Check className="w-3 h-3" /> : '1'}
+            </div>
+            <span className="text-sm">Upload</span>
+          </div>
+          <div className="flex-1 h-0.5 bg-muted mx-2" />
+          <div className={`flex items-center gap-2 ${currentStep === 2 ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${currentStep === 2 ? 'bg-primary text-primary-foreground' : currentStep > 2 ? 'bg-green-500 text-white' : 'bg-muted'}`}>
+              {currentStep > 2 ? <Check className="w-3 h-3" /> : '2'}
+            </div>
+            <span className="text-sm">Parse with AI</span>
+          </div>
+          <div className="flex-1 h-0.5 bg-muted mx-2" />
+          <div className={`flex items-center gap-2 ${currentStep === 3 ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${currentStep === 3 ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+              3
+            </div>
+            <span className="text-sm">Import</span>
+          </div>
+        </div>
+
         {/* Drop Zone */}
         <div
           onDragOver={handleDragOver}
@@ -447,6 +483,42 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
             </div>
           )}
         </div>
+
+        {/* Warning for .doc files */}
+        {hasDocFiles && (
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-amber-800">
+                {docFileCount} legacy .doc file{docFileCount > 1 ? 's' : ''} detected
+              </p>
+              <p className="text-xs text-amber-700 mt-1">
+                Legacy .doc files may have limited parsing accuracy. For best results, convert to .docx or .pdf format before uploading.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Action prompt for pending files */}
+        {pendingCount > 0 && !isParsing && (
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Brain className="w-5 h-5 text-blue-600" />
+              <div>
+                <p className="text-sm font-medium text-blue-800">
+                  {pendingCount} file{pendingCount > 1 ? 's' : ''} ready to parse
+                </p>
+                <p className="text-xs text-blue-700">
+                  Click "Parse with AI" to extract candidate information
+                </p>
+              </div>
+            </div>
+            <Button onClick={parseAllFiles} size="sm" className="bg-blue-600 hover:bg-blue-700">
+              <Brain className="w-4 h-4 mr-2" />
+              Parse Now
+            </Button>
+          </div>
+        )}
 
         {/* File Status Summary */}
         {files.length > 0 && (
@@ -818,6 +890,27 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
                 </Card>
               ))}
             </div>
+
+            {/* Action prompt for parsed files ready to import */}
+            {parsedCount > 0 && pendingCount === 0 && !isImporting && (
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Check className="w-5 h-5 text-green-600" />
+                  <div>
+                    <p className="text-sm font-medium text-green-800">
+                      {parsedCount} CV{parsedCount > 1 ? 's' : ''} ready to import
+                    </p>
+                    <p className="text-xs text-green-700">
+                      Review the data above, then click "Import" to save to database
+                    </p>
+                  </div>
+                </div>
+                <Button onClick={importAllParsed} size="sm" className="bg-green-600 hover:bg-green-700">
+                  <Check className="w-4 h-4 mr-2" />
+                  Import Now
+                </Button>
+              </div>
+            )}
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-3 pt-4 border-t">

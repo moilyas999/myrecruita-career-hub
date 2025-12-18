@@ -316,9 +316,56 @@ DO NOT return empty fields. Extract or infer everything.`;
 ${textContent}`
       }];
     } else if (extension === 'doc') {
-      throw new Error('Legacy .doc format is not supported. Please convert to .docx or .pdf');
+      // Try to extract text from legacy .doc files
+      // .doc files are binary OLE compound documents, but often contain readable text
+      console.log('Attempting to extract text from legacy .doc file...');
+      
+      const uint8Array = new Uint8Array(arrayBuffer);
+      let extractedText = '';
+      
+      // Method 1: Try to find and extract ASCII text sequences
+      let currentText = '';
+      for (let i = 0; i < uint8Array.length; i++) {
+        const byte = uint8Array[i];
+        // Check if it's a printable ASCII character or common whitespace
+        if ((byte >= 32 && byte <= 126) || byte === 10 || byte === 13 || byte === 9) {
+          currentText += String.fromCharCode(byte);
+        } else {
+          // End of text sequence - if it's substantial, keep it
+          if (currentText.length > 10) {
+            extractedText += currentText + ' ';
+          }
+          currentText = '';
+        }
+      }
+      // Don't forget the last sequence
+      if (currentText.length > 10) {
+        extractedText += currentText;
+      }
+      
+      // Clean up the extracted text
+      extractedText = extractedText
+        .replace(/\s+/g, ' ')
+        .replace(/[^\x20-\x7E\n\r\t]/g, '')
+        .trim();
+      
+      console.log('Extracted text from .doc, length:', extractedText.length);
+      console.log('Text preview:', extractedText.substring(0, 500));
+      
+      if (!extractedText || extractedText.length < 100) {
+        throw new Error('Unable to extract text from this .doc file. The file may be corrupted or too heavily formatted. Please convert to .docx or .pdf format for better results.');
+      }
+      
+      messageContent = [{
+        type: 'text',
+        text: `${userPrompt}
+
+--- CV DOCUMENT CONTENT (extracted from legacy .doc format) ---
+
+${extractedText}`
+      }];
     } else {
-      throw new Error(`Unsupported file type: ${extension}`);
+      throw new Error(`Unsupported file type: ${extension}. Please upload PDF, DOCX, or DOC files.`);
     }
 
     console.log('Calling Gemini 2.5 Pro for enhanced CV extraction and scoring...');
