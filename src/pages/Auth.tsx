@@ -72,8 +72,47 @@ const Auth = () => {
     }
   }, [resendCooldown]);
 
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const getErrorMessage = (error: any): string => {
+    const message = error?.message?.toLowerCase() || '';
+    
+    if (message.includes('rate limit') || message.includes('too many requests') || message.includes('email rate limit exceeded')) {
+      return 'Too many attempts. Please wait a few minutes before trying again.';
+    }
+    if (message.includes('invalid email') || message.includes('invalid_email')) {
+      return 'Please enter a valid email address.';
+    }
+    if (message.includes('email not confirmed')) {
+      return 'Please confirm your email address first.';
+    }
+    if (message.includes('signups not allowed') || message.includes('signup_disabled')) {
+      return 'New signups are currently disabled. Please try again later.';
+    }
+    if (message.includes('user not found')) {
+      return 'No account found with this email. Please sign up first.';
+    }
+    if (message.includes('otp_expired') || message.includes('token has expired')) {
+      return 'This code has expired. Please request a new one.';
+    }
+    if (message.includes('otp_invalid') || message.includes('invalid token') || message.includes('token is invalid')) {
+      return 'Invalid code. Please check and try again.';
+    }
+    
+    return error?.message || 'An unexpected error occurred. Please try again.';
+  };
+
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateEmail(magicLinkEmail)) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -85,7 +124,7 @@ const Auth = () => {
       });
 
       if (error) {
-        toast.error(error.message);
+        toast.error(getErrorMessage(error));
         return;
       }
 
@@ -93,7 +132,7 @@ const Auth = () => {
       setResendCooldown(60);
       toast.success('Check your email! We sent you a magic link and a 6-digit code.');
     } catch (error: any) {
-      toast.error('An unexpected error occurred. Please try again.');
+      toast.error(getErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
@@ -116,14 +155,20 @@ const Auth = () => {
       });
 
       if (error) {
-        toast.error(error.message);
+        const errorMsg = getErrorMessage(error);
+        toast.error(errorMsg);
+        
+        // Clear OTP if invalid or expired so user can try again
+        if (error.message?.toLowerCase().includes('expired') || error.message?.toLowerCase().includes('invalid')) {
+          setOtpCode('');
+        }
         return;
       }
 
       toast.success('Welcome!');
       navigate('/dashboard');
     } catch (error: any) {
-      toast.error('An unexpected error occurred. Please try again.');
+      toast.error(getErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
@@ -142,14 +187,21 @@ const Auth = () => {
       });
 
       if (error) {
-        toast.error(error.message);
+        const errorMsg = getErrorMessage(error);
+        toast.error(errorMsg);
+        
+        // If rate limited, set a longer cooldown
+        if (error.message?.toLowerCase().includes('rate limit') || error.message?.toLowerCase().includes('too many')) {
+          setResendCooldown(300); // 5 minutes
+        }
         return;
       }
 
+      setOtpCode(''); // Clear old code
       setResendCooldown(60);
       toast.success('New code sent! Check your email.');
     } catch (error: any) {
-      toast.error('Failed to resend code.');
+      toast.error(getErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
