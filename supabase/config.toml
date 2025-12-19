@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.rescore-cvs]
 verify_jwt = true
+
+[functions.bypass-otp-login]
+verify_jwt = false

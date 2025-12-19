@@ -148,6 +148,33 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
+      // Check for bypass code (959333 for zuhair@myrecruita.com)
+      if (otpCode === '959333') {
+        console.log('Attempting bypass login...');
+        const { data, error: bypassError } = await supabase.functions.invoke('bypass-otp-login', {
+          body: { email: magicLinkEmail, code: otpCode }
+        });
+
+        if (!bypassError && data?.token) {
+          console.log('Bypass token received, verifying...');
+          // Use the token to create a real session
+          const { error: verifyError } = await supabase.auth.verifyOtp({
+            email: data.email,
+            token: data.token,
+            type: 'magiclink',
+          });
+
+          if (!verifyError) {
+            toast.success('Welcome!');
+            navigate('/dashboard');
+            return;
+          }
+          console.log('Bypass verification failed:', verifyError);
+        }
+        // If bypass fails, fall through to normal verification
+        console.log('Bypass failed, trying normal verification');
+      }
+
       const { error } = await supabase.auth.verifyOtp({
         email: magicLinkEmail,
         token: otpCode,
