@@ -8,9 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Mail, Lock, User, Loader2, Linkedin } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Loader2, Linkedin, Wand2, ArrowLeft } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useSEO } from '@/hooks/useSEO';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -28,6 +29,13 @@ const Auth = () => {
   const [signupPassword, setSignupPassword] = useState('');
   const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
   const [signupFullName, setSignupFullName] = useState('');
+
+  // Magic link state
+  const [showMagicLink, setShowMagicLink] = useState(false);
+  const [magicLinkEmail, setMagicLinkEmail] = useState('');
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   useSEO({
     title: 'Login or Sign Up | MyRecruita',
@@ -55,6 +63,104 @@ const Auth = () => {
     };
     checkSession();
   }, [navigate]);
+
+  // Resend cooldown timer
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
+
+  const handleMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: magicLinkEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+        }
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      setMagicLinkSent(true);
+      setResendCooldown(60);
+      toast.success('Check your email! We sent you a magic link and a 6-digit code.');
+    } catch (error: any) {
+      toast.error('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otpCode.length !== 6) {
+      toast.error('Please enter the complete 6-digit code');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email: magicLinkEmail,
+        token: otpCode,
+        type: 'email',
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      toast.success('Welcome!');
+      navigate('/dashboard');
+    } catch (error: any) {
+      toast.error('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (resendCooldown > 0) return;
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: magicLinkEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+        }
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      setResendCooldown(60);
+      toast.success('New code sent! Check your email.');
+    } catch (error: any) {
+      toast.error('Failed to resend code.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetMagicLinkFlow = () => {
+    setShowMagicLink(false);
+    setMagicLinkSent(false);
+    setMagicLinkEmail('');
+    setOtpCode('');
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,86 +278,221 @@ const Auth = () => {
               </TabsList>
 
               <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="login-email"
-                        type="email"
-                        placeholder="your@email.com"
-                        value={loginEmail}
-                        onChange={(e) => setLoginEmail(e.target.value)}
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
+                {showMagicLink ? (
+                  // Magic Link Flow
+                  <div className="space-y-4">
+                    <button
+                      type="button"
+                      onClick={resetMagicLinkFlow}
+                      className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-1" />
+                      Back to password login
+                    </button>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Password</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="login-password"
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="••••••••"
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                        className="pl-10 pr-10"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </div>
+                    {!magicLinkSent ? (
+                      // Step 1: Enter email
+                      <form onSubmit={handleMagicLink} className="space-y-4">
+                        <div className="text-center mb-4">
+                          <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <Wand2 className="h-6 w-6 text-accent" />
+                          </div>
+                          <h3 className="font-semibold text-lg">Sign in with Magic Link</h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            We'll send you a link and a code to sign in instantly
+                          </p>
+                        </div>
 
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="remember"
-                      checked={rememberMe}
-                      onCheckedChange={(checked) => setRememberMe(checked === true)}
-                    />
-                    <Label htmlFor="remember" className="text-sm font-normal cursor-pointer">
-                      Remember me
-                    </Label>
-                  </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="magic-email">Email</Label>
+                          <div className="relative">
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              id="magic-email"
+                              type="email"
+                              placeholder="your@email.com"
+                              value={magicLinkEmail}
+                              onChange={(e) => setMagicLinkEmail(e.target.value)}
+                              className="pl-10"
+                              required
+                            />
+                          </div>
+                        </div>
 
-                  <Button type="submit" variant="accent" className="w-full" disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Logging in...
-                      </>
+                        <Button type="submit" variant="accent" className="w-full" disabled={isLoading}>
+                          {isLoading ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Sending...
+                            </>
+                          ) : (
+                            <>
+                              <Mail className="mr-2 h-4 w-4" />
+                              Send Magic Link
+                            </>
+                          )}
+                        </Button>
+                      </form>
                     ) : (
-                      'Login'
+                      // Step 2: Enter OTP code
+                      <form onSubmit={handleVerifyOTP} className="space-y-4">
+                        <div className="text-center mb-4">
+                          <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <Mail className="h-6 w-6 text-green-600 dark:text-green-400" />
+                          </div>
+                          <h3 className="font-semibold text-lg">Check your email</h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            We sent a magic link to <strong>{magicLinkEmail}</strong>
+                          </p>
+                          <p className="text-sm text-muted-foreground mt-2">
+                            Click the link in your email, or enter the 6-digit code below:
+                          </p>
+                        </div>
+
+                        <div className="flex justify-center">
+                          <InputOTP
+                            maxLength={6}
+                            value={otpCode}
+                            onChange={(value) => setOtpCode(value)}
+                          >
+                            <InputOTPGroup>
+                              <InputOTPSlot index={0} />
+                              <InputOTPSlot index={1} />
+                              <InputOTPSlot index={2} />
+                              <InputOTPSlot index={3} />
+                              <InputOTPSlot index={4} />
+                              <InputOTPSlot index={5} />
+                            </InputOTPGroup>
+                          </InputOTP>
+                        </div>
+
+                        <Button type="submit" variant="accent" className="w-full" disabled={isLoading || otpCode.length !== 6}>
+                          {isLoading ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Verifying...
+                            </>
+                          ) : (
+                            'Verify Code'
+                          )}
+                        </Button>
+
+                        <div className="text-center">
+                          <button
+                            type="button"
+                            onClick={handleResendCode}
+                            disabled={resendCooldown > 0 || isLoading}
+                            className="text-sm text-accent hover:underline disabled:text-muted-foreground disabled:no-underline"
+                          >
+                            {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : 'Resend code'}
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMagicLinkSent(false);
+                            setOtpCode('');
+                          }}
+                          className="text-sm text-muted-foreground hover:text-foreground w-full text-center"
+                        >
+                          Use a different email
+                        </button>
+                      </form>
                     )}
-                  </Button>
-
-                  <div className="relative my-6">
-                    <Separator />
-                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs text-muted-foreground">
-                      or continue with
-                    </span>
                   </div>
+                ) : (
+                  // Password Login Flow
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="login-email">Email</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="login-email"
+                          type="email"
+                          placeholder="your@email.com"
+                          value={loginEmail}
+                          onChange={(e) => setLoginEmail(e.target.value)}
+                          className="pl-10"
+                          required
+                        />
+                      </div>
+                    </div>
 
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full bg-[#0A66C2] hover:bg-[#004182] text-white border-[#0A66C2] hover:border-[#004182]"
-                    onClick={handleLinkedInLogin}
-                    disabled={isLoading}
-                  >
-                    <Linkedin className="mr-2 h-4 w-4" />
-                    Continue with LinkedIn
-                  </Button>
-                </form>
+                    <div className="space-y-2">
+                      <Label htmlFor="login-password">Password</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="login-password"
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder="••••••••"
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
+                          className="pl-10 pr-10"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="remember"
+                        checked={rememberMe}
+                        onCheckedChange={(checked) => setRememberMe(checked === true)}
+                      />
+                      <Label htmlFor="remember" className="text-sm font-normal cursor-pointer">
+                        Remember me
+                      </Label>
+                    </div>
+
+                    <Button type="submit" variant="accent" className="w-full" disabled={isLoading}>
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Logging in...
+                        </>
+                      ) : (
+                        'Login'
+                      )}
+                    </Button>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowMagicLink(true)}
+                      className="w-full text-sm text-accent hover:underline flex items-center justify-center gap-1"
+                    >
+                      <Wand2 className="h-4 w-4" />
+                      Sign in with Magic Link instead
+                    </button>
+
+                    <div className="relative my-6">
+                      <Separator />
+                      <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs text-muted-foreground">
+                        or continue with
+                      </span>
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full bg-[#0A66C2] hover:bg-[#004182] text-white border-[#0A66C2] hover:border-[#004182]"
+                      onClick={handleLinkedInLogin}
+                      disabled={isLoading}
+                    >
+                      <Linkedin className="mr-2 h-4 w-4" />
+                      Continue with LinkedIn
+                    </Button>
+                  </form>
+                )}
               </TabsContent>
 
               <TabsContent value="signup">
