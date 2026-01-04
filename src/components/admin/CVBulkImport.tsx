@@ -359,7 +359,7 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
       const entry: any = {
         name: file.data.name,
         email: file.data.email,
-        phone: file.data.phone || null,
+        phone: file.data.phone || '',
         job_title: file.data.job_title || null,
         sector: file.data.sector || null,
         location: file.data.location || null,
@@ -370,7 +370,7 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
         education_level: file.data.education_level || null,
         seniority_level: file.data.seniority_level || null,
         ai_profile: file.data.ai_profile || null,
-        cv_score: file.data.cv_score || null,
+        cv_score: file.data.cv_score ? Math.round(file.data.cv_score) : null,
         cv_score_breakdown: file.data.cv_score_breakdown || null,
         scored_at: file.data.cv_score ? new Date().toISOString() : null,
         admin_notes: null,
@@ -381,7 +381,8 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
       const { error } = await supabase.from('cv_submissions').insert(entry);
       
       if (error) {
-        console.error('Insert error:', error);
+        console.error('Insert error for', file.fileName, ':', error);
+        toast.error(`Failed to import ${file.fileName}: ${error.message}`);
         failed++;
       } else {
         success++;
