@@ -3,15 +3,15 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { LogOut, Briefcase, FileText, Star, BarChart3, UserPlus, RefreshCw, Loader2, AlertTriangle } from 'lucide-react';
+import { LogOut, Briefcase, FileText, Star, BarChart3, UserPlus, RefreshCw, Loader2, AlertTriangle, Settings } from 'lucide-react';
 import JobsManagement from '@/components/admin/JobsManagement';
 import SubmissionsManagement from '@/components/admin/SubmissionsManagement';
 import TalentManagement from '@/components/admin/TalentManagement';
 import StatsDashboard from '@/components/admin/StatsDashboard';
 import AdminManagement from '@/components/admin/AdminManagement';
+import SettingsManagement from '@/components/admin/SettingsManagement';
 import { BUILD_VERSION, forceRefresh } from '@/lib/version';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-
 export default function AdminDashboard() {
   const { user, isAdmin, adminRole, loading, isAdminLoading, signOut } = useAuth();
   const navigate = useNavigate();
@@ -82,7 +82,7 @@ export default function AdminDashboard() {
         )}
 
         <Tabs defaultValue={isCvUploader ? "submissions" : "stats"} className="space-y-4 sm:space-y-6">
-          <TabsList className={`grid w-full gap-1 ${isFullAdmin ? 'grid-cols-2 lg:grid-cols-5' : 'grid-cols-1'}`}>
+          <TabsList className={`grid w-full gap-1 ${isFullAdmin ? 'grid-cols-3 lg:grid-cols-6' : 'grid-cols-1'}`}>
             {isFullAdmin && (
               <TabsTrigger value="stats" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
                 <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -114,6 +114,13 @@ export default function AdminDashboard() {
                 <span className="sm:hidden">Staff</span>
               </TabsTrigger>
             )}
+            {isFullAdmin && (
+              <TabsTrigger value="settings" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Settings</span>
+                <span className="sm:hidden">⚙️</span>
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {isFullAdmin && (
@@ -141,6 +148,12 @@ export default function AdminDashboard() {
           {isFullAdmin && (
             <TabsContent value="admins" className="space-y-4 sm:space-y-6">
               <AdminManagement />
+            </TabsContent>
+          )}
+
+          {isFullAdmin && (
+            <TabsContent value="settings" className="space-y-4 sm:space-y-6">
+              <SettingsManagement />
             </TabsContent>
           )}
         </Tabs>

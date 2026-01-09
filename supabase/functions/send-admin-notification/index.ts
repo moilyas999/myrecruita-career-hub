@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -114,6 +115,38 @@ const getEmailContent = (type: string, data: any) => {
   }
 };
 
+const getNotificationEmails = async (): Promise<string[]> => {
+  const defaultEmails = ['zuhair@myrecruita.com'];
+  
+  try {
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const { data, error } = await supabaseAdmin
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'notification_emails')
+      .single();
+
+    if (error) {
+      console.error('Error fetching notification emails:', error);
+      return defaultEmails;
+    }
+
+    if (data?.value && Array.isArray(data.value) && data.value.length > 0) {
+      console.log('Using notification emails from settings:', data.value);
+      return data.value;
+    }
+
+    return defaultEmails;
+  } catch (error) {
+    console.error('Error in getNotificationEmails:', error);
+    return defaultEmails;
+  }
+};
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -126,11 +159,15 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Processing ${type} notification:`, data);
 
     const emailContent = getEmailContent(type, data);
+    
+    // Fetch notification emails from database
+    const notificationEmails = await getNotificationEmails();
+    console.log('Sending to:', notificationEmails);
 
     // Using Resend account email until domain is verified at resend.com/domains
     const emailResponse = await resend.emails.send({
       from: "MyRecruita <onboarding@resend.dev>",
-      to: ["iuddin200999@gmail.com"], // TODO: Change to zuhair@myrecruita.com after verifying myrecruita.com domain at resend.com/domains
+      to: notificationEmails,
       subject: emailContent.subject,
       html: emailContent.html,
     });
