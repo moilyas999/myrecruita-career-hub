@@ -258,8 +258,8 @@ const JobDetail = () => {
         console.log('Admin notification failed (non-critical):', notificationError);
       }
       
-      // Redirect to thank you page
-      navigate('/thank-you');
+      // Redirect to thank you page with submission type
+      navigate('/thank-you?type=job_application');
     } catch (error) {
       toast({
         title: "Error",

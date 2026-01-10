@@ -153,8 +153,8 @@ const SubmitCV = () => {
         console.log('Admin notification failed (non-critical):', notificationError);
       }
       
-      // Redirect to thank you page
-      navigate('/thank-you');
+      // Redirect to thank you page with submission type
+      navigate('/thank-you?type=cv');
     } catch (error) {
       console.error('Submission error:', error);
       toast({

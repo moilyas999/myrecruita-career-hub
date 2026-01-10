@@ -122,7 +122,7 @@ const PostJob = () => {
       }
 
       toast.success("Job posting submitted successfully!");
-      navigate('/thank-you');
+      navigate('/thank-you?type=employer_job');
     } catch (error) {
       console.error('Submission error:', error);
       toast.error("An error occurred while submitting your job posting");
