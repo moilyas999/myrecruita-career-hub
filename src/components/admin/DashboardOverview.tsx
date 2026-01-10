@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,10 +14,12 @@ import {
   Clock,
   Zap,
   Star,
+  RefreshCw,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface DashboardStats {
   totalCVs: number;
@@ -36,82 +38,113 @@ interface RecentActivity {
   timestamp: string;
 }
 
+async function fetchDashboardData() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const [
+    { count: totalCVs },
+    { count: newCVsToday },
+    { count: activeJobs },
+    { count: pendingApplications },
+    { count: talentProfiles },
+    { data: recentCVs },
+    { data: recentApplications },
+  ] = await Promise.all([
+    supabase.from('cv_submissions').select('*', { count: 'exact', head: true }),
+    supabase.from('cv_submissions').select('*', { count: 'exact', head: true })
+      .gte('created_at', today.toISOString()),
+    supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+    supabase.from('job_applications').select('*', { count: 'exact', head: true }),
+    supabase.from('talent_profiles').select('*', { count: 'exact', head: true }).eq('is_visible', true),
+    supabase.from('cv_submissions').select('id, name, created_at, job_title').order('created_at', { ascending: false }).limit(3),
+    supabase.from('job_applications').select('id, name, created_at, jobs(title)').order('created_at', { ascending: false }).limit(3),
+  ]);
+
+  const stats: DashboardStats = {
+    totalCVs: totalCVs || 0,
+    newCVsToday: newCVsToday || 0,
+    activeJobs: activeJobs || 0,
+    pendingApplications: pendingApplications || 0,
+    talentProfiles: talentProfiles || 0,
+    totalSubmissions: (totalCVs || 0) + (pendingApplications || 0),
+  };
+
+  const activity: RecentActivity[] = [
+    ...(recentCVs || []).map((cv: any) => ({
+      id: cv.id,
+      type: 'cv' as const,
+      title: cv.name,
+      subtitle: cv.job_title || 'CV Submission',
+      timestamp: cv.created_at,
+    })),
+    ...(recentApplications || []).map((app: any) => ({
+      id: app.id,
+      type: 'application' as const,
+      title: app.name,
+      subtitle: app.jobs?.title || 'Job Application',
+      timestamp: app.created_at,
+    })),
+  ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 5);
+
+  return { stats, activity };
+}
+
 export default function DashboardOverview() {
-  const [stats, setStats] = useState<DashboardStats>({
+  const queryClient = useQueryClient();
+  
+  const { data, isLoading, refetch, isFetching } = useQuery({
+    queryKey: ['dashboard-overview'],
+    queryFn: fetchDashboardData,
+    staleTime: 30000, // Consider data stale after 30 seconds
+    refetchInterval: 60000, // Auto refetch every minute
+  });
+
+  const stats = data?.stats || {
     totalCVs: 0,
     newCVsToday: 0,
     activeJobs: 0,
     pendingApplications: 0,
     talentProfiles: 0,
     totalSubmissions: 0,
-  });
-  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
-    try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      // Parallel fetch all counts
-      const [
-        { count: totalCVs },
-        { count: newCVsToday },
-        { count: activeJobs },
-        { count: pendingApplications },
-        { count: talentProfiles },
-        { data: recentCVs },
-        { data: recentApplications },
-      ] = await Promise.all([
-        supabase.from('cv_submissions').select('*', { count: 'exact', head: true }),
-        supabase.from('cv_submissions').select('*', { count: 'exact', head: true })
-          .gte('created_at', today.toISOString()),
-        supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'active'),
-        supabase.from('job_applications').select('*', { count: 'exact', head: true }),
-        supabase.from('talent_profiles').select('*', { count: 'exact', head: true }).eq('is_visible', true),
-        supabase.from('cv_submissions').select('id, name, created_at, job_title').order('created_at', { ascending: false }).limit(3),
-        supabase.from('job_applications').select('id, name, created_at, jobs(title)').order('created_at', { ascending: false }).limit(3),
-      ]);
-
-      setStats({
-        totalCVs: totalCVs || 0,
-        newCVsToday: newCVsToday || 0,
-        activeJobs: activeJobs || 0,
-        pendingApplications: pendingApplications || 0,
-        talentProfiles: talentProfiles || 0,
-        totalSubmissions: (totalCVs || 0) + (pendingApplications || 0),
-      });
-
-      // Combine and sort recent activity
-      const activity: RecentActivity[] = [
-        ...(recentCVs || []).map((cv: any) => ({
-          id: cv.id,
-          type: 'cv' as const,
-          title: cv.name,
-          subtitle: cv.job_title || 'CV Submission',
-          timestamp: cv.created_at,
-        })),
-        ...(recentApplications || []).map((app: any) => ({
-          id: app.id,
-          type: 'application' as const,
-          title: app.name,
-          subtitle: app.jobs?.title || 'Job Application',
-          timestamp: app.created_at,
-        })),
-      ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 5);
-
-      setRecentActivity(activity);
-    } catch (error: any) {
-      toast.error('Failed to load dashboard data');
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
   };
+  const recentActivity = data?.activity || [];
+
+  // Real-time subscriptions
+  useEffect(() => {
+    const cvChannel = supabase
+      .channel('cv-changes')
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'cv_submissions' 
+      }, (payload) => {
+        toast.success('New CV submitted', {
+          description: `${payload.new.name} just submitted their CV`,
+        });
+        queryClient.invalidateQueries({ queryKey: ['dashboard-overview'] });
+      })
+      .subscribe();
+
+    const appChannel = supabase
+      .channel('application-changes')
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'job_applications' 
+      }, (payload) => {
+        toast.success('New job application', {
+          description: `${payload.new.name} applied for a job`,
+        });
+        queryClient.invalidateQueries({ queryKey: ['dashboard-overview'] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(cvChannel);
+      supabase.removeChannel(appChannel);
+    };
+  }, [queryClient]);
 
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
@@ -168,7 +201,7 @@ export default function DashboardOverview() {
     { label: 'Post Job', icon: Briefcase, href: '/admin?tab=jobs', variant: 'outline' as const },
   ];
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="grid gap-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -195,6 +228,15 @@ export default function DashboardOverview() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => refetch()}
+            disabled={isFetching}
+          >
+            <RefreshCw className={cn("w-4 h-4 mr-2", isFetching && "animate-spin")} />
+            Refresh
+          </Button>
           {quickActions.map((action) => (
             <Button key={action.label} variant={action.variant} size="sm" asChild>
               <Link to={action.href}>
