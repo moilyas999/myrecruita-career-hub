@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,10 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calendar, PlusCircle, Edit, Trash2, Eye, Upload, Save, X } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { PlusCircle, Edit, Trash2, Eye, Save, X, RefreshCw, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface BlogPost {
   id: string;
@@ -41,11 +45,27 @@ interface BlogCategory {
   slug: string;
 }
 
+// Fetch functions
+const fetchPosts = async (): Promise<BlogPost[]> => {
+  const { data, error } = await supabase
+    .from('blog_posts')
+    .select(`*, blog_categories (name, slug)`)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+};
+
+const fetchCategories = async (): Promise<BlogCategory[]> => {
+  const { data, error } = await supabase
+    .from('blog_categories')
+    .select('*')
+    .order('name');
+  if (error) throw error;
+  return data || [];
+};
+
 const BlogManagement = () => {
-  const { toast } = useToast();
-  const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [categories, setCategories] = useState<BlogCategory[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -64,52 +84,94 @@ const BlogManagement = () => {
     published_at: ""
   });
 
-  const fetchPosts = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
+  // React Query hooks
+  const { data: posts = [], isLoading: loadingPosts, isError: errorPosts, refetch: refetchPosts } = useQuery({
+    queryKey: queryKeys.blogPosts,
+    queryFn: fetchPosts,
+  });
+
+  const { data: categories = [] } = useQuery({
+    queryKey: queryKeys.blogCategories,
+    queryFn: fetchCategories,
+  });
+
+  // Real-time subscription
+  useRealtimeSubscription({
+    table: 'blog_posts',
+    queryKeys: [queryKeys.blogPosts],
+    showToasts: true,
+    toastMessages: {
+      insert: (data) => `New blog post: ${data.title}`,
+      update: (data) => `Blog post updated: ${data.title}`,
+      delete: () => 'Blog post deleted',
+    },
+  });
+
+  // Create/Update mutation
+  const saveMutation = useMutation({
+    mutationFn: async (postData: typeof formData & { id?: string }) => {
+      const payload = {
+        ...postData,
+        category_id: postData.category_id || null,
+        published_at: postData.is_published ? (postData.published_at || new Date().toISOString()) : null,
+        meta_title: postData.meta_title || postData.title,
+        meta_description: postData.meta_description || postData.excerpt
+      };
+
+      if (postData.id) {
+        const { error } = await supabase
+          .from('blog_posts')
+          .update(payload)
+          .eq('id', postData.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('blog_posts')
+          .insert([payload]);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success(`Blog post ${editingPost ? 'updated' : 'created'} successfully`);
+      setDialogOpen(false);
+      resetForm();
+      queryClient.invalidateQueries({ queryKey: queryKeys.blogPosts });
+    },
+    onError: (error) => {
+      console.error('Error saving post:', error);
+      toast.error('Failed to save blog post');
+    },
+  });
+
+  // Delete mutation with optimistic update
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
         .from('blog_posts')
-        .select(`
-          *,
-          blog_categories (
-            name,
-            slug
-          )
-        `)
-        .order('created_at', { ascending: false });
-
+        .delete()
+        .eq('id', id);
       if (error) throw error;
-      setPosts(data || []);
-    } catch (error) {
-      console.error('Error fetching posts:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load blog posts",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchCategories = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('blog_categories')
-        .select('*')
-        .order('name');
-
-      if (error) throw error;
-      setCategories(data || []);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchPosts();
-    fetchCategories();
-  }, []);
+    },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.blogPosts });
+      const previousPosts = queryClient.getQueryData<BlogPost[]>(queryKeys.blogPosts);
+      queryClient.setQueryData<BlogPost[]>(queryKeys.blogPosts, (old) =>
+        old?.filter((post) => post.id !== id) || []
+      );
+      return { previousPosts };
+    },
+    onError: (err, id, context) => {
+      queryClient.setQueryData(queryKeys.blogPosts, context?.previousPosts);
+      toast.error('Failed to delete blog post');
+      console.error('Delete error:', err);
+    },
+    onSuccess: () => {
+      toast.success('Blog post deleted successfully');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.blogPosts });
+    },
+  });
 
   const generateSlug = (title: string) => {
     return title
@@ -126,7 +188,6 @@ const BlogManagement = () => {
       [field]: value
     }));
 
-    // Auto-generate slug from title
     if (field === 'title') {
       setFormData(prev => ({
         ...prev,
@@ -157,71 +218,25 @@ const BlogManagement = () => {
         featured_image_url: publicUrl
       }));
 
-      toast({
-        title: "Image uploaded",
-        description: "Featured image uploaded successfully",
-      });
+      toast.success('Featured image uploaded successfully');
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast({
-        title: "Upload failed",
-        description: "Failed to upload image",
-        variant: "destructive",
-      });
+      toast.error('Failed to upload image');
     } finally {
       setUploading(false);
     }
   };
 
   const handleSubmit = async () => {
-    try {
-      if (!formData.title || !formData.content) {
-        toast({
-          title: "Validation Error",
-          description: "Title and content are required",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const postData = {
-        ...formData,
-        category_id: formData.category_id || null,
-        published_at: formData.is_published ? (formData.published_at || new Date().toISOString()) : null,
-        meta_title: formData.meta_title || formData.title,
-        meta_description: formData.meta_description || formData.excerpt
-      };
-
-      let error;
-      if (editingPost) {
-        ({ error } = await supabase
-          .from('blog_posts')
-          .update(postData)
-          .eq('id', editingPost.id));
-      } else {
-        ({ error } = await supabase
-          .from('blog_posts')
-          .insert([postData]));
-      }
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: `Blog post ${editingPost ? 'updated' : 'created'} successfully`,
-      });
-
-      setDialogOpen(false);
-      resetForm();
-      fetchPosts();
-    } catch (error) {
-      console.error('Error saving post:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save blog post",
-        variant: "destructive",
-      });
+    if (!formData.title || !formData.content) {
+      toast.error('Title and content are required');
+      return;
     }
+
+    saveMutation.mutate({
+      ...formData,
+      id: editingPost?.id,
+    });
   };
 
   const handleEdit = (post: BlogPost) => {
@@ -244,29 +259,7 @@ const BlogManagement = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this blog post?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('blog_posts')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Blog post deleted successfully",
-      });
-
-      fetchPosts();
-    } catch (error) {
-      console.error('Error deleting post:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete blog post",
-        variant: "destructive",
-      });
-    }
+    deleteMutation.mutate(id);
   };
 
   const resetForm = () => {
@@ -291,176 +284,197 @@ const BlogManagement = () => {
     resetForm();
   };
 
+  if (errorPosts) {
+    return (
+      <Card className="border-destructive/20 bg-destructive/5">
+        <CardContent className="p-8 text-center">
+          <AlertTriangle className="w-8 h-8 text-destructive mx-auto mb-3" />
+          <p className="text-destructive font-medium mb-2">Failed to load blog posts</p>
+          <Button onClick={() => refetchPosts()} variant="outline" size="sm">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Retry
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Blog Management</h2>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              New Post
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editingPost ? 'Edit Blog Post' : 'Create New Blog Post'}</DialogTitle>
-            </DialogHeader>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Left Column */}
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="title">Title *</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => handleInputChange('title', e.target.value)}
-                    placeholder="Enter blog post title..."
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="slug">Slug</Label>
-                  <Input
-                    id="slug"
-                    value={formData.slug}
-                    onChange={(e) => handleInputChange('slug', e.target.value)}
-                    placeholder="url-friendly-slug"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="excerpt">Excerpt</Label>
-                  <Textarea
-                    id="excerpt"
-                    value={formData.excerpt}
-                    onChange={(e) => handleInputChange('excerpt', e.target.value)}
-                    placeholder="Brief description..."
-                    rows={3}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="author">Author</Label>
-                  <Input
-                    id="author"
-                    value={formData.author_name}
-                    onChange={(e) => handleInputChange('author_name', e.target.value)}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="category">Category</Label>
-                  <Select value={formData.category_id} onValueChange={(value) => handleInputChange('category_id', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">No category</SelectItem>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="featured-image">Featured Image</Label>
-                  <div className="space-y-2">
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleImageUpload(file);
-                      }}
-                      disabled={uploading}
-                    />
-                    {formData.featured_image_url && (
-                      <img 
-                        src={formData.featured_image_url} 
-                        alt="Featured" 
-                        className="w-full h-32 object-cover rounded"
-                      />
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={formData.is_published}
-                    onCheckedChange={(checked) => handleInputChange('is_published', checked)}
-                  />
-                  <Label>Published</Label>
-                </div>
-
-                {formData.is_published && (
+        <div className="flex gap-2">
+          <Button onClick={() => refetchPosts()} variant="outline" size="sm">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh
+          </Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={resetForm}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                New Post
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{editingPost ? 'Edit Blog Post' : 'Create New Blog Post'}</DialogTitle>
+              </DialogHeader>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Left Column */}
+                <div className="space-y-4">
                   <div>
-                    <Label htmlFor="published_at">Publish Date</Label>
+                    <Label htmlFor="title">Title *</Label>
                     <Input
-                      id="published_at"
-                      type="datetime-local"
-                      value={formData.published_at}
-                      onChange={(e) => handleInputChange('published_at', e.target.value)}
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => handleInputChange('title', e.target.value)}
+                      placeholder="Enter blog post title..."
                     />
                   </div>
-                )}
+
+                  <div>
+                    <Label htmlFor="slug">Slug</Label>
+                    <Input
+                      id="slug"
+                      value={formData.slug}
+                      onChange={(e) => handleInputChange('slug', e.target.value)}
+                      placeholder="url-friendly-slug"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="excerpt">Excerpt</Label>
+                    <Textarea
+                      id="excerpt"
+                      value={formData.excerpt}
+                      onChange={(e) => handleInputChange('excerpt', e.target.value)}
+                      placeholder="Brief description..."
+                      rows={3}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="author">Author</Label>
+                    <Input
+                      id="author"
+                      value={formData.author_name}
+                      onChange={(e) => handleInputChange('author_name', e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="category">Category</Label>
+                    <Select value={formData.category_id} onValueChange={(value) => handleInputChange('category_id', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">No category</SelectItem>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="featured-image">Featured Image</Label>
+                    <div className="space-y-2">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleImageUpload(file);
+                        }}
+                        disabled={uploading}
+                      />
+                      {formData.featured_image_url && (
+                        <img 
+                          src={formData.featured_image_url} 
+                          alt="Featured" 
+                          className="w-full h-32 object-cover rounded"
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={formData.is_published}
+                      onCheckedChange={(checked) => handleInputChange('is_published', checked)}
+                    />
+                    <Label>Published</Label>
+                  </div>
+
+                  {formData.is_published && (
+                    <div>
+                      <Label htmlFor="published_at">Publish Date</Label>
+                      <Input
+                        id="published_at"
+                        type="datetime-local"
+                        value={formData.published_at}
+                        onChange={(e) => handleInputChange('published_at', e.target.value)}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="content">Content *</Label>
+                    <Textarea
+                      id="content"
+                      value={formData.content}
+                      onChange={(e) => handleInputChange('content', e.target.value)}
+                      placeholder="Write your blog post content here..."
+                      rows={15}
+                      className="font-mono"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Supports basic formatting: # Heading, ## Subheading, - List items, &gt; Blockquote
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="meta_title">SEO Title</Label>
+                    <Input
+                      id="meta_title"
+                      value={formData.meta_title}
+                      onChange={(e) => handleInputChange('meta_title', e.target.value)}
+                      placeholder="SEO optimized title..."
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="meta_description">SEO Description</Label>
+                    <Textarea
+                      id="meta_description"
+                      value={formData.meta_description}
+                      onChange={(e) => handleInputChange('meta_description', e.target.value)}
+                      placeholder="SEO meta description..."
+                      rows={3}
+                    />
+                  </div>
+                </div>
               </div>
 
-              {/* Right Column */}
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="content">Content *</Label>
-                  <Textarea
-                    id="content"
-                    value={formData.content}
-                    onChange={(e) => handleInputChange('content', e.target.value)}
-                    placeholder="Write your blog post content here..."
-                    rows={15}
-                    className="font-mono"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Supports basic formatting: # Heading, ## Subheading, - List items, &gt; Blockquote
-                  </p>
-                </div>
-
-                <div>
-                  <Label htmlFor="meta_title">SEO Title</Label>
-                  <Input
-                    id="meta_title"
-                    value={formData.meta_title}
-                    onChange={(e) => handleInputChange('meta_title', e.target.value)}
-                    placeholder="SEO optimized title..."
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="meta_description">SEO Description</Label>
-                  <Textarea
-                    id="meta_description"
-                    value={formData.meta_description}
-                    onChange={(e) => handleInputChange('meta_description', e.target.value)}
-                    placeholder="SEO meta description..."
-                    rows={3}
-                  />
-                </div>
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button variant="outline" onClick={handleDialogClose}>
+                  <X className="mr-2 h-4 w-4" />
+                  Cancel
+                </Button>
+                <Button onClick={handleSubmit} disabled={uploading || saveMutation.isPending}>
+                  <Save className="mr-2 h-4 w-4" />
+                  {saveMutation.isPending ? 'Saving...' : (editingPost ? 'Update' : 'Create')} Post
+                </Button>
               </div>
-            </div>
-
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button variant="outline" onClick={handleDialogClose}>
-                <X className="mr-2 h-4 w-4" />
-                Cancel
-              </Button>
-              <Button onClick={handleSubmit} disabled={uploading}>
-                <Save className="mr-2 h-4 w-4" />
-                {editingPost ? 'Update' : 'Create'} Post
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card>
@@ -468,9 +482,13 @@ const BlogManagement = () => {
           <CardTitle>Blog Posts</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          {loadingPosts ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center space-x-4">
+                  <Skeleton className="h-12 w-full" />
+                </div>
+              ))}
             </div>
           ) : (
             <Table>
@@ -507,30 +525,44 @@ const BlogManagement = () => {
                     </TableCell>
                     <TableCell>{post.view_count}</TableCell>
                     <TableCell>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <Calendar className="mr-1 h-4 w-4" />
-                        {format(new Date(post.created_at), 'MMM dd, yyyy')}
-                      </div>
+                      {format(new Date(post.created_at), "MMM dd, yyyy")}
                     </TableCell>
                     <TableCell>
-                      <div className="flex space-x-2">
-                        {post.is_published && (
-                          <Button asChild variant="ghost" size="sm">
-                            <a href={`/blog/${post.slug}`} target="_blank" rel="noopener noreferrer">
-                              <Eye className="h-4 w-4" />
-                            </a>
-                          </Button>
-                        )}
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(post)}>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => window.open(`/blog/${post.slug}`, '_blank')}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(post)}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(post.id)}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(post.id)}
+                          disabled={deleteMutation.isPending}
+                          className="text-muted-foreground hover:text-destructive"
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
                 ))}
+                {posts.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      No blog posts yet. Create your first post!
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           )}
