@@ -1,17 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Mail, Phone, Calendar, FileText, User, Briefcase, Download, ExternalLink, RefreshCw, Plus, Upload, List, MapPin, Building, Trash2, Zap, Loader2, Activity } from 'lucide-react';
+import { Mail, Phone, Calendar, FileText, User, Briefcase, Download, RefreshCw, Plus, Upload, List, MapPin, Trash2, Zap, Loader2, Activity, AlertTriangle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import CVManualEntry from './CVManualEntry';
 import CVBulkImport from './CVBulkImport';
-import CVScoreBadge, { CVScoreBreakdown } from './CVScoreBadge';
+import CVScoreBadge from './CVScoreBadge';
 import CVUploaderActivityLog from './CVUploaderActivityLog';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { queryKeys, submissionQueryKeys } from '@/lib/queryKeys';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface JobApplication {
   id: string;
@@ -70,146 +74,255 @@ interface TalentRequest {
   };
 }
 
+interface EmployerJobSubmission {
+  id: string;
+  company_name: string;
+  contact_name: string;
+  email: string;
+  phone: string;
+  job_title: string;
+  job_description: string;
+  sector: string;
+  location: string;
+  job_spec_file_url?: string;
+  created_at: string;
+}
+
+interface ContactSubmission {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  subject: string;
+  message: string;
+  inquiry_type: string;
+  created_at: string;
+}
+
+// Fetch functions
+const fetchJobApplications = async (): Promise<JobApplication[]> => {
+  const { data, error } = await supabase
+    .from('job_applications')
+    .select(`*, jobs (title, reference_id)`)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+};
+
+const fetchCVSubmissions = async (): Promise<CVSubmission[]> => {
+  const { data, error } = await supabase
+    .from('cv_submissions')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+};
+
+const fetchCareerPartnerRequests = async (): Promise<CareerPartnerRequest[]> => {
+  const { data, error } = await supabase
+    .from('career_partner_requests')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+};
+
+const fetchTalentRequests = async (): Promise<TalentRequest[]> => {
+  const { data, error } = await supabase
+    .from('talent_requests')
+    .select(`*, talent_profiles (reference_id, role)`)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+};
+
+const fetchEmployerJobSubmissions = async (): Promise<EmployerJobSubmission[]> => {
+  const { data, error } = await supabase
+    .from('employer_job_submissions')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+};
+
+const fetchContactSubmissions = async (): Promise<ContactSubmission[]> => {
+  const { data, error } = await supabase
+    .from('contact_submissions')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+};
+
+// Loading skeleton component
+function SubmissionsSkeleton() {
+  return (
+    <div className="space-y-4">
+      {[1, 2, 3].map((i) => (
+        <Card key={i}>
+          <CardHeader className="pb-3">
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-32 mt-2" />
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
 export default function SubmissionsManagement() {
   const { adminRole } = useAuth();
   const isFullAdmin = adminRole === 'admin';
   const isCvUploader = adminRole === 'cv_uploader';
+  const queryClient = useQueryClient();
 
-  const [jobApplications, setJobApplications] = useState<JobApplication[]>([]);
-  const [cvSubmissions, setCvSubmissions] = useState<CVSubmission[]>([]);
-  const [careerRequests, setCareerRequests] = useState<CareerPartnerRequest[]>([]);
-  const [talentRequests, setTalentRequests] = useState<TalentRequest[]>([]);
-  const [employerJobSubmissions, setEmployerJobSubmissions] = useState<any[]>([]);
-  const [contactSubmissions, setContactSubmissions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [cvSubTab, setCvSubTab] = useState('all-cvs');
   const [isRescoring, setIsRescoring] = useState(false);
   const [rescoreProgress, setRescoreProgress] = useState({ current: 0, total: 0 });
 
-  useEffect(() => {
-    fetchAllSubmissions();
-  }, []);
+  // React Query hooks for each submission type
+  const { data: jobApplications = [], isLoading: loadingJobs, isError: errorJobs, refetch: refetchJobs } = useQuery({
+    queryKey: queryKeys.jobApplications,
+    queryFn: fetchJobApplications,
+    enabled: isFullAdmin,
+  });
 
-  const fetchAllSubmissions = async () => {
-    try {
-      setLoading(true);
-      console.log('Fetching submissions...');
-      
-      // Fetch job applications
-      const { data: jobApps, error: jobError } = await supabase
-        .from('job_applications')
-        .select(`
-          *,
-          jobs (title, reference_id)
-        `)
-        .order('created_at', { ascending: false });
+  const { data: cvSubmissions = [], isLoading: loadingCVs, isError: errorCVs, refetch: refetchCVs } = useQuery({
+    queryKey: queryKeys.cvSubmissions,
+    queryFn: fetchCVSubmissions,
+  });
 
-      if (jobError) {
-        console.error('Job applications error:', jobError);
-        throw jobError;
-      }
+  const { data: careerRequests = [], isLoading: loadingCareer, isError: errorCareer, refetch: refetchCareer } = useQuery({
+    queryKey: queryKeys.careerPartnerRequests,
+    queryFn: fetchCareerPartnerRequests,
+    enabled: isFullAdmin,
+  });
 
-      // Fetch CV submissions
-      const { data: cvSubs, error: cvError } = await supabase
+  const { data: talentRequests = [], isLoading: loadingTalent, isError: errorTalent, refetch: refetchTalent } = useQuery({
+    queryKey: queryKeys.talentRequests,
+    queryFn: fetchTalentRequests,
+    enabled: isFullAdmin,
+  });
+
+  const { data: employerJobSubmissions = [], isLoading: loadingEmployer, isError: errorEmployer, refetch: refetchEmployer } = useQuery({
+    queryKey: queryKeys.employerJobSubmissions,
+    queryFn: fetchEmployerJobSubmissions,
+    enabled: isFullAdmin,
+  });
+
+  const { data: contactSubmissions = [], isLoading: loadingContact, isError: errorContact, refetch: refetchContact } = useQuery({
+    queryKey: queryKeys.contactSubmissions,
+    queryFn: fetchContactSubmissions,
+    enabled: isFullAdmin,
+  });
+
+  // Real-time subscriptions for all submission types
+  useRealtimeSubscription({
+    table: 'job_applications',
+    queryKeys: [queryKeys.jobApplications, queryKeys.dashboardOverview],
+    showToasts: true,
+    toastMessages: {
+      insert: (data) => `New job application: ${data.name}`,
+    },
+  });
+
+  useRealtimeSubscription({
+    table: 'cv_submissions',
+    queryKeys: [queryKeys.cvSubmissions, queryKeys.dashboardOverview],
+    showToasts: true,
+    toastMessages: {
+      insert: (data) => `New CV submission: ${data.name}`,
+      delete: () => 'CV submission deleted',
+    },
+  });
+
+  useRealtimeSubscription({
+    table: 'career_partner_requests',
+    queryKeys: [queryKeys.careerPartnerRequests, queryKeys.dashboardOverview],
+    showToasts: true,
+    toastMessages: {
+      insert: (data) => `New career partner request: ${data.name}`,
+    },
+  });
+
+  useRealtimeSubscription({
+    table: 'talent_requests',
+    queryKeys: [queryKeys.talentRequests, queryKeys.dashboardOverview],
+    showToasts: true,
+    toastMessages: {
+      insert: (data) => `New talent request from ${data.company_name}`,
+    },
+  });
+
+  useRealtimeSubscription({
+    table: 'employer_job_submissions',
+    queryKeys: [queryKeys.employerJobSubmissions, queryKeys.dashboardOverview],
+    showToasts: true,
+    toastMessages: {
+      insert: (data) => `New employer job submission: ${data.job_title}`,
+    },
+  });
+
+  useRealtimeSubscription({
+    table: 'contact_submissions',
+    queryKeys: [queryKeys.contactSubmissions, queryKeys.dashboardOverview],
+    showToasts: true,
+    toastMessages: {
+      insert: (data) => `New contact form submission: ${data.name}`,
+    },
+  });
+
+  // Delete CV mutation with optimistic update
+  const deleteCVMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
         .from('cv_submissions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (cvError) {
-        console.error('CV submissions error:', cvError);
-        throw cvError;
-      }
-
-      // Fetch career partner requests
-      const { data: careerReqs, error: careerError } = await supabase
-        .from('career_partner_requests')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (careerError) {
-        console.error('Career requests error:', careerError);
-        throw careerError;
-      }
-
-      // Fetch talent requests
-      const { data: talentReqs, error: talentError } = await supabase
-        .from('talent_requests')
-        .select(`
-          *,
-          talent_profiles (reference_id, role)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (talentError) {
-        console.error('Talent requests error:', talentError);
-        throw talentError;
-      }
-
-      // Fetch employer job submissions
-      const { data: employerJobs, error: employerError } = await supabase
-        .from('employer_job_submissions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (employerError) {
-        console.error('Employer job submissions error:', employerError);
-        throw employerError;
-      }
-
-      // Fetch contact submissions
-      const { data: contactSubs, error: contactError } = await supabase
-        .from('contact_submissions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (contactError) {
-        console.error('Contact submissions error:', contactError);
-        throw contactError;
-      }
-
-      console.log('Fetched data:', {
-        jobApplications: jobApps?.length || 0,
-        cvSubmissions: cvSubs?.length || 0,
-        careerRequests: careerReqs?.length || 0,
-        talentRequests: talentReqs?.length || 0,
-        employerJobSubmissions: employerJobs?.length || 0,
-        contactSubmissions: contactSubs?.length || 0
-      });
-
-      setJobApplications(jobApps || []);
-      setCvSubmissions(cvSubs || []);
-      setCareerRequests(careerReqs || []);
-      setTalentRequests(talentReqs || []);
-      setEmployerJobSubmissions(employerJobs || []);
-      setContactSubmissions(contactSubs || []);
-    } catch (error: any) {
-      console.error('Failed to fetch submissions:', error);
-      toast.error('Failed to fetch submissions: ' + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.cvSubmissions });
+      const previousCVs = queryClient.getQueryData<CVSubmission[]>(queryKeys.cvSubmissions);
+      queryClient.setQueryData<CVSubmission[]>(queryKeys.cvSubmissions, (old) =>
+        old?.filter((cv) => cv.id !== id) || []
+      );
+      return { previousCVs };
+    },
+    onError: (err, id, context) => {
+      queryClient.setQueryData(queryKeys.cvSubmissions, context?.previousCVs);
+      toast.error('Failed to delete CV submission');
+      console.error('Delete error:', err);
+    },
+    onSuccess: () => {
+      toast.success('CV submission deleted successfully');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.cvSubmissions });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardOverview });
+    },
+  });
 
   const handleDownloadCV = async (cvUrl: string, applicantName: string) => {
     try {
       if (cvUrl.includes('cv-uploads/')) {
-        // Extract the file path from the URL
         const filePath = cvUrl.split('/cv-uploads/')[1];
-        
-        // Create a signed URL for download
         const { data, error } = await supabase.storage
           .from('cv-uploads')
-          .createSignedUrl(filePath, 3600); // 1 hour expiry
-
+          .createSignedUrl(filePath, 3600);
         if (error) {
           toast.error('Failed to generate download link');
           return;
         }
-
-        // Open the signed URL in a new tab
         window.open(data.signedUrl, '_blank');
       } else {
-        // For external URLs, open directly
         window.open(cvUrl, '_blank');
       }
     } catch (error) {
@@ -221,21 +334,7 @@ export default function SubmissionsManagement() {
     if (!confirm(`Are you sure you want to delete the CV submission for "${name}"? This action cannot be undone.`)) {
       return;
     }
-
-    try {
-      const { error } = await supabase
-        .from('cv_submissions')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      setCvSubmissions(prev => prev.filter(cv => cv.id !== id));
-      toast.success('CV submission deleted successfully');
-    } catch (error: any) {
-      console.error('Delete error:', error);
-      toast.error('Failed to delete CV submission: ' + error.message);
-    }
+    deleteCVMutation.mutate(id);
   };
 
   const handleRescoreAllCVs = async () => {
@@ -256,11 +355,8 @@ export default function SubmissionsManagement() {
 
     try {
       const { data, error } = await supabase.functions.invoke('rescore-cvs');
-
       if (error) throw error;
-
-      toast.success(`Started re-scoring ${data.count} CVs in background. You can navigate away - refresh to see updated scores.`);
-      console.log('Background rescoring started:', data);
+      toast.success(`Started re-scoring ${data.count} CVs in background. Refresh to see updated scores.`);
     } catch (error: any) {
       console.error('Failed to start background rescoring:', error);
       toast.error('Failed to start re-scoring: ' + error.message);
@@ -277,7 +373,6 @@ export default function SubmissionsManagement() {
       date: string;
     }> = [];
 
-    // Collect from all sources
     jobApplications.forEach(app => allEmails.push({
       email: app.email,
       name: app.name,
@@ -320,12 +415,10 @@ export default function SubmissionsManagement() {
       date: sub.created_at
     }));
 
-    // De-duplicate by email (keep first occurrence)
     const uniqueEmails = Array.from(
       new Map(allEmails.map(e => [e.email.toLowerCase(), e])).values()
     );
 
-    // Generate CSV
     const csvContent = [
       ['Email', 'Name', 'Source', 'Submission Date'].join(','),
       ...uniqueEmails.map(e => 
@@ -333,7 +426,6 @@ export default function SubmissionsManagement() {
       )
     ].join('\n');
 
-    // Download
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -345,8 +437,38 @@ export default function SubmissionsManagement() {
     toast.success(`Exported ${uniqueEmails.length} unique emails`);
   };
 
-  if (loading) {
-    return <div className="text-center py-8">Loading submissions...</div>;
+  const handleRefreshAll = () => {
+    submissionQueryKeys.forEach(key => {
+      queryClient.invalidateQueries({ queryKey: key });
+    });
+    queryClient.invalidateQueries({ queryKey: queryKeys.dashboardOverview });
+  };
+
+  const handleCVSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.cvSubmissions });
+    queryClient.invalidateQueries({ queryKey: queryKeys.dashboardOverview });
+  };
+
+  // Combined loading state for initial load
+  const isInitialLoading = loadingCVs || (isFullAdmin && (loadingJobs || loadingCareer || loadingTalent || loadingEmployer || loadingContact));
+  
+  // Check for any errors
+  const hasError = errorCVs || (isFullAdmin && (errorJobs || errorCareer || errorTalent || errorEmployer || errorContact));
+
+  if (hasError) {
+    return (
+      <Card className="border-destructive/20 bg-destructive/5">
+        <CardContent className="p-8 text-center">
+          <AlertTriangle className="w-8 h-8 text-destructive mx-auto mb-3" />
+          <p className="text-destructive font-medium mb-2">Failed to load submissions</p>
+          <p className="text-sm text-muted-foreground mb-4">There was an error loading the submission data.</p>
+          <Button onClick={handleRefreshAll} variant="outline" size="sm">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Retry
+          </Button>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -367,7 +489,7 @@ export default function SubmissionsManagement() {
               Export All Emails
             </Button>
           )}
-          <Button onClick={fetchAllSubmissions} variant="outline" size="sm">
+          <Button onClick={handleRefreshAll} variant="outline" size="sm">
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
@@ -421,7 +543,9 @@ export default function SubmissionsManagement() {
             </TabsList>
 
             <TabsContent value="all-cvs" className="space-y-4">
-              {cvSubmissions.length === 0 ? (
+              {loadingCVs ? (
+                <SubmissionsSkeleton />
+              ) : cvSubmissions.length === 0 ? (
                 <Card>
                   <CardContent className="py-8 text-center text-muted-foreground">
                     No CV submissions found. Add some CVs to get started.
@@ -513,11 +637,11 @@ export default function SubmissionsManagement() {
             </TabsContent>
 
             <TabsContent value="add-single">
-              <CVManualEntry onSuccess={fetchAllSubmissions} />
+              <CVManualEntry onSuccess={handleCVSuccess} />
             </TabsContent>
 
             <TabsContent value="bulk-import">
-              <CVBulkImport onSuccess={fetchAllSubmissions} />
+              <CVBulkImport onSuccess={handleCVSuccess} />
             </TabsContent>
           </Tabs>
         </div>
@@ -558,7 +682,9 @@ export default function SubmissionsManagement() {
           </TabsList>
 
           <TabsContent value="job-applications" className="space-y-4">
-            {jobApplications.length === 0 ? (
+            {loadingJobs ? (
+              <SubmissionsSkeleton />
+            ) : jobApplications.length === 0 ? (
               <Card>
                 <CardContent className="py-8 text-center text-muted-foreground">
                   No job applications yet.
@@ -574,11 +700,11 @@ export default function SubmissionsManagement() {
                       <span className="break-words">{app.name}</span>
                     </CardTitle>
                     <Badge variant="secondary" className="self-start sm:self-auto">
-                      {app.jobs.reference_id}
+                      {app.jobs?.reference_id || 'N/A'}
                     </Badge>
                   </div>
                   <CardDescription className="break-words">
-                    Applied for: {app.jobs.title}
+                    Applied for: {app.jobs?.title || 'Unknown Job'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -719,7 +845,9 @@ export default function SubmissionsManagement() {
             </TabsList>
 
             <TabsContent value="all-cvs" className="space-y-4">
-              {cvSubmissions.length === 0 ? (
+              {loadingCVs ? (
+                <SubmissionsSkeleton />
+              ) : cvSubmissions.length === 0 ? (
                 <Card>
                   <CardContent className="py-8 text-center text-muted-foreground">
                     No CV submissions yet.
@@ -756,6 +884,7 @@ export default function SubmissionsManagement() {
                               size="icon"
                               onClick={() => handleDeleteCV(submission.id, submission.name)}
                               className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                              disabled={deleteCVMutation.isPending}
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -836,11 +965,11 @@ export default function SubmissionsManagement() {
             </TabsContent>
 
             <TabsContent value="add-single">
-              <CVManualEntry onSuccess={fetchAllSubmissions} />
+              <CVManualEntry onSuccess={handleCVSuccess} />
             </TabsContent>
 
             <TabsContent value="bulk-import">
-              <CVBulkImport onSuccess={fetchAllSubmissions} />
+              <CVBulkImport onSuccess={handleCVSuccess} />
             </TabsContent>
 
             <TabsContent value="activity-log">
@@ -850,7 +979,9 @@ export default function SubmissionsManagement() {
         </TabsContent>
 
         <TabsContent value="career-requests" className="space-y-4">
-          {careerRequests.length === 0 ? (
+          {loadingCareer ? (
+            <SubmissionsSkeleton />
+          ) : careerRequests.length === 0 ? (
             <Card>
               <CardContent className="py-8 text-center text-muted-foreground">
                 No career partner requests yet.
@@ -914,7 +1045,9 @@ export default function SubmissionsManagement() {
         </TabsContent>
 
         <TabsContent value="talent-requests" className="space-y-4">
-          {talentRequests.length === 0 ? (
+          {loadingTalent ? (
+            <SubmissionsSkeleton />
+          ) : talentRequests.length === 0 ? (
             <Card>
               <CardContent className="py-8 text-center text-muted-foreground">
                 No talent requests yet.
@@ -933,11 +1066,11 @@ export default function SubmissionsManagement() {
                       </div>
                     </CardTitle>
                     <Badge variant="secondary" className="self-start sm:self-auto">
-                      {request.talent_profiles.reference_id}
+                      {request.talent_profiles?.reference_id || 'N/A'}
                     </Badge>
                   </div>
                   <CardDescription className="break-words">
-                    Interested in: {request.talent_profiles.role}
+                    Interested in: {request.talent_profiles?.role || 'Unknown Role'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -972,14 +1105,16 @@ export default function SubmissionsManagement() {
         </TabsContent>
 
         <TabsContent value="employer-jobs" className="space-y-4">
-          {employerJobSubmissions.length === 0 ? (
+          {loadingEmployer ? (
+            <SubmissionsSkeleton />
+          ) : employerJobSubmissions.length === 0 ? (
             <Card>
               <CardContent className="py-8 text-center text-muted-foreground">
                 No employer job submissions yet.
               </CardContent>
             </Card>
           ) : (
-            employerJobSubmissions.map((submission: any) => (
+            employerJobSubmissions.map((submission) => (
               <Card key={submission.id}>
                 <CardHeader className="pb-3">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -1039,7 +1174,7 @@ export default function SubmissionsManagement() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleDownloadCV(submission.job_spec_file_url, `${submission.company_name}-${submission.job_title}`)}
+                          onClick={() => handleDownloadCV(submission.job_spec_file_url!, `${submission.company_name}-${submission.job_title}`)}
                           className="h-8"
                         >
                           <Download className="w-3 h-3 mr-1" />
@@ -1059,14 +1194,16 @@ export default function SubmissionsManagement() {
         </TabsContent>
 
         <TabsContent value="contact-submissions" className="space-y-4">
-          {contactSubmissions.length === 0 ? (
+          {loadingContact ? (
+            <SubmissionsSkeleton />
+          ) : contactSubmissions.length === 0 ? (
             <Card>
               <CardContent className="py-8 text-center text-muted-foreground">
                 No contact form submissions yet.
               </CardContent>
             </Card>
           ) : (
-            contactSubmissions.map((submission: any) => (
+            contactSubmissions.map((submission) => (
               <Card key={submission.id}>
                 <CardHeader className="pb-3">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">

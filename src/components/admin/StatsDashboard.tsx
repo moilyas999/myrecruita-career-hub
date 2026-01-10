@@ -11,6 +11,8 @@ import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, star
 import { cn } from '@/lib/utils';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/queryKeys';
+import { useMultiTableRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 
 interface Stats {
   cvSubmissions: number;
@@ -35,6 +37,13 @@ export default function StatsDashboard() {
   const [timeRange, setTimeRange] = useState<TimeRange>('last30days');
   const [customStartDate, setCustomStartDate] = useState<Date>();
   const [customEndDate, setCustomEndDate] = useState<Date>();
+
+  // Real-time subscription for stats updates
+  useMultiTableRealtimeSubscription(
+    ['cv_submissions', 'job_applications', 'career_partner_requests', 'talent_requests', 'jobs', 'talent_profiles'],
+    [queryKeys.statsDashboard],
+    { showToasts: false } // Don't show toasts for stats updates
+  );
 
   const getDateRange = useCallback(() => {
     const now = new Date();
@@ -146,9 +155,9 @@ export default function StatsDashboard() {
   }, [getDateRange, getPreviousDateRange]);
 
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
-    queryKey: ['stats-dashboard', timeRange, customStartDate?.toISOString(), customEndDate?.toISOString()],
+    queryKey: [queryKeys.statsDashboard, timeRange, customStartDate?.toISOString(), customEndDate?.toISOString()],
     queryFn: fetchStats,
-    staleTime: 60000, // Consider data stale after 1 minute
+    staleTime: 30000, // 30 seconds - shorter for real-time updates
     retry: 2,
   });
 
@@ -458,8 +467,8 @@ export default function StatsDashboard() {
         {/* Pie Chart - Distribution */}
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Distribution</CardTitle>
-            <CardDescription>Submission breakdown by type</CardDescription>
+            <CardTitle className="text-lg">Submission Distribution</CardTitle>
+            <CardDescription>Breakdown by type</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px] w-full">
@@ -471,19 +480,14 @@ export default function StatsDashboard() {
                       cx="50%"
                       cy="50%"
                       innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={2}
+                      outerRadius={80}
+                      paddingAngle={5}
                       dataKey="value"
                     >
                       {pieData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Legend 
-                      verticalAlign="bottom" 
-                      height={36}
-                      formatter={(value) => <span className="text-sm text-muted-foreground">{value}</span>}
-                    />
                     <Tooltip 
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))', 
@@ -491,11 +495,12 @@ export default function StatsDashboard() {
                         borderRadius: '8px'
                       }}
                     />
+                    <Legend />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
                 <div className="h-full flex items-center justify-center text-muted-foreground">
-                  No data for this period
+                  No data for selected period
                 </div>
               )}
             </div>
@@ -503,35 +508,24 @@ export default function StatsDashboard() {
         </Card>
       </div>
 
-      {/* Platform Totals */}
+      {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Active Jobs</p>
-                <p className="text-3xl font-bold text-primary">{stats.totalJobs}</p>
-                <p className="text-xs text-muted-foreground mt-1">Currently active listings</p>
-              </div>
-              <div className="p-3 rounded-full bg-primary/10">
-                <Briefcase className="w-6 h-6 text-primary" />
-              </div>
-            </div>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Active Jobs</CardTitle>
+            <CardDescription>Currently open positions</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-4xl font-bold text-primary">{stats.totalJobs}</div>
           </CardContent>
         </Card>
-
-        <Card className="bg-gradient-to-br from-amber-500/5 to-amber-500/10 border-amber-500/20">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Featured Talent</p>
-                <p className="text-3xl font-bold text-amber-600">{stats.visibleTalentProfiles}</p>
-                <p className="text-xs text-muted-foreground mt-1">Visible talent profiles</p>
-              </div>
-              <div className="p-3 rounded-full bg-amber-500/10">
-                <Star className="w-6 h-6 text-amber-600" />
-              </div>
-            </div>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Visible Talent</CardTitle>
+            <CardDescription>Profiles available to employers</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-4xl font-bold text-primary">{stats.visibleTalentProfiles}</div>
           </CardContent>
         </Card>
       </div>
