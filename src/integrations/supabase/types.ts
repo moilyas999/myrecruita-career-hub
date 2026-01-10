@@ -16,7 +16,9 @@ export type Database = {
     Tables: {
       admin_profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
+          display_name: string | null
           email: string
           id: string
           role: string
@@ -24,7 +26,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
+          display_name?: string | null
           email: string
           id?: string
           role?: string
@@ -32,7 +36,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
+          display_name?: string | null
           email?: string
           id?: string
           role?: string
@@ -516,6 +522,99 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          email_enabled: boolean
+          event_preferences: Json
+          id: string
+          in_app_enabled: boolean
+          push_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_enabled?: boolean
+          event_preferences?: Json
+          id?: string
+          in_app_enabled?: boolean
+          push_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_enabled?: boolean
+          event_preferences?: Json
+          id?: string
+          in_app_enabled?: boolean
+          push_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          link: string | null
+          message: string
+          read: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          link?: string | null
+          message: string
+          read?: boolean
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          link?: string | null
+          message?: string
+          read?: boolean
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      staff_permissions: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          id: string
+          permission: Database["public"]["Enums"]["permission_type"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          permission: Database["public"]["Enums"]["permission_type"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          permission?: Database["public"]["Enums"]["permission_type"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       talent_profiles: {
         Row: {
           created_at: string
@@ -634,14 +733,65 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_role_permissions: {
+        Args: { _role: string; _user_id: string }
+        Returns: undefined
+      }
       generate_job_reference: { Args: never; Returns: string }
       generate_talent_reference: { Args: never; Returns: string }
       get_admin_role: { Args: { user_id: string }; Returns: string }
+      get_user_permissions: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["permission_type"][]
+      }
+      has_permission: {
+        Args: {
+          _permission: Database["public"]["Enums"]["permission_type"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_admin: { Args: { user_id: string }; Returns: boolean }
       is_full_admin: { Args: { user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      permission_type:
+        | "cv.view"
+        | "cv.create"
+        | "cv.update"
+        | "cv.delete"
+        | "cv.export"
+        | "jobs.view"
+        | "jobs.create"
+        | "jobs.update"
+        | "jobs.delete"
+        | "applications.view"
+        | "applications.manage"
+        | "talent.view"
+        | "talent.create"
+        | "talent.update"
+        | "talent.delete"
+        | "submissions.view"
+        | "submissions.delete"
+        | "blog.view"
+        | "blog.create"
+        | "blog.update"
+        | "blog.delete"
+        | "analytics.view"
+        | "staff.view"
+        | "staff.create"
+        | "staff.update"
+        | "staff.delete"
+        | "settings.view"
+        | "settings.update"
+        | "notifications.manage"
+      staff_role:
+        | "admin"
+        | "recruiter"
+        | "account_manager"
+        | "marketing"
+        | "cv_uploader"
+        | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -768,6 +918,46 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      permission_type: [
+        "cv.view",
+        "cv.create",
+        "cv.update",
+        "cv.delete",
+        "cv.export",
+        "jobs.view",
+        "jobs.create",
+        "jobs.update",
+        "jobs.delete",
+        "applications.view",
+        "applications.manage",
+        "talent.view",
+        "talent.create",
+        "talent.update",
+        "talent.delete",
+        "submissions.view",
+        "submissions.delete",
+        "blog.view",
+        "blog.create",
+        "blog.update",
+        "blog.delete",
+        "analytics.view",
+        "staff.view",
+        "staff.create",
+        "staff.update",
+        "staff.delete",
+        "settings.view",
+        "settings.update",
+        "notifications.manage",
+      ],
+      staff_role: [
+        "admin",
+        "recruiter",
+        "account_manager",
+        "marketing",
+        "cv_uploader",
+        "viewer",
+      ],
+    },
   },
 } as const
