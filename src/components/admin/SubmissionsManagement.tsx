@@ -402,18 +402,18 @@ export default function SubmissionsManagement() {
           </div>
 
           <Tabs value={cvSubTab} onValueChange={setCvSubTab} className="space-y-4">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="all-cvs" className="flex items-center gap-2">
+            <TabsList className="w-full flex flex-wrap sm:grid sm:grid-cols-3 gap-1 h-auto p-1.5">
+              <TabsTrigger value="all-cvs" className="flex items-center gap-1.5 px-2 sm:px-3">
                 <List className="w-4 h-4" />
                 <span className="hidden sm:inline">My CVs</span>
                 <span className="sm:hidden">CVs</span>
               </TabsTrigger>
-              <TabsTrigger value="add-single" className="flex items-center gap-2">
+              <TabsTrigger value="add-single" className="flex items-center gap-1.5 px-2 sm:px-3">
                 <Plus className="w-4 h-4" />
                 <span className="hidden sm:inline">Add Single</span>
                 <span className="sm:hidden">Add</span>
               </TabsTrigger>
-              <TabsTrigger value="bulk-import" className="flex items-center gap-2">
+              <TabsTrigger value="bulk-import" className="flex items-center gap-1.5 px-2 sm:px-3">
                 <Upload className="w-4 h-4" />
                 <span className="hidden sm:inline">Bulk Import</span>
                 <span className="sm:hidden">Bulk</span>
@@ -524,33 +524,33 @@ export default function SubmissionsManagement() {
       ) : (
         // Full admin sees all tabs
         <Tabs defaultValue="job-applications" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6 gap-1">
-            <TabsTrigger value="job-applications" className="text-xs sm:text-sm">
+          <TabsList className="w-full flex flex-wrap gap-1 h-auto p-1.5">
+            <TabsTrigger value="job-applications" className="text-xs sm:text-sm px-2 sm:px-3">
               <span className="hidden sm:inline">Job Applications</span>
               <span className="sm:hidden">Jobs</span>
               <span className="ml-1">({jobApplications.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="cv-submissions" className="text-xs sm:text-sm">
+            <TabsTrigger value="cv-submissions" className="text-xs sm:text-sm px-2 sm:px-3">
               <span className="hidden sm:inline">CV Submissions</span>
               <span className="sm:hidden">CVs</span>
               <span className="ml-1">({cvSubmissions.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="career-requests" className="text-xs sm:text-sm">
+            <TabsTrigger value="career-requests" className="text-xs sm:text-sm px-2 sm:px-3">
               <span className="hidden sm:inline">Career Requests</span>
               <span className="sm:hidden">Career</span>
               <span className="ml-1">({careerRequests.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="talent-requests" className="text-xs sm:text-sm">
+            <TabsTrigger value="talent-requests" className="text-xs sm:text-sm px-2 sm:px-3">
               <span className="hidden sm:inline">Talent Requests</span>
               <span className="sm:hidden">Talent</span>
               <span className="ml-1">({talentRequests.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="employer-jobs" className="text-xs sm:text-sm">
+            <TabsTrigger value="employer-jobs" className="text-xs sm:text-sm px-2 sm:px-3">
               <span className="hidden sm:inline">Employer Posts</span>
               <span className="sm:hidden">Employer</span>
               <span className="ml-1">({employerJobSubmissions.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="contact-submissions" className="text-xs sm:text-sm">
+            <TabsTrigger value="contact-submissions" className="text-xs sm:text-sm px-2 sm:px-3">
               <span className="hidden sm:inline">Contact Forms</span>
               <span className="sm:hidden">Contact</span>
               <span className="ml-1">({contactSubmissions.length})</span>
@@ -695,23 +695,23 @@ export default function SubmissionsManagement() {
           </div>
 
           <Tabs value={cvSubTab} onValueChange={setCvSubTab} className="space-y-4">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="all-cvs" className="flex items-center gap-2">
+            <TabsList className="w-full flex flex-wrap sm:grid sm:grid-cols-4 gap-1 h-auto p-1.5">
+              <TabsTrigger value="all-cvs" className="flex items-center gap-1.5 px-2 sm:px-3">
                 <List className="w-4 h-4" />
                 <span className="hidden sm:inline">All CVs</span>
                 <span className="sm:hidden">All</span>
               </TabsTrigger>
-              <TabsTrigger value="add-single" className="flex items-center gap-2">
+              <TabsTrigger value="add-single" className="flex items-center gap-1.5 px-2 sm:px-3">
                 <Plus className="w-4 h-4" />
                 <span className="hidden sm:inline">Add Single</span>
                 <span className="sm:hidden">Add</span>
               </TabsTrigger>
-              <TabsTrigger value="bulk-import" className="flex items-center gap-2">
+              <TabsTrigger value="bulk-import" className="flex items-center gap-1.5 px-2 sm:px-3">
                 <Upload className="w-4 h-4" />
                 <span className="hidden sm:inline">Bulk Import</span>
                 <span className="sm:hidden">Bulk</span>
               </TabsTrigger>
-              <TabsTrigger value="activity-log" className="flex items-center gap-2">
+              <TabsTrigger value="activity-log" className="flex items-center gap-1.5 px-2 sm:px-3">
                 <Activity className="w-4 h-4" />
                 <span className="hidden sm:inline">Activity Log</span>
                 <span className="sm:hidden">Log</span>
