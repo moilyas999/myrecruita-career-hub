@@ -23,6 +23,11 @@ export const queryKeys = {
   // Admin
   adminProfiles: ['admin-profiles'] as const,
   activityLog: ['activity-log'] as const,
+  
+  // Permissions & Notifications
+  staffPermissions: ['staff-permissions'] as const,
+  notifications: ['notifications'] as const,
+  notificationPreferences: ['notification-preferences'] as const,
 } as const;
 
 // Helper to get all submission-related keys for bulk invalidation

@@ -99,9 +99,17 @@ export default function AdminSidebar({ isFullAdmin, isCvUploader }: AdminSidebar
         ],
       },
       {
+        label: 'Content',
+        items: [
+          { title: 'Blog Posts', href: '/admin?tab=blog', icon: FileText },
+        ],
+      },
+      {
         label: 'Administration',
         items: [
           { title: 'Staff Accounts', href: '/admin?tab=admins', icon: UserPlus },
+          { title: 'Permissions', href: '/admin?tab=permissions', icon: Settings },
+          { title: 'Notifications', href: '/admin?tab=notification-settings', icon: Mail },
           { title: 'Settings', href: '/admin?tab=settings', icon: Settings },
         ],
       },

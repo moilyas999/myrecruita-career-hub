@@ -13,13 +13,13 @@ import {
 import { 
   LogOut, 
   RefreshCw, 
-  Bell,
   Search,
 } from 'lucide-react';
 import { BUILD_VERSION, forceRefresh } from '@/lib/version';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import CommandPalette from './CommandPalette';
 import OfflineIndicator from './OfflineIndicator';
+import NotificationCenter from './NotificationCenter';
 
 interface AdminHeaderProps {
   user: User;
@@ -104,13 +104,7 @@ export default function AdminHeader({ user, onSignOut }: AdminHeaderProps) {
             </Button>
 
             {/* Notifications */}
-            <Button 
-              variant="ghost" 
-              size="icon"
-              className="text-muted-foreground hover:text-foreground h-9 w-9 relative"
-            >
-              <Bell className="w-4 h-4" />
-            </Button>
+            <NotificationCenter />
 
             {/* User Menu */}
             <DropdownMenu>
