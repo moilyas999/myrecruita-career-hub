@@ -191,7 +191,8 @@ export type NotificationEventType =
   | 'permission_changed'
   | 'blog_published'
   | 'system_updates'
-  | 'weekly_digest';
+  | 'weekly_digest'
+  | 'daily_summary';
 
 // Notification event configuration - Single source of truth
 export interface NotificationEventConfig {
@@ -291,6 +292,14 @@ export const NOTIFICATION_EVENT_CONFIG: NotificationEventConfig[] = [
     icon: 'Calendar',
     defaultForRoles: ['admin', 'recruiter', 'account_manager'],
     channels: ['email'],
+  },
+  {
+    id: 'daily_summary',
+    label: 'Daily Summary',
+    description: 'End-of-day summary of all activity',
+    icon: 'BarChart3',
+    defaultForRoles: ['admin', 'recruiter', 'account_manager'],
+    channels: ['push', 'email', 'in_app'],
   },
 ];
 

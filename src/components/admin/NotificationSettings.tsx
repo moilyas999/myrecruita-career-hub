@@ -24,6 +24,7 @@ import {
   Calendar,
   Send,
   Loader2,
+  BarChart3,
 } from 'lucide-react';
 import { useNotificationPreferences } from '@/hooks/useNotifications';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
@@ -49,6 +50,7 @@ const eventIcons: Record<NotificationEventType, React.ElementType> = {
   blog_published: BookOpen,
   system_updates: Settings,
   weekly_digest: Calendar,
+  daily_summary: BarChart3,
 };
 
 // Get event descriptions from config
