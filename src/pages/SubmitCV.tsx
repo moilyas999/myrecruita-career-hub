@@ -137,7 +137,7 @@ const SubmitCV = () => {
         description: "We'll review your profile and be in touch within 24 hours.",
       });
       
-      // Send admin notification
+      // Send admin notification with rich content
       try {
         await supabase.functions.invoke('send-push-notification', {
           body: {
@@ -146,6 +146,7 @@ const SubmitCV = () => {
             category: 'cv_submission',
             link: '/admin?tab=submissions',
             targetRoles: ['admin', 'recruiter'],
+            icon: 'https://myrecruita.com/favicon.ico',
           }
         });
       } catch (notificationError) {

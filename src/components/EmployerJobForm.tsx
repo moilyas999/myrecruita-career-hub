@@ -146,7 +146,7 @@ const EmployerJobForm = ({ isCompact = false }: EmployerJobFormProps) => {
         description: "We'll review your requirements and contact you within 24 hours.",
       });
       
-      // Send admin notification
+      // Send admin notification with rich content
       try {
         await supabase.functions.invoke('send-push-notification', {
           body: {
@@ -155,6 +155,7 @@ const EmployerJobForm = ({ isCompact = false }: EmployerJobFormProps) => {
             category: 'employer_job_submission',
             link: '/admin?tab=employer-jobs',
             targetRoles: ['admin', 'account_manager'],
+            icon: 'https://myrecruita.com/favicon.ico',
           }
         });
       } catch (notificationError) {

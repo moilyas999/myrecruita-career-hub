@@ -11,11 +11,24 @@ interface UsePushNotificationsReturn {
   requestPermission: () => Promise<NotificationPermission>;
 }
 
+interface UserData {
+  userId?: string;
+  email?: string;
+  name?: string;
+  role?: string;
+}
+
 // Progressier will be loaded via script tag
 declare global {
   interface Window {
     progressier?: {
-      add: (options: { id: string }) => void;
+      add: (options: { 
+        id?: string;
+        userId?: string;
+        email?: string;
+        name?: string;
+        tags?: string[];
+      }) => void;
       subscribe: () => Promise<void>;
       unsubscribe: () => Promise<void>;
       isSubscribed: () => Promise<boolean>;
@@ -23,7 +36,7 @@ declare global {
   }
 }
 
-export function usePushNotifications(): UsePushNotificationsReturn {
+export function usePushNotifications(userData?: UserData): UsePushNotificationsReturn {
   const { user } = useAuth();
   const [isSupported, setIsSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -62,6 +75,25 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     return Notification.requestPermission();
   }, [isSupported]);
 
+  const syncUserToProgressier = useCallback((data?: UserData) => {
+    if (!window.progressier) return;
+    
+    const syncData = data || userData;
+    if (!syncData) return;
+
+    try {
+      window.progressier.add({
+        userId: syncData.userId,
+        email: syncData.email,
+        name: syncData.name,
+        tags: syncData.role ? [syncData.role] : undefined,
+      });
+      console.log('User synced to Progressier:', syncData);
+    } catch (error) {
+      console.error('Failed to sync user to Progressier:', error);
+    }
+  }, [userData]);
+
   const subscribe = useCallback(async () => {
     if (!isSupported) {
       toast.error('Push notifications are not supported in this browser');
@@ -80,6 +112,10 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       if (window.progressier) {
         await window.progressier.subscribe();
         setIsSubscribed(true);
+        
+        // Sync user data to Progressier after successful subscription
+        syncUserToProgressier();
+        
         toast.success('Push notifications enabled!');
       } else {
         toast.error('Push notification service not available');
@@ -90,7 +126,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [isSupported, requestPermission]);
+  }, [isSupported, requestPermission, syncUserToProgressier]);
 
   const unsubscribe = useCallback(async () => {
     setIsLoading(true);

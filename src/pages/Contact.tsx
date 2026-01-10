@@ -133,7 +133,7 @@ const Contact = () => {
         description: "We'll get back to you within 2 hours during business hours.",
       });
       
-      // Send admin notification
+      // Send admin notification with rich content
       try {
         await supabase.functions.invoke('send-push-notification', {
           body: {
@@ -142,6 +142,7 @@ const Contact = () => {
             category: 'contact_submission',
             link: '/admin?tab=contact',
             targetRoles: ['admin', 'account_manager'],
+            icon: 'https://myrecruita.com/favicon.ico',
           }
         });
       } catch (notificationError) {

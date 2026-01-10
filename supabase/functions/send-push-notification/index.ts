@@ -11,8 +11,12 @@ interface NotificationPayload {
   category: string;
   link?: string;
   type?: 'info' | 'success' | 'warning' | 'error';
-  targetUserIds?: string[]; // If empty, sends to all users with notifications enabled
-  targetRoles?: string[]; // Send to users with these roles
+  targetUserIds?: string[];
+  targetRoles?: string[];
+  // Rich notification fields
+  icon?: string;
+  image?: string;
+  badge?: string;
 }
 
 Deno.serve(async (req) => {
@@ -29,7 +33,18 @@ Deno.serve(async (req) => {
     );
 
     const payload: NotificationPayload = await req.json();
-    const { title, message, category, link, type = 'info', targetUserIds, targetRoles } = payload;
+    const { 
+      title, 
+      message, 
+      category, 
+      link, 
+      type = 'info', 
+      targetUserIds, 
+      targetRoles,
+      icon,
+      image,
+      badge 
+    } = payload;
 
     if (!title || !message || !category) {
       return new Response(
@@ -125,32 +140,52 @@ Deno.serve(async (req) => {
 
       if (pushUsers.length > 0) {
         try {
-          // Progressier uses a broadcast-style API
-          // For user-specific targeting, you'd need to use their segments feature
+          // Build the notification URL
+          const baseUrl = Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '') || 'https://myrecruita.com';
+          const notificationUrl = link ? `https://myrecruita.com${link}` : undefined;
+
+          // Progressier Push API with rich notification support
+          const pushPayload: Record<string, unknown> = {
+            appId: progressierAppId,
+            title,
+            body: message,
+            url: notificationUrl,
+            icon: icon || 'https://myrecruita.com/favicon.ico',
+            badge: badge || 'https://myrecruita.com/favicon.ico',
+          };
+
+          // Add image for rich notifications if provided
+          if (image) {
+            pushPayload.image = image;
+          }
+
+          // Target specific roles as segments if configured
+          if (targetRoles && targetRoles.length > 0) {
+            pushPayload.segments = targetRoles;
+          }
+
           const response = await fetch('https://progressier.com/api/push', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${progressierApiKey}`,
             },
-            body: JSON.stringify({
-              appId: progressierAppId,
-              title,
-              body: message,
-              url: link || undefined,
-              // Progressier supports segments for targeting
-              // segments: ['all'] // or specific user segments
-            }),
+            body: JSON.stringify(pushPayload),
           });
 
           if (!response.ok) {
-            console.error('Progressier push failed:', await response.text());
+            const errorText = await response.text();
+            console.error('Progressier push failed:', errorText);
+          } else {
+            console.log('Push notification sent successfully via Progressier');
           }
         } catch (pushError) {
           console.error('Push notification error:', pushError);
           // Don't fail the whole request if push fails
         }
       }
+    } else {
+      console.log('Progressier not configured - skipping push notifications');
     }
 
     // Send email notifications (if Resend is configured)
@@ -186,9 +221,22 @@ Deno.serve(async (req) => {
                 to: emails,
                 subject: title,
                 html: `
-                  <h2>${title}</h2>
-                  <p>${message}</p>
-                  ${link ? `<p><a href="${link}">View Details</a></p>` : ''}
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <div style="background: linear-gradient(135deg, #0ea5e9 0%, #1d4ed8 100%); padding: 24px; border-radius: 8px 8px 0 0;">
+                      <h1 style="color: white; margin: 0; font-size: 24px;">${title}</h1>
+                    </div>
+                    <div style="background: #f8fafc; padding: 24px; border: 1px solid #e2e8f0; border-top: 0; border-radius: 0 0 8px 8px;">
+                      <p style="color: #334155; font-size: 16px; line-height: 1.6;">${message}</p>
+                      ${link ? `
+                        <a href="https://myrecruita.com${link}" style="display: inline-block; background: #0ea5e9; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin-top: 16px;">
+                          View Details
+                        </a>
+                      ` : ''}
+                    </div>
+                    <div style="text-align: center; padding: 16px; color: #94a3b8; font-size: 12px;">
+                      <p>You received this email because you enabled notifications in MyRecruita.</p>
+                    </div>
+                  </div>
                 `,
               }),
             });
