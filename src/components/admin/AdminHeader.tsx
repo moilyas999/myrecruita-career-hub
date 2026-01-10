@@ -24,9 +24,10 @@ import NotificationCenter from './NotificationCenter';
 interface AdminHeaderProps {
   user: User;
   onSignOut: () => void;
+  updateAvailable?: boolean;
 }
 
-export default function AdminHeader({ user, onSignOut }: AdminHeaderProps) {
+export default function AdminHeader({ user, onSignOut, updateAvailable = false }: AdminHeaderProps) {
   const [commandOpen, setCommandOpen] = useState(false);
   const [showCommandHint, setShowCommandHint] = useState(true);
 
@@ -94,13 +95,16 @@ export default function AdminHeader({ user, onSignOut }: AdminHeaderProps) {
 
             {/* Refresh Button */}
             <Button 
-              variant="ghost" 
+              variant={updateAvailable ? "default" : "ghost"}
               size="icon"
               onClick={forceRefresh} 
-              title="Force refresh to clear cache"
-              className="text-muted-foreground hover:text-foreground h-9 w-9"
+              title={updateAvailable ? "Update available - click to refresh" : "Force refresh to clear cache"}
+              className={updateAvailable 
+                ? "h-9 w-9 bg-primary text-primary-foreground animate-pulse" 
+                : "text-muted-foreground hover:text-foreground h-9 w-9"
+              }
             >
-              <RefreshCw className="w-4 h-4" />
+              <RefreshCw className={`w-4 h-4 ${updateAvailable ? 'animate-spin' : ''}`} />
             </Button>
 
             {/* Notifications */}
