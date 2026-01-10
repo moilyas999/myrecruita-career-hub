@@ -181,7 +181,33 @@ Deno.serve(async (req) => {
       console.error('Permission assignment failed:', permErr)
     }
 
-    // Create notification preferences with defaults
+    // Role-based notification defaults
+    const roleNotificationDefaults: Record<string, string[]> = {
+      admin: ['cv_submission', 'job_application', 'contact_submission', 'career_partner_request', 
+              'employer_job_submission', 'talent_request', 'staff_added', 'permission_changed', 
+              'blog_published', 'system_updates', 'weekly_digest'],
+      recruiter: ['cv_submission', 'job_application', 'employer_job_submission', 'talent_request', 
+                  'permission_changed', 'system_updates'],
+      account_manager: ['contact_submission', 'career_partner_request', 'employer_job_submission', 
+                        'talent_request', 'permission_changed', 'system_updates', 'weekly_digest'],
+      marketing: ['blog_published', 'permission_changed', 'system_updates'],
+      cv_uploader: ['cv_submission', 'permission_changed', 'system_updates'],
+      viewer: ['permission_changed', 'system_updates'],
+    };
+
+    // Generate event_preferences based on role
+    const enabledEvents = roleNotificationDefaults[role] || roleNotificationDefaults.viewer;
+    const allEventTypes = ['cv_submission', 'job_application', 'contact_submission', 
+                          'career_partner_request', 'employer_job_submission', 'talent_request',
+                          'staff_added', 'permission_changed', 'blog_published', 
+                          'system_updates', 'weekly_digest'];
+    
+    const eventPreferences = allEventTypes.reduce((acc, event) => {
+      acc[event] = enabledEvents.includes(event);
+      return acc;
+    }, {} as Record<string, boolean>);
+
+    // Create notification preferences with role-based defaults
     try {
       const { error: prefError } = await supabaseAdmin
         .from('notification_preferences')
@@ -190,19 +216,7 @@ Deno.serve(async (req) => {
           email_enabled: true,
           push_enabled: true,
           in_app_enabled: true,
-          event_preferences: {
-            cv_submission: true,
-            job_application: true,
-            contact_submission: true,
-            career_partner_request: true,
-            employer_job_submission: true,
-            talent_request: true,
-            staff_added: true,
-            permission_changed: true,
-            blog_published: true,
-            system_updates: true,
-            weekly_digest: true,
-          }
+          event_preferences: eventPreferences
         })
       
       if (prefError) {

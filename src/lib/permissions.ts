@@ -193,35 +193,149 @@ export type NotificationEventType =
   | 'system_updates'
   | 'weekly_digest';
 
-// Notification event labels
-export const NOTIFICATION_EVENT_LABELS: Record<NotificationEventType, string> = {
-  cv_submission: 'New CV Submission',
-  job_application: 'New Job Application',
-  contact_submission: 'Contact Form Submission',
-  career_partner_request: 'Career Partner Request',
-  employer_job_submission: 'Employer Job Submission',
-  talent_request: 'Talent Profile Request',
-  staff_added: 'New Staff Member Added',
-  permission_changed: 'Permission Changed',
-  blog_published: 'New Blog Post Published',
-  system_updates: 'System Updates',
-  weekly_digest: 'Weekly Digest',
+// Notification event configuration - Single source of truth
+export interface NotificationEventConfig {
+  id: NotificationEventType;
+  label: string;
+  description: string;
+  icon: string;
+  defaultForRoles: StaffRole[];
+  channels: ('push' | 'email' | 'in_app')[];
+}
+
+export const NOTIFICATION_EVENT_CONFIG: NotificationEventConfig[] = [
+  {
+    id: 'cv_submission',
+    label: 'New CV Submission',
+    description: 'When a new CV is submitted',
+    icon: 'FileText',
+    defaultForRoles: ['admin', 'recruiter', 'cv_uploader'],
+    channels: ['push', 'email', 'in_app'],
+  },
+  {
+    id: 'job_application',
+    label: 'New Job Application',
+    description: 'When someone applies for a job',
+    icon: 'Briefcase',
+    defaultForRoles: ['admin', 'recruiter'],
+    channels: ['push', 'email', 'in_app'],
+  },
+  {
+    id: 'contact_submission',
+    label: 'Contact Form Submission',
+    description: 'When a contact form is submitted',
+    icon: 'MessageSquare',
+    defaultForRoles: ['admin', 'account_manager'],
+    channels: ['push', 'email', 'in_app'],
+  },
+  {
+    id: 'career_partner_request',
+    label: 'Career Partner Request',
+    description: 'When someone requests career partnership',
+    icon: 'Users',
+    defaultForRoles: ['admin', 'account_manager'],
+    channels: ['push', 'email', 'in_app'],
+  },
+  {
+    id: 'employer_job_submission',
+    label: 'Employer Job Submission',
+    description: 'When an employer submits a job posting',
+    icon: 'Building',
+    defaultForRoles: ['admin', 'account_manager', 'recruiter'],
+    channels: ['push', 'email', 'in_app'],
+  },
+  {
+    id: 'talent_request',
+    label: 'Talent Profile Request',
+    description: 'When someone inquires about a talent profile',
+    icon: 'Star',
+    defaultForRoles: ['admin', 'account_manager', 'recruiter'],
+    channels: ['push', 'email', 'in_app'],
+  },
+  {
+    id: 'staff_added',
+    label: 'New Staff Member Added',
+    description: 'When a new staff member is added',
+    icon: 'UserPlus',
+    defaultForRoles: ['admin'],
+    channels: ['push', 'in_app'],
+  },
+  {
+    id: 'permission_changed',
+    label: 'Permission Changed',
+    description: 'When your permissions are changed',
+    icon: 'Shield',
+    defaultForRoles: ['admin', 'recruiter', 'account_manager', 'marketing', 'cv_uploader', 'viewer'],
+    channels: ['push', 'email', 'in_app'],
+  },
+  {
+    id: 'blog_published',
+    label: 'New Blog Post Published',
+    description: 'When a new blog post is published',
+    icon: 'BookOpen',
+    defaultForRoles: ['admin', 'marketing'],
+    channels: ['push', 'in_app'],
+  },
+  {
+    id: 'system_updates',
+    label: 'System Updates',
+    description: 'Important system updates and announcements',
+    icon: 'Settings',
+    defaultForRoles: ['admin', 'recruiter', 'account_manager', 'marketing', 'cv_uploader', 'viewer'],
+    channels: ['push', 'email', 'in_app'],
+  },
+  {
+    id: 'weekly_digest',
+    label: 'Weekly Digest',
+    description: 'Weekly summary of activity',
+    icon: 'Calendar',
+    defaultForRoles: ['admin', 'recruiter', 'account_manager'],
+    channels: ['email'],
+  },
+];
+
+// Notification event labels (derived from config)
+export const NOTIFICATION_EVENT_LABELS: Record<NotificationEventType, string> = 
+  NOTIFICATION_EVENT_CONFIG.reduce((acc, event) => {
+    acc[event.id] = event.label;
+    return acc;
+  }, {} as Record<NotificationEventType, string>);
+
+// Role-based notification defaults
+export const ROLE_NOTIFICATION_DEFAULTS: Record<StaffRole, NotificationEventType[]> = {
+  admin: NOTIFICATION_EVENT_CONFIG.map(e => e.id),
+  recruiter: NOTIFICATION_EVENT_CONFIG.filter(e => 
+    e.defaultForRoles.includes('recruiter')
+  ).map(e => e.id),
+  account_manager: NOTIFICATION_EVENT_CONFIG.filter(e => 
+    e.defaultForRoles.includes('account_manager')
+  ).map(e => e.id),
+  marketing: NOTIFICATION_EVENT_CONFIG.filter(e => 
+    e.defaultForRoles.includes('marketing')
+  ).map(e => e.id),
+  cv_uploader: NOTIFICATION_EVENT_CONFIG.filter(e => 
+    e.defaultForRoles.includes('cv_uploader')
+  ).map(e => e.id),
+  viewer: NOTIFICATION_EVENT_CONFIG.filter(e => 
+    e.defaultForRoles.includes('viewer')
+  ).map(e => e.id),
 };
 
-// Default notification preferences
-export const DEFAULT_EVENT_PREFERENCES: Record<NotificationEventType, boolean> = {
-  cv_submission: true,
-  job_application: true,
-  contact_submission: true,
-  career_partner_request: true,
-  employer_job_submission: true,
-  talent_request: true,
-  staff_added: true,
-  permission_changed: true,
-  blog_published: true,
-  system_updates: true,
-  weekly_digest: false,
-};
+// Default notification preferences (for backwards compatibility)
+export const DEFAULT_EVENT_PREFERENCES: Record<NotificationEventType, boolean> = 
+  NOTIFICATION_EVENT_CONFIG.reduce((acc, event) => {
+    acc[event.id] = true; // All enabled by default for admin
+    return acc;
+  }, {} as Record<NotificationEventType, boolean>);
+
+// Generate role-based event preferences
+export function generateEventPreferencesForRole(role: StaffRole): Record<NotificationEventType, boolean> {
+  const enabledEvents = ROLE_NOTIFICATION_DEFAULTS[role];
+  return NOTIFICATION_EVENT_CONFIG.reduce((acc, event) => {
+    acc[event.id] = enabledEvents.includes(event.id);
+    return acc;
+  }, {} as Record<NotificationEventType, boolean>);
+}
 
 // Get all permissions as a flat array
 export const ALL_PERMISSIONS = Object.values(PERMISSION_CATEGORIES).flatMap(c => c.permissions);

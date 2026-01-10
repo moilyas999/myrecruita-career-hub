@@ -16,6 +16,7 @@ const SettingsManagement = lazy(() => import('@/components/admin/SettingsManagem
 const BlogManagement = lazy(() => import('@/components/admin/BlogManagement'));
 const PermissionsManagement = lazy(() => import('@/components/admin/PermissionsManagement'));
 const NotificationSettings = lazy(() => import('@/components/admin/NotificationSettings'));
+const UserNotificationManagement = lazy(() => import('@/components/admin/UserNotificationManagement'));
 
 // Loading fallback component
 function TabSkeleton() {
@@ -58,6 +59,7 @@ const TAB_CONFIG: Record<string, TabConfig> = {
   'admins': { component: AdminManagement, title: 'Staff Management', description: 'Manage staff accounts and permissions', fullAdminOnly: true },
   'permissions': { component: PermissionsManagement, title: 'Permissions', description: 'Manage staff permissions', fullAdminOnly: true },
   'notification-settings': { component: NotificationSettings, title: 'Notification Settings', description: 'Configure your notification preferences' },
+  'user-notifications': { component: UserNotificationManagement, title: 'User Notifications', description: 'Manage notification preferences for all staff', fullAdminOnly: true },
   'settings': { component: SettingsManagement, title: 'System Settings', description: 'Configure application settings', fullAdminOnly: true },
   'blog': { component: BlogManagement, title: 'Blog Management', description: 'Manage blog posts and content', fullAdminOnly: true },
 };
