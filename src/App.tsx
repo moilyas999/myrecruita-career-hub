@@ -30,7 +30,17 @@ import MyProfile from "./pages/MyProfile";
 import CompleteProfile from "./pages/CompleteProfile";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30000, // 30 seconds - data considered fresh
+      gcTime: 300000, // 5 minutes - garbage collection time
+      refetchOnWindowFocus: true, // Refetch when user returns to tab
+      refetchOnReconnect: true, // Refetch when network reconnects
+      retry: 2, // Retry failed requests twice
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

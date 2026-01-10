@@ -1,4 +1,3 @@
-import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,9 +16,10 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
+import { queryKeys } from '@/lib/queryKeys';
 
 interface DashboardStats {
   totalCVs: number;
@@ -93,11 +93,40 @@ async function fetchDashboardData() {
 export default function DashboardOverview() {
   const queryClient = useQueryClient();
   
+  // Real-time subscriptions for live updates
+  useRealtimeSubscription({
+    table: 'cv_submissions',
+    queryKeys: [queryKeys.dashboardOverview, queryKeys.cvSubmissions],
+    showToasts: true,
+    toastMessages: {
+      insert: (data) => `New CV submitted: ${data.name}`,
+    },
+  });
+
+  useRealtimeSubscription({
+    table: 'job_applications',
+    queryKeys: [queryKeys.dashboardOverview, queryKeys.jobApplications],
+    showToasts: true,
+    toastMessages: {
+      insert: (data) => `New job application: ${data.name}`,
+    },
+  });
+
+  useRealtimeSubscription({
+    table: 'jobs',
+    queryKeys: [queryKeys.dashboardOverview, queryKeys.jobs],
+  });
+
+  useRealtimeSubscription({
+    table: 'talent_profiles',
+    queryKeys: [queryKeys.dashboardOverview, queryKeys.talentProfiles],
+  });
+  
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
-    queryKey: ['dashboard-overview'],
+    queryKey: queryKeys.dashboardOverview,
     queryFn: fetchDashboardData,
-    staleTime: 30000, // Consider data stale after 30 seconds
-    refetchInterval: 60000, // Auto refetch every minute
+    staleTime: 30000,
+    refetchInterval: 60000,
     retry: 2,
   });
 
@@ -110,42 +139,6 @@ export default function DashboardOverview() {
     totalSubmissions: 0,
   };
   const recentActivity = data?.activity || [];
-
-  // Real-time subscriptions
-  useEffect(() => {
-    const cvChannel = supabase
-      .channel('cv-changes')
-      .on('postgres_changes', { 
-        event: 'INSERT', 
-        schema: 'public', 
-        table: 'cv_submissions' 
-      }, (payload) => {
-        toast.success('New CV submitted', {
-          description: `${payload.new.name} just submitted their CV`,
-        });
-        queryClient.invalidateQueries({ queryKey: ['dashboard-overview'] });
-      })
-      .subscribe();
-
-    const appChannel = supabase
-      .channel('application-changes')
-      .on('postgres_changes', { 
-        event: 'INSERT', 
-        schema: 'public', 
-        table: 'job_applications' 
-      }, (payload) => {
-        toast.success('New job application', {
-          description: `${payload.new.name} applied for a job`,
-        });
-        queryClient.invalidateQueries({ queryKey: ['dashboard-overview'] });
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(cvChannel);
-      supabase.removeChannel(appChannel);
-    };
-  }, [queryClient]);
 
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
