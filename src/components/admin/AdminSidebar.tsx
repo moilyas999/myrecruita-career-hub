@@ -26,7 +26,6 @@ import {
   Mail,
   Building,
   MessageSquare,
-  ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -126,6 +125,7 @@ export default function AdminSidebar({ isFullAdmin, isCvUploader }: AdminSidebar
     <Sidebar 
       className="border-r border-border/50 bg-card"
       collapsible="icon"
+      aria-label="Admin navigation"
     >
       <SidebarHeader className="border-b border-border/50 p-4">
         <Link to="/admin" className="flex items-center gap-3">
@@ -169,11 +169,15 @@ export default function AdminSidebar({ isFullAdmin, isCvUploader }: AdminSidebar
                             'hover:bg-accent/50',
                             active && 'bg-primary/10 text-primary font-medium border-l-2 border-primary'
                           )}
+                          aria-current={active ? 'page' : undefined}
                         >
-                          <Icon className={cn(
-                            'w-4 h-4 shrink-0',
-                            active ? 'text-primary' : 'text-muted-foreground'
-                          )} />
+                          <Icon 
+                            className={cn(
+                              'w-4 h-4 shrink-0',
+                              active ? 'text-primary' : 'text-muted-foreground'
+                            )} 
+                            aria-hidden="true"
+                          />
                           {!isCollapsed && (
                             <>
                               <span className="flex-1 truncate">{item.title}</span>
@@ -181,9 +185,6 @@ export default function AdminSidebar({ isFullAdmin, isCvUploader }: AdminSidebar
                                 <Badge variant={item.badgeVariant || 'secondary'} className="text-xs">
                                   {item.badge}
                                 </Badge>
-                              )}
-                              {active && (
-                                <ChevronRight className="w-3 h-3 text-primary" />
                               )}
                             </>
                           )}

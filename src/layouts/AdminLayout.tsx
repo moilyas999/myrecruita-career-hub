@@ -44,6 +44,14 @@ export default function AdminLayout({ children, title, description }: AdminLayou
 
   return (
     <SidebarProvider defaultOpen={true}>
+      {/* Skip to content link for accessibility */}
+      <a 
+        href="#main-content" 
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:outline-none"
+      >
+        Skip to content
+      </a>
+      
       <div className="min-h-screen flex w-full bg-muted/30">
         <AdminSidebar 
           isFullAdmin={isFullAdmin} 
@@ -56,7 +64,7 @@ export default function AdminLayout({ children, title, description }: AdminLayou
             onSignOut={signOut}
           />
           
-          <main className="flex-1 overflow-auto">
+          <main id="main-content" className="flex-1 overflow-auto" role="main">
             <div className="container max-w-7xl mx-auto px-4 sm:px-6 py-6">
               {isCvUploader && (
                 <Alert className="mb-6 border-amber-500/30 bg-amber-500/10">

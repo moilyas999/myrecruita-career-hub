@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -41,18 +41,19 @@ export default function AdminHeader({ user, onSignOut }: AdminHeaderProps) {
     return 'Good evening';
   };
 
+  // Memoized keyboard handler to prevent re-creation
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      setCommandOpen((open) => !open);
+    }
+  }, []);
+
   // Keyboard shortcut for command palette
   useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setCommandOpen((open) => !open);
-      }
-    };
-
-    document.addEventListener('keydown', down);
-    return () => document.removeEventListener('keydown', down);
-  }, []);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   // Hide command hint after a few seconds
   useEffect(() => {
