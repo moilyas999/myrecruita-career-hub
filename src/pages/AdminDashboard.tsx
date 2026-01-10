@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import AdminLayout from '@/layouts/AdminLayout';
 import { useAuth } from '@/hooks/useAuth';
 import { Skeleton } from '@/components/ui/skeleton';
+import AdminErrorBoundary from '@/components/admin/AdminErrorBoundary';
 
 // Lazy load all admin components for code splitting
 const DashboardOverview = lazy(() => import('@/components/admin/DashboardOverview'));
@@ -75,9 +76,11 @@ export default function AdminDashboard() {
         title="CV Submissions" 
         description="View and manage your CV submissions"
       >
-        <Suspense fallback={<TabSkeleton />}>
-          <SubmissionsManagement />
-        </Suspense>
+        <AdminErrorBoundary fallbackTitle="Failed to load CV Submissions">
+          <Suspense fallback={<TabSkeleton />}>
+            <SubmissionsManagement />
+          </Suspense>
+        </AdminErrorBoundary>
       </AdminLayout>
     );
   }
@@ -89,9 +92,11 @@ export default function AdminDashboard() {
         title="CV Management" 
         description="Upload and manage CV submissions"
       >
-        <Suspense fallback={<TabSkeleton />}>
-          <DashboardOverview />
-        </Suspense>
+        <AdminErrorBoundary fallbackTitle="Failed to load Dashboard">
+          <Suspense fallback={<TabSkeleton />}>
+            <DashboardOverview />
+          </Suspense>
+        </AdminErrorBoundary>
       </AdminLayout>
     );
   }
@@ -103,9 +108,11 @@ export default function AdminDashboard() {
       title={tabConfig.title} 
       description={tabConfig.description}
     >
-      <Suspense fallback={<TabSkeleton />}>
-        <Component />
-      </Suspense>
+      <AdminErrorBoundary fallbackTitle={`Failed to load ${tabConfig.title}`}>
+        <Suspense fallback={<TabSkeleton />}>
+          <Component />
+        </Suspense>
+      </AdminErrorBoundary>
     </AdminLayout>
   );
 }

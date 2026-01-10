@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -6,11 +6,11 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CalendarIcon, TrendingUp, Users, Briefcase, FileText, Star, Download, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval } from 'date-fns';
-import { toast } from 'sonner';
+import { CalendarIcon, TrendingUp, Users, Briefcase, FileText, Star, ArrowUpRight, ArrowDownRight, RefreshCw, AlertTriangle } from 'lucide-react';
+import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, eachDayOfInterval } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { useQuery } from '@tanstack/react-query';
 
 interface Stats {
   cvSubmissions: number;
@@ -32,26 +32,11 @@ type TimeRange = 'last7days' | 'thisWeek' | 'thisMonth' | 'last30days' | 'thisYe
 const COLORS = ['hsl(217, 91%, 60%)', 'hsl(142, 76%, 36%)', 'hsl(262, 83%, 58%)', 'hsl(45, 93%, 47%)', 'hsl(0, 72%, 51%)', 'hsl(189, 94%, 43%)'];
 
 export default function StatsDashboard() {
-  const [stats, setStats] = useState<Stats>({
-    cvSubmissions: 0,
-    jobApplications: 0,
-    careerPartnerRequests: 0,
-    talentRequests: 0,
-    visibleTalentProfiles: 0,
-    totalJobs: 0,
-  });
-  const [previousStats, setPreviousStats] = useState<Stats | null>(null);
-  const [dailyData, setDailyData] = useState<DailyData[]>([]);
-  const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<TimeRange>('last30days');
   const [customStartDate, setCustomStartDate] = useState<Date>();
   const [customEndDate, setCustomEndDate] = useState<Date>();
 
-  useEffect(() => {
-    fetchStats();
-  }, [timeRange, customStartDate, customEndDate]);
-
-  const getDateRange = () => {
+  const getDateRange = useCallback(() => {
     const now = new Date();
     
     switch (timeRange) {
@@ -73,100 +58,112 @@ export default function StatsDashboard() {
       default:
         return { start: subDays(now, 30), end: now };
     }
-  };
+  }, [timeRange, customStartDate, customEndDate]);
 
-  const getPreviousDateRange = () => {
+  const getPreviousDateRange = useCallback(() => {
     const { start, end } = getDateRange();
     const duration = end.getTime() - start.getTime();
     return {
       start: new Date(start.getTime() - duration),
       end: start
     };
-  };
+  }, [getDateRange]);
 
-  const fetchStats = async () => {
-    try {
-      const { start, end } = getDateRange();
-      const { start: prevStart, end: prevEnd } = getPreviousDateRange();
-      const startDate = start.toISOString();
-      const endDate = end.toISOString();
-      const prevStartDate = prevStart.toISOString();
-      const prevEndDate = prevEnd.toISOString();
+  const fetchStats = useCallback(async () => {
+    const { start, end } = getDateRange();
+    const { start: prevStart, end: prevEnd } = getPreviousDateRange();
+    const startDate = start.toISOString();
+    const endDate = end.toISOString();
+    const prevStartDate = prevStart.toISOString();
+    const prevEndDate = prevEnd.toISOString();
 
-      // Fetch current period stats
-      const [
-        { count: cvCount },
-        { count: jobAppCount },
-        { count: careerCount },
-        { count: talentReqCount },
-        { count: visibleTalentCount },
-        { count: totalJobsCount },
-        // Previous period
-        { count: prevCvCount },
-        { count: prevJobAppCount },
-        // Daily data for chart
-        { data: cvDailyData },
-        { data: appDailyData }
-      ] = await Promise.all([
-        supabase.from('cv_submissions').select('*', { count: 'exact', head: true }).gte('created_at', startDate).lte('created_at', endDate),
-        supabase.from('job_applications').select('*', { count: 'exact', head: true }).gte('created_at', startDate).lte('created_at', endDate),
-        supabase.from('career_partner_requests').select('*', { count: 'exact', head: true }).gte('created_at', startDate).lte('created_at', endDate),
-        supabase.from('talent_requests').select('*', { count: 'exact', head: true }).gte('created_at', startDate).lte('created_at', endDate),
-        supabase.from('talent_profiles').select('*', { count: 'exact', head: true }).eq('is_visible', true),
-        supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'active'),
-        // Previous period for comparison
-        supabase.from('cv_submissions').select('*', { count: 'exact', head: true }).gte('created_at', prevStartDate).lte('created_at', prevEndDate),
-        supabase.from('job_applications').select('*', { count: 'exact', head: true }).gte('created_at', prevStartDate).lte('created_at', prevEndDate),
-        // Fetch daily data for charts
-        supabase.from('cv_submissions').select('created_at').gte('created_at', startDate).lte('created_at', endDate),
-        supabase.from('job_applications').select('created_at').gte('created_at', startDate).lte('created_at', endDate)
-      ]);
+    // Fetch current period stats
+    const [
+      { count: cvCount },
+      { count: jobAppCount },
+      { count: careerCount },
+      { count: talentReqCount },
+      { count: visibleTalentCount },
+      { count: totalJobsCount },
+      // Previous period
+      { count: prevCvCount },
+      { count: prevJobAppCount },
+      // Daily data for chart
+      { data: cvDailyData },
+      { data: appDailyData }
+    ] = await Promise.all([
+      supabase.from('cv_submissions').select('*', { count: 'exact', head: true }).gte('created_at', startDate).lte('created_at', endDate),
+      supabase.from('job_applications').select('*', { count: 'exact', head: true }).gte('created_at', startDate).lte('created_at', endDate),
+      supabase.from('career_partner_requests').select('*', { count: 'exact', head: true }).gte('created_at', startDate).lte('created_at', endDate),
+      supabase.from('talent_requests').select('*', { count: 'exact', head: true }).gte('created_at', startDate).lte('created_at', endDate),
+      supabase.from('talent_profiles').select('*', { count: 'exact', head: true }).eq('is_visible', true),
+      supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+      // Previous period for comparison
+      supabase.from('cv_submissions').select('*', { count: 'exact', head: true }).gte('created_at', prevStartDate).lte('created_at', prevEndDate),
+      supabase.from('job_applications').select('*', { count: 'exact', head: true }).gte('created_at', prevStartDate).lte('created_at', prevEndDate),
+      // Fetch daily data for charts
+      supabase.from('cv_submissions').select('created_at').gte('created_at', startDate).lte('created_at', endDate),
+      supabase.from('job_applications').select('created_at').gte('created_at', startDate).lte('created_at', endDate)
+    ]);
 
-      setStats({
-        cvSubmissions: cvCount || 0,
-        jobApplications: jobAppCount || 0,
-        careerPartnerRequests: careerCount || 0,
-        talentRequests: talentReqCount || 0,
-        visibleTalentProfiles: visibleTalentCount || 0,
-        totalJobs: totalJobsCount || 0,
-      });
+    const stats: Stats = {
+      cvSubmissions: cvCount || 0,
+      jobApplications: jobAppCount || 0,
+      careerPartnerRequests: careerCount || 0,
+      talentRequests: talentReqCount || 0,
+      visibleTalentProfiles: visibleTalentCount || 0,
+      totalJobs: totalJobsCount || 0,
+    };
 
-      setPreviousStats({
-        cvSubmissions: prevCvCount || 0,
-        jobApplications: prevJobAppCount || 0,
-        careerPartnerRequests: 0,
-        talentRequests: 0,
-        visibleTalentProfiles: 0,
-        totalJobs: 0,
-      });
+    const previousStats: Stats = {
+      cvSubmissions: prevCvCount || 0,
+      jobApplications: prevJobAppCount || 0,
+      careerPartnerRequests: 0,
+      talentRequests: 0,
+      visibleTalentProfiles: 0,
+      totalJobs: 0,
+    };
 
-      // Process daily data for charts
-      const days = eachDayOfInterval({ start, end });
-      const chartData = days.map(day => {
-        const dayStr = format(day, 'yyyy-MM-dd');
-        const cvs = (cvDailyData || []).filter((cv: any) => 
-          format(new Date(cv.created_at), 'yyyy-MM-dd') === dayStr
-        ).length;
-        const applications = (appDailyData || []).filter((app: any) => 
-          format(new Date(app.created_at), 'yyyy-MM-dd') === dayStr
-        ).length;
-        
-        return {
-          date: format(day, 'MMM dd'),
-          cvs,
-          applications
-        };
-      });
+    // Process daily data for charts
+    const days = eachDayOfInterval({ start, end });
+    const dailyData: DailyData[] = days.map(day => {
+      const dayStr = format(day, 'yyyy-MM-dd');
+      const cvs = (cvDailyData || []).filter((cv: any) => 
+        format(new Date(cv.created_at), 'yyyy-MM-dd') === dayStr
+      ).length;
+      const applications = (appDailyData || []).filter((app: any) => 
+        format(new Date(app.created_at), 'yyyy-MM-dd') === dayStr
+      ).length;
       
-      setDailyData(chartData);
-    } catch (error: any) {
-      toast.error('Failed to fetch statistics: ' + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return {
+        date: format(day, 'MMM dd'),
+        cvs,
+        applications
+      };
+    });
+    
+    return { stats, previousStats, dailyData };
+  }, [getDateRange, getPreviousDateRange]);
 
-  const getTimeRangeLabel = () => {
+  const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
+    queryKey: ['stats-dashboard', timeRange, customStartDate?.toISOString(), customEndDate?.toISOString()],
+    queryFn: fetchStats,
+    staleTime: 60000, // Consider data stale after 1 minute
+    retry: 2,
+  });
+
+  const stats = data?.stats || {
+    cvSubmissions: 0,
+    jobApplications: 0,
+    careerPartnerRequests: 0,
+    talentRequests: 0,
+    visibleTalentProfiles: 0,
+    totalJobs: 0,
+  };
+  const previousStats = data?.previousStats || null;
+  const dailyData = data?.dailyData || [];
+
+  const getTimeRangeLabel = useMemo(() => {
     const { start, end } = getDateRange();
     
     switch (timeRange) {
@@ -185,7 +182,7 @@ export default function StatsDashboard() {
       default:
         return 'Last 30 Days';
     }
-  };
+  }, [timeRange, getDateRange]);
 
   const calculateChange = (current: number, previous: number) => {
     if (previous === 0) return current > 0 ? 100 : 0;
@@ -225,14 +222,14 @@ export default function StatsDashboard() {
     },
   ];
 
-  const pieData = [
+  const pieData = useMemo(() => [
     { name: 'CVs', value: stats.cvSubmissions },
     { name: 'Applications', value: stats.jobApplications },
     { name: 'Career Requests', value: stats.careerPartnerRequests },
     { name: 'Talent Requests', value: stats.talentRequests },
-  ].filter(d => d.value > 0);
+  ].filter(d => d.value > 0), [stats]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -245,6 +242,24 @@ export default function StatsDashboard() {
           ))}
         </div>
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card className="border-destructive/20 bg-destructive/5">
+        <CardContent className="p-8 text-center">
+          <AlertTriangle className="w-8 h-8 text-destructive mx-auto mb-3" />
+          <p className="text-destructive font-medium mb-2">Failed to load analytics</p>
+          <p className="text-sm text-muted-foreground mb-4">
+            {error instanceof Error ? error.message : 'An unexpected error occurred'}
+          </p>
+          <Button onClick={() => refetch()} variant="outline" size="sm">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Retry
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -322,11 +337,21 @@ export default function StatsDashboard() {
           )}
         </div>
 
-        <Badge variant="outline" className="text-sm">
-          {getTimeRangeLabel()}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => refetch()}
+            disabled={isFetching}
+          >
+            <RefreshCw className={cn("w-4 h-4 mr-2", isFetching && "animate-spin")} />
+            Refresh
+          </Button>
+          <Badge variant="outline" className="text-sm">
+            {getTimeRangeLabel}
+          </Badge>
+        </div>
       </div>
-
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((stat) => {

@@ -93,11 +93,12 @@ async function fetchDashboardData() {
 export default function DashboardOverview() {
   const queryClient = useQueryClient();
   
-  const { data, isLoading, refetch, isFetching } = useQuery({
+  const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ['dashboard-overview'],
     queryFn: fetchDashboardData,
     staleTime: 30000, // Consider data stale after 30 seconds
     refetchInterval: 60000, // Auto refetch every minute
+    retry: 2,
   });
 
   const stats = data?.stats || {
@@ -214,6 +215,23 @@ export default function DashboardOverview() {
           ))}
         </div>
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card className="border-destructive/20 bg-destructive/5">
+        <CardContent className="p-8 text-center">
+          <p className="text-destructive font-medium mb-2">Failed to load dashboard</p>
+          <p className="text-sm text-muted-foreground mb-4">
+            {error instanceof Error ? error.message : 'An unexpected error occurred'}
+          </p>
+          <Button onClick={() => refetch()} variant="outline" size="sm">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Retry
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
