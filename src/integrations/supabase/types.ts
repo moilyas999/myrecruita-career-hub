@@ -753,6 +753,7 @@ export type Database = {
       }
       is_admin: { Args: { user_id: string }; Returns: boolean }
       is_full_admin: { Args: { user_id: string }; Returns: boolean }
+      sync_notification_event_types: { Args: never; Returns: undefined }
     }
     Enums: {
       permission_type:
