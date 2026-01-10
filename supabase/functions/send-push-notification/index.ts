@@ -19,6 +19,70 @@ interface NotificationPayload {
   badge?: string;
 }
 
+// Professional email template
+const emailTemplate = (title: string, message: string, category: string, link?: string) => `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f1f5f9;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f1f5f9;">
+    <tr>
+      <td style="padding: 40px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto;">
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #0ea5e9 0%, #1d4ed8 100%); padding: 32px 40px; border-radius: 16px 16px 0 0; text-align: center;">
+              <img src="https://myrecruita.com/lovable-uploads/4eb1ab2b-840d-4af3-b4bf-c47f13a76a4f.png" alt="MyRecruita" style="height: 48px; margin-bottom: 16px;" />
+              <h1 style="color: white; margin: 0; font-size: 22px; font-weight: 600;">${title}</h1>
+            </td>
+          </tr>
+          
+          <!-- Content Card -->
+          <tr>
+            <td style="background: white; padding: 32px 40px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+              <!-- Category Badge -->
+              <div style="margin-bottom: 20px;">
+                <span style="display: inline-block; background: #e0f2fe; color: #0369a1; padding: 6px 14px; border-radius: 16px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                  ${category}
+                </span>
+              </div>
+              
+              <!-- Message -->
+              <p style="color: #334155; font-size: 16px; line-height: 1.7; margin: 0 0 24px;">${message}</p>
+              
+              ${link ? `
+              <!-- CTA Button -->
+              <div style="text-align: center; margin-top: 28px;">
+                <a href="https://myrecruita.com${link}" style="display: inline-block; background: linear-gradient(135deg, #0ea5e9 0%, #1d4ed8 100%); color: white; padding: 14px 32px; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 14px; box-shadow: 0 4px 6px -1px rgba(14, 165, 233, 0.3);">
+                  View Details
+                </a>
+              </div>
+              ` : ''}
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 32px 40px; text-align: center;">
+              <p style="color: #64748b; font-size: 14px; margin: 0 0 8px;">MyRecruita Notifications</p>
+              <p style="color: #94a3b8; font-size: 12px; margin: 0;">You received this email because you enabled notifications in MyRecruita.</p>
+              <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+                <a href="https://myrecruita.com/admin?tab=settings" style="color: #0ea5e9; text-decoration: none; font-size: 12px;">Manage notification preferences</a>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`;
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -220,29 +284,14 @@ Deno.serve(async (req) => {
                 from: 'MyRecruita <notifications@myrecruita.com>',
                 to: emails,
                 subject: title,
-                html: `
-                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <div style="background: linear-gradient(135deg, #0ea5e9 0%, #1d4ed8 100%); padding: 24px; border-radius: 8px 8px 0 0;">
-                      <h1 style="color: white; margin: 0; font-size: 24px;">${title}</h1>
-                    </div>
-                    <div style="background: #f8fafc; padding: 24px; border: 1px solid #e2e8f0; border-top: 0; border-radius: 0 0 8px 8px;">
-                      <p style="color: #334155; font-size: 16px; line-height: 1.6;">${message}</p>
-                      ${link ? `
-                        <a href="https://myrecruita.com${link}" style="display: inline-block; background: #0ea5e9; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; margin-top: 16px;">
-                          View Details
-                        </a>
-                      ` : ''}
-                    </div>
-                    <div style="text-align: center; padding: 16px; color: #94a3b8; font-size: 12px;">
-                      <p>You received this email because you enabled notifications in MyRecruita.</p>
-                    </div>
-                  </div>
-                `,
+                html: emailTemplate(title, message, category, link),
               }),
             });
 
             if (!response.ok) {
               console.error('Email send failed:', await response.text());
+            } else {
+              console.log('Email notifications sent successfully');
             }
           } catch (emailError) {
             console.error('Email notification error:', emailError);
