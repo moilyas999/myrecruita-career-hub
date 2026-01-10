@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UsePushNotificationsReturn {
   isSupported: boolean;
@@ -41,10 +42,11 @@ export function usePushNotifications(userData?: UserData): UsePushNotificationsR
   const [isSupported, setIsSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const hasAutoSubscribed = useRef(false);
 
-  // Check if push notifications are supported
+  // Check if push notifications are supported and auto-subscribe if enabled
   useEffect(() => {
-    const checkSupport = async () => {
+    const checkSupportAndAutoSubscribe = async () => {
       const supported = 
         'Notification' in window && 
         'serviceWorker' in navigator &&
@@ -57,6 +59,37 @@ export function usePushNotifications(userData?: UserData): UsePushNotificationsR
         try {
           const subscribed = await window.progressier.isSubscribed();
           setIsSubscribed(subscribed);
+          
+          // Auto-subscribe if user has push_enabled and not already subscribed
+          if (!subscribed && user && !hasAutoSubscribed.current) {
+            // Check user's notification preferences
+            const { data: prefs } = await supabase
+              .from('notification_preferences')
+              .select('push_enabled')
+              .eq('user_id', user.id)
+              .single();
+            
+            if (prefs?.push_enabled && Notification.permission === 'granted') {
+              hasAutoSubscribed.current = true;
+              try {
+                await window.progressier.subscribe();
+                setIsSubscribed(true);
+                
+                // Sync user data
+                if (userData) {
+                  window.progressier.add({
+                    userId: userData.userId,
+                    email: userData.email,
+                    name: userData.name,
+                    tags: userData.role ? [userData.role] : undefined,
+                  });
+                }
+                console.log('Auto-subscribed to push notifications');
+              } catch (err) {
+                console.error('Auto-subscribe failed:', err);
+              }
+            }
+          }
         } catch {
           setIsSubscribed(false);
         }
@@ -66,9 +99,9 @@ export function usePushNotifications(userData?: UserData): UsePushNotificationsR
     };
 
     // Wait a bit for Progressier to load
-    const timer = setTimeout(checkSupport, 1000);
+    const timer = setTimeout(checkSupportAndAutoSubscribe, 1000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [user, userData]);
 
   const requestPermission = useCallback(async (): Promise<NotificationPermission> => {
     if (!isSupported) return 'denied';

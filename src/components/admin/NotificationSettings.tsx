@@ -28,7 +28,7 @@ import {
 import { useNotificationPreferences } from '@/hooks/useNotifications';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { 
-  NOTIFICATION_EVENT_LABELS, 
+  NOTIFICATION_EVENT_CONFIG,
   NotificationEventType,
   DEFAULT_EVENT_PREFERENCES 
 } from '@/lib/permissions';
@@ -51,19 +51,14 @@ const eventIcons: Record<NotificationEventType, React.ElementType> = {
   weekly_digest: Calendar,
 };
 
-const eventDescriptions: Record<NotificationEventType, string> = {
-  cv_submission: 'When a new CV is submitted',
-  job_application: 'When someone applies for a job',
-  contact_submission: 'When a contact form is submitted',
-  career_partner_request: 'When someone requests career partnership',
-  employer_job_submission: 'When an employer submits a job posting',
-  talent_request: 'When someone inquires about a talent profile',
-  staff_added: 'When a new staff member is added',
-  permission_changed: 'When your permissions are changed',
-  blog_published: 'When a new blog post is published',
-  system_updates: 'Important system updates and announcements',
-  weekly_digest: 'Weekly summary of activity',
-};
+// Get event descriptions from config
+const eventDescriptions: Record<NotificationEventType, string> = NOTIFICATION_EVENT_CONFIG.reduce(
+  (acc, event) => {
+    acc[event.id] = event.description;
+    return acc;
+  },
+  {} as Record<NotificationEventType, string>
+);
 
 export default function NotificationSettings() {
   const { preferences, isLoading, updatePreferences, isUpdating } = useNotificationPreferences();
@@ -270,12 +265,12 @@ export default function NotificationSettings() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {(Object.keys(NOTIFICATION_EVENT_LABELS) as NotificationEventType[]).map((event, index) => {
-              const Icon = eventIcons[event];
-              const isEnabled = eventPreferences[event] ?? DEFAULT_EVENT_PREFERENCES[event];
+            {NOTIFICATION_EVENT_CONFIG.map((event, index) => {
+              const Icon = eventIcons[event.id];
+              const isEnabled = eventPreferences[event.id] ?? DEFAULT_EVENT_PREFERENCES[event.id];
               
               return (
-                <div key={event}>
+                <div key={event.id}>
                   {index > 0 && <Separator className="mb-4" />}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -293,16 +288,16 @@ export default function NotificationSettings() {
                           "text-sm font-medium",
                           !isEnabled && "text-muted-foreground"
                         )}>
-                          {NOTIFICATION_EVENT_LABELS[event]}
+                          {event.label}
                         </Label>
                         <p className="text-xs text-muted-foreground">
-                          {eventDescriptions[event]}
+                          {event.description}
                         </p>
                       </div>
                     </div>
                     <Switch
                       checked={isEnabled}
-                      onCheckedChange={(value) => handleEventToggle(event, value)}
+                      onCheckedChange={(value) => handleEventToggle(event.id, value)}
                       disabled={isUpdating}
                     />
                   </div>

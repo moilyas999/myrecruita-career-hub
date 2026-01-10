@@ -116,6 +116,7 @@ export default function AdminSidebar({ isFullAdmin, isCvUploader }: AdminSidebar
           { title: 'Staff Accounts', href: '/admin?tab=admins', icon: UserPlus, permission: 'staff.view' },
           { title: 'Permissions', href: '/admin?tab=permissions', icon: Lock, permission: 'staff.update' },
           { title: 'Notifications', href: '/admin?tab=notification-settings', icon: Bell },
+          { title: 'User Notifications', href: '/admin?tab=user-notifications', icon: Users, permission: 'notifications.manage' },
           { title: 'Settings', href: '/admin?tab=settings', icon: Settings, permission: 'settings.view' },
         ],
       },
