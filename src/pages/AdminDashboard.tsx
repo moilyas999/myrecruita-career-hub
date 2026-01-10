@@ -1,15 +1,45 @@
+import { Suspense, lazy } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import AdminLayout from '@/layouts/AdminLayout';
 import { useAuth } from '@/hooks/useAuth';
-import DashboardOverview from '@/components/admin/DashboardOverview';
-import JobsManagement from '@/components/admin/JobsManagement';
-import SubmissionsManagement from '@/components/admin/SubmissionsManagement';
-import TalentManagement from '@/components/admin/TalentManagement';
-import StatsDashboard from '@/components/admin/StatsDashboard';
-import AdminManagement from '@/components/admin/AdminManagement';
-import SettingsManagement from '@/components/admin/SettingsManagement';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const TAB_CONFIG: Record<string, { component: React.ComponentType; title: string; description: string; fullAdminOnly?: boolean }> = {
+// Lazy load all admin components for code splitting
+const DashboardOverview = lazy(() => import('@/components/admin/DashboardOverview'));
+const JobsManagement = lazy(() => import('@/components/admin/JobsManagement'));
+const SubmissionsManagement = lazy(() => import('@/components/admin/SubmissionsManagement'));
+const TalentManagement = lazy(() => import('@/components/admin/TalentManagement'));
+const StatsDashboard = lazy(() => import('@/components/admin/StatsDashboard'));
+const AdminManagement = lazy(() => import('@/components/admin/AdminManagement'));
+const SettingsManagement = lazy(() => import('@/components/admin/SettingsManagement'));
+const BlogManagement = lazy(() => import('@/components/admin/BlogManagement'));
+
+// Loading fallback component
+function TabSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-10 w-32" />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-32 rounded-xl" />
+        ))}
+      </div>
+      <Skeleton className="h-96 rounded-xl" />
+    </div>
+  );
+}
+
+interface TabConfig {
+  component: React.LazyExoticComponent<React.ComponentType<any>>;
+  title: string;
+  description: string;
+  fullAdminOnly?: boolean;
+}
+
+const TAB_CONFIG: Record<string, TabConfig> = {
   '': { component: DashboardOverview, title: 'Dashboard', description: 'Overview of your recruitment pipeline' },
   'stats': { component: StatsDashboard, title: 'Analytics', description: 'View detailed statistics and insights', fullAdminOnly: true },
   'jobs': { component: JobsManagement, title: 'Jobs Management', description: 'Manage job postings and listings', fullAdminOnly: true },
@@ -24,6 +54,7 @@ const TAB_CONFIG: Record<string, { component: React.ComponentType; title: string
   'talent': { component: TalentManagement, title: 'Featured Talent', description: 'Manage featured talent profiles', fullAdminOnly: true },
   'admins': { component: AdminManagement, title: 'Staff Management', description: 'Manage staff accounts and permissions', fullAdminOnly: true },
   'settings': { component: SettingsManagement, title: 'System Settings', description: 'Configure application settings', fullAdminOnly: true },
+  'blog': { component: BlogManagement, title: 'Blog Management', description: 'Manage blog posts and content', fullAdminOnly: true },
 };
 
 export default function AdminDashboard() {
@@ -39,26 +70,28 @@ export default function AdminDashboard() {
   
   // Check access for CV uploader
   if (isCvUploader && tabConfig.fullAdminOnly) {
-    // Redirect CV uploaders to submissions tab
-    const Component = SubmissionsManagement;
     return (
       <AdminLayout 
         title="CV Submissions" 
         description="View and manage your CV submissions"
       >
-        <Component />
+        <Suspense fallback={<TabSkeleton />}>
+          <SubmissionsManagement />
+        </Suspense>
       </AdminLayout>
     );
   }
 
-  // For CV uploader, show dashboard overview on root
+  // CV uploaders see a simplified dashboard on root
   if (isCvUploader && currentTab === '') {
     return (
       <AdminLayout 
         title="CV Management" 
         description="Upload and manage CV submissions"
       >
-        <SubmissionsManagement />
+        <Suspense fallback={<TabSkeleton />}>
+          <DashboardOverview />
+        </Suspense>
       </AdminLayout>
     );
   }
@@ -70,7 +103,9 @@ export default function AdminDashboard() {
       title={tabConfig.title} 
       description={tabConfig.description}
     >
-      <Component />
+      <Suspense fallback={<TabSkeleton />}>
+        <Component />
+      </Suspense>
     </AdminLayout>
   );
 }
