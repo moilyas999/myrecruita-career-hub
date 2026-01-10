@@ -26,9 +26,13 @@ import {
   Mail,
   Building,
   MessageSquare,
+  Bell,
+  Lock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { usePermissions } from '@/hooks/usePermissions';
+import { PermissionType } from '@/lib/permissions';
 
 interface AdminSidebarProps {
   isFullAdmin: boolean;
@@ -41,6 +45,7 @@ interface NavItem {
   icon: React.ElementType;
   badge?: string;
   badgeVariant?: 'default' | 'secondary' | 'destructive' | 'outline';
+  permission?: PermissionType;
 }
 
 interface NavGroup {
@@ -52,6 +57,7 @@ export default function AdminSidebar({ isFullAdmin, isCvUploader }: AdminSidebar
   const location = useLocation();
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
+  const { hasPermission, isLoading: permissionsLoading } = usePermissions();
 
   const getNavGroups = (): NavGroup[] => {
     if (isCvUploader) {
@@ -59,9 +65,9 @@ export default function AdminSidebar({ isFullAdmin, isCvUploader }: AdminSidebar
         {
           label: 'CV Management',
           items: [
-            { title: 'All CVs', href: '/admin?tab=submissions', icon: FileText },
-            { title: 'Add CV', href: '/admin?tab=add-cv', icon: Upload },
-            { title: 'Bulk Import', href: '/admin?tab=bulk-import', icon: FolderOpen },
+            { title: 'All CVs', href: '/admin?tab=submissions', icon: FileText, permission: 'cv.view' },
+            { title: 'Add CV', href: '/admin?tab=add-cv', icon: Upload, permission: 'cv.create' },
+            { title: 'Bulk Import', href: '/admin?tab=bulk-import', icon: FolderOpen, permission: 'cv.create' },
           ],
         },
       ];
@@ -72,51 +78,60 @@ export default function AdminSidebar({ isFullAdmin, isCvUploader }: AdminSidebar
         label: 'Overview',
         items: [
           { title: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-          { title: 'Analytics', href: '/admin?tab=stats', icon: BarChart3 },
+          { title: 'Analytics', href: '/admin?tab=stats', icon: BarChart3, permission: 'analytics.view' },
         ],
       },
       {
         label: 'Talent Pool',
         items: [
-          { title: 'CV Database', href: '/admin?tab=submissions', icon: FileText },
-          { title: 'Featured Talent', href: '/admin?tab=talent', icon: Star },
+          { title: 'CV Database', href: '/admin?tab=submissions', icon: FileText, permission: 'cv.view' },
+          { title: 'Featured Talent', href: '/admin?tab=talent', icon: Star, permission: 'talent.view' },
         ],
       },
       {
         label: 'Jobs',
         items: [
-          { title: 'All Jobs', href: '/admin?tab=jobs', icon: Briefcase },
+          { title: 'All Jobs', href: '/admin?tab=jobs', icon: Briefcase, permission: 'jobs.view' },
         ],
       },
       {
         label: 'Submissions',
         items: [
-          { title: 'Job Applications', href: '/admin?tab=applications', icon: Users },
-          { title: 'Career Partner', href: '/admin?tab=career', icon: MessageSquare },
-          { title: 'Talent Requests', href: '/admin?tab=talent-requests', icon: Star },
-          { title: 'Employer Jobs', href: '/admin?tab=employer-jobs', icon: Building },
-          { title: 'Contact Forms', href: '/admin?tab=contact', icon: Mail },
+          { title: 'Job Applications', href: '/admin?tab=applications', icon: Users, permission: 'applications.view' },
+          { title: 'Career Partner', href: '/admin?tab=career', icon: MessageSquare, permission: 'submissions.view' },
+          { title: 'Talent Requests', href: '/admin?tab=talent-requests', icon: Star, permission: 'submissions.view' },
+          { title: 'Employer Jobs', href: '/admin?tab=employer-jobs', icon: Building, permission: 'submissions.view' },
+          { title: 'Contact Forms', href: '/admin?tab=contact', icon: Mail, permission: 'submissions.view' },
         ],
       },
       {
         label: 'Content',
         items: [
-          { title: 'Blog Posts', href: '/admin?tab=blog', icon: FileText },
+          { title: 'Blog Posts', href: '/admin?tab=blog', icon: FileText, permission: 'blog.view' },
         ],
       },
       {
         label: 'Administration',
         items: [
-          { title: 'Staff Accounts', href: '/admin?tab=admins', icon: UserPlus },
-          { title: 'Permissions', href: '/admin?tab=permissions', icon: Settings },
-          { title: 'Notifications', href: '/admin?tab=notification-settings', icon: Mail },
-          { title: 'Settings', href: '/admin?tab=settings', icon: Settings },
+          { title: 'Staff Accounts', href: '/admin?tab=admins', icon: UserPlus, permission: 'staff.view' },
+          { title: 'Permissions', href: '/admin?tab=permissions', icon: Lock, permission: 'staff.update' },
+          { title: 'Notifications', href: '/admin?tab=notification-settings', icon: Bell },
+          { title: 'Settings', href: '/admin?tab=settings', icon: Settings, permission: 'settings.view' },
         ],
       },
     ];
   };
 
-  const navGroups = getNavGroups();
+  // Filter items based on permissions
+  const filterItemsByPermission = (items: NavItem[]): NavItem[] => {
+    if (isFullAdmin) return items; // Full admins see everything
+    return items.filter(item => !item.permission || hasPermission(item.permission));
+  };
+
+  const navGroups = getNavGroups().map(group => ({
+    ...group,
+    items: filterItemsByPermission(group.items),
+  })).filter(group => group.items.length > 0);
 
   const isActive = (href: string) => {
     const url = new URL(href, window.location.origin);

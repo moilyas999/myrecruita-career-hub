@@ -139,16 +139,13 @@ const SubmitCV = () => {
       
       // Send admin notification
       try {
-        await supabase.functions.invoke('send-admin-notification', {
+        await supabase.functions.invoke('send-push-notification', {
           body: {
-            type: 'cv_submission',
-            data: {
-              name: formData.name,
-              email: formData.email,
-              phone: formData.phone,
-              message: formData.message,
-              cv_file_url: cvFileUrl
-            }
+            title: 'New CV Submission',
+            message: `${formData.name} submitted their CV`,
+            category: 'cv_submission',
+            link: '/admin?tab=submissions',
+            targetRoles: ['admin', 'recruiter'],
           }
         });
       } catch (notificationError) {

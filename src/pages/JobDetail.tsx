@@ -244,17 +244,13 @@ const JobDetail = () => {
       
       // Send admin notification
       try {
-        await supabase.functions.invoke('send-admin-notification', {
+        await supabase.functions.invoke('send-push-notification', {
           body: {
-            type: 'job_application',
-            data: {
-              job_id: job.id,
-              name: formData.name,
-              email: formData.email,
-              phone: formData.phone,
-              message: formData.message,
-              cv_file_url: cvUrl
-            }
+            title: 'New Job Application',
+            message: `${formData.name} applied for ${job.title}`,
+            category: 'job_application',
+            link: '/admin?tab=applications',
+            targetRoles: ['admin', 'recruiter'],
           }
         });
       } catch (notificationError) {

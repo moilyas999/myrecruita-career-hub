@@ -124,16 +124,13 @@ const FeaturedTalent = () => {
       
       // Send admin notification
       try {
-        await supabase.functions.invoke('send-admin-notification', {
+        await supabase.functions.invoke('send-push-notification', {
           body: {
-            type: 'talent_request',
-            data: {
-              talent_id: requestFormData.candidateRef,
-              contact_name: requestFormData.name,
-              company_name: requestFormData.company,
-              email: requestFormData.email,
-              message: requestFormData.message
-            }
+            title: 'Talent Profile Request',
+            message: `${requestFormData.company} requested a talent profile`,
+            category: 'talent_request',
+            link: '/admin?tab=talent-requests',
+            targetRoles: ['admin', 'account_manager'],
           }
         });
       } catch (notificationError) {

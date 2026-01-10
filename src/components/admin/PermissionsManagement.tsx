@@ -142,9 +142,25 @@ export default function PermissionsManagement() {
         if (insertError) throw insertError;
       }
     },
-    onSuccess: () => {
+    onSuccess: async (_, { userId }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.staffPermissions });
       toast.success('Permissions updated successfully');
+      
+      // Send notification to the affected user
+      try {
+        await supabase.functions.invoke('send-push-notification', {
+          body: {
+            title: 'Permissions Updated',
+            message: 'Your admin permissions have been updated',
+            category: 'permission_changed',
+            link: '/admin?tab=permissions',
+            targetUserIds: [userId],
+          }
+        });
+      } catch (e) {
+        console.log('Permission notification failed:', e);
+      }
+      
       setSelectedStaff(null);
     },
     onError: (error) => {
