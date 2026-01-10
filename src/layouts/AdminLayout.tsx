@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 import { PushNotificationPrompt } from '@/components/admin/PushNotificationPrompt';
 import { supabase } from '@/integrations/supabase/client';
+import { useProgressierUpdates, syncUserToProgressier } from '@/hooks/useProgressierUpdates';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -23,6 +24,12 @@ export default function AdminLayout({ children, title, description }: AdminLayou
 
   const isFullAdmin = adminRole === 'admin';
   const isCvUploader = adminRole === 'cv_uploader';
+
+  // Enable PWA auto-updates via Progressier
+  const { updateAvailable } = useProgressierUpdates({
+    autoReloadOnVisibility: true,
+    showToast: true,
+  });
 
   useEffect(() => {
     if (!loading && !isAdminLoading && (!user || !isAdmin)) {
@@ -48,6 +55,18 @@ export default function AdminLayout({ children, title, description }: AdminLayou
     
     fetchAdminProfile();
   }, [user]);
+
+  // Sync user data to Progressier for segment targeting on every load
+  useEffect(() => {
+    if (user && adminRole) {
+      syncUserToProgressier({
+        userId: user.id,
+        email: user.email,
+        name: adminProfile?.display_name || undefined,
+        role: adminRole,
+      });
+    }
+  }, [user, adminRole, adminProfile]);
 
   if (loading || isAdminLoading) {
     return (
@@ -84,6 +103,7 @@ export default function AdminLayout({ children, title, description }: AdminLayou
           <AdminHeader 
             user={user} 
             onSignOut={signOut}
+            updateAvailable={updateAvailable}
           />
           
           <main id="main-content" className="flex-1 overflow-auto" role="main">
