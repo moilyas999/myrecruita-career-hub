@@ -122,7 +122,7 @@ const FeaturedTalent = () => {
         description: "We'll send you the full candidate profile within 24 hours.",
       });
       
-      // Send admin notification
+      // Send admin notification with rich content
       try {
         await supabase.functions.invoke('send-push-notification', {
           body: {
@@ -131,6 +131,7 @@ const FeaturedTalent = () => {
             category: 'talent_request',
             link: '/admin?tab=talent-requests',
             targetRoles: ['admin', 'account_manager'],
+            icon: 'https://myrecruita.com/favicon.ico',
           }
         });
       } catch (notificationError) {

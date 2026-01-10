@@ -94,7 +94,7 @@ const CareerPartner = () => {
         description: "We'll review your CV and contact you within 24 hours.",
       });
       
-      // Send admin notification
+      // Send admin notification with rich content
       try {
         await supabase.functions.invoke('send-push-notification', {
           body: {
@@ -103,6 +103,7 @@ const CareerPartner = () => {
             category: 'career_partner_request',
             link: '/admin?tab=career',
             targetRoles: ['admin', 'recruiter'],
+            icon: 'https://myrecruita.com/favicon.ico',
           }
         });
       } catch (notificationError) {
@@ -146,7 +147,7 @@ const CareerPartner = () => {
         description: "We'll contact you within 2 hours to schedule your session.",
       });
       
-      // Send admin notification
+      // Send admin notification with rich content
       try {
         await supabase.functions.invoke('send-push-notification', {
           body: {
@@ -155,6 +156,7 @@ const CareerPartner = () => {
             category: 'career_partner_request',
             link: '/admin?tab=career',
             targetRoles: ['admin', 'recruiter'],
+            icon: 'https://myrecruita.com/favicon.ico',
           }
         });
       } catch (notificationError) {

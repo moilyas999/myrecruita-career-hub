@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
@@ -7,6 +7,8 @@ import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminHeader from '@/components/admin/AdminHeader';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
+import { PushNotificationPrompt } from '@/components/admin/PushNotificationPrompt';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -17,6 +19,7 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children, title, description }: AdminLayoutProps) {
   const { user, isAdmin, adminRole, loading, isAdminLoading, signOut } = useAuth();
   const navigate = useNavigate();
+  const [adminProfile, setAdminProfile] = useState<{ display_name: string | null; email: string } | null>(null);
 
   const isFullAdmin = adminRole === 'admin';
   const isCvUploader = adminRole === 'cv_uploader';
@@ -26,6 +29,25 @@ export default function AdminLayout({ children, title, description }: AdminLayou
       navigate('/admin/login');
     }
   }, [user, isAdmin, loading, isAdminLoading, navigate]);
+
+  // Fetch admin profile for push notification sync
+  useEffect(() => {
+    const fetchAdminProfile = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from('admin_profiles')
+          .select('display_name, email')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (data) {
+          setAdminProfile(data);
+        }
+      }
+    };
+    
+    fetchAdminProfile();
+  }, [user]);
 
   if (loading || isAdminLoading) {
     return (
@@ -95,6 +117,14 @@ export default function AdminLayout({ children, title, description }: AdminLayou
           </main>
         </div>
       </div>
+      
+      {/* Push Notification Prompt */}
+      <PushNotificationPrompt
+        userId={user?.id}
+        userEmail={adminProfile?.email}
+        userName={adminProfile?.display_name || undefined}
+        userRole={adminRole || undefined}
+      />
     </SidebarProvider>
   );
 }

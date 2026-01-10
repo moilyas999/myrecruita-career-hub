@@ -242,7 +242,7 @@ const JobDetail = () => {
         description: "We'll be in touch within 24 hours to discuss your application.",
       });
       
-      // Send admin notification
+      // Send admin notification with rich content
       try {
         await supabase.functions.invoke('send-push-notification', {
           body: {
@@ -251,6 +251,7 @@ const JobDetail = () => {
             category: 'job_application',
             link: '/admin?tab=applications',
             targetRoles: ['admin', 'recruiter'],
+            icon: 'https://myrecruita.com/favicon.ico',
           }
         });
       } catch (notificationError) {
