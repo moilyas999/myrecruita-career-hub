@@ -148,20 +148,13 @@ const EmployerJobForm = ({ isCompact = false }: EmployerJobFormProps) => {
       
       // Send admin notification
       try {
-        await supabase.functions.invoke('send-admin-notification', {
+        await supabase.functions.invoke('send-push-notification', {
           body: {
-            type: 'employer_job_submission',
-            data: {
-              contact_name: formData.contactName,
-              company_name: formData.companyName,
-              email: formData.email,
-              phone: formData.phone,
-              job_title: formData.jobTitle,
-              sector: formData.sector,
-              location: formData.location,
-              job_description: formData.jobDescription,
-              job_spec_file_url: jobSpecUrl
-            }
+            title: 'New Employer Job Submission',
+            message: `${formData.companyName} submitted a job: ${formData.jobTitle}`,
+            category: 'employer_job_submission',
+            link: '/admin?tab=employer-jobs',
+            targetRoles: ['admin', 'account_manager'],
           }
         });
       } catch (notificationError) {

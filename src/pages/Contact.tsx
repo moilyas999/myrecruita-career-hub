@@ -135,18 +135,13 @@ const Contact = () => {
       
       // Send admin notification
       try {
-        await supabase.functions.invoke('send-admin-notification', {
+        await supabase.functions.invoke('send-push-notification', {
           body: {
-            type: 'contact_submission',
-            data: {
-              name: formData.name,
-              email: formData.email,
-              phone: formData.phone,
-              company: formData.company,
-              subject: formData.subject,
-              message: formData.message,
-              inquiry_type: formData.inquiryType
-            }
+            title: 'New Contact Form Submission',
+            message: `${formData.name} sent a message: ${formData.subject}`,
+            category: 'contact_submission',
+            link: '/admin?tab=contact',
+            targetRoles: ['admin', 'account_manager'],
           }
         });
       } catch (notificationError) {

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -21,6 +22,8 @@ import {
   BookOpen,
   Settings,
   Calendar,
+  Send,
+  Loader2,
 } from 'lucide-react';
 import { useNotificationPreferences } from '@/hooks/useNotifications';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
@@ -30,6 +33,9 @@ import {
   DEFAULT_EVENT_PREFERENCES 
 } from '@/lib/permissions';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
 
 const eventIcons: Record<NotificationEventType, React.ElementType> = {
   cv_submission: FileText,
@@ -68,8 +74,34 @@ export default function NotificationSettings() {
     subscribe, 
     unsubscribe 
   } = usePushNotifications();
+  const { user } = useAuth();
+  const [sendingTest, setSendingTest] = useState(false);
 
   const eventPreferences = preferences?.event_preferences as Record<string, boolean> || DEFAULT_EVENT_PREFERENCES;
+
+  const handleSendTestNotification = async () => {
+    if (!user) return;
+    setSendingTest(true);
+    try {
+      const { error } = await supabase.functions.invoke('send-push-notification', {
+        body: {
+          title: 'Test Notification',
+          message: 'This is a test notification to verify your settings work correctly.',
+          category: 'system_updates',
+          link: '/admin?tab=notification-settings',
+          targetUserIds: [user.id],
+        }
+      });
+      
+      if (error) throw error;
+      toast.success('Test notification sent! Check your notification center.');
+    } catch (err) {
+      console.error('Test notification failed:', err);
+      toast.error('Failed to send test notification');
+    } finally {
+      setSendingTest(false);
+    }
+  };
 
   const handleChannelToggle = (channel: 'email_enabled' | 'push_enabled' | 'in_app_enabled', value: boolean) => {
     updatePreferences({ [channel]: value });
@@ -104,9 +136,28 @@ export default function NotificationSettings() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-primary">Notification Settings</h2>
-        <p className="text-muted-foreground">Manage how you receive notifications</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 className="text-2xl font-bold text-primary">Notification Settings</h2>
+          <p className="text-muted-foreground">Manage how you receive notifications</p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={handleSendTestNotification}
+          disabled={sendingTest}
+        >
+          {sendingTest ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Sending...
+            </>
+          ) : (
+            <>
+              <Send className="w-4 h-4 mr-2" />
+              Send Test
+            </>
+          )}
+        </Button>
       </div>
 
       {/* Channel Settings */}

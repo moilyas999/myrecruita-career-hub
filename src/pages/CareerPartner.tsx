@@ -96,16 +96,13 @@ const CareerPartner = () => {
       
       // Send admin notification
       try {
-        await supabase.functions.invoke('send-admin-notification', {
+        await supabase.functions.invoke('send-push-notification', {
           body: {
-            type: 'career_partner_request',
-            data: {
-              name: cvFormData.name,
-              email: cvFormData.email,
-              phone: cvFormData.phone,
-              service_type: 'cv_enhancement',
-              message: cvFormData.message
-            }
+            title: 'Career Partner Request',
+            message: `${cvFormData.name} requested CV enhancement`,
+            category: 'career_partner_request',
+            link: '/admin?tab=career',
+            targetRoles: ['admin', 'recruiter'],
           }
         });
       } catch (notificationError) {
@@ -151,16 +148,13 @@ const CareerPartner = () => {
       
       // Send admin notification
       try {
-        await supabase.functions.invoke('send-admin-notification', {
+        await supabase.functions.invoke('send-push-notification', {
           body: {
-            type: 'career_partner_request',
-            data: {
-              name: sessionFormData.name,
-              email: sessionFormData.email,
-              phone: sessionFormData.phone,
-              service_type: sessionFormData.service,
-              message: `Preferred time: ${sessionFormData.preferredTime}. ${sessionFormData.message}`
-            }
+            title: 'Session Booking Request',
+            message: `${sessionFormData.name} requested ${sessionFormData.service}`,
+            category: 'career_partner_request',
+            link: '/admin?tab=career',
+            targetRoles: ['admin', 'recruiter'],
           }
         });
       } catch (notificationError) {

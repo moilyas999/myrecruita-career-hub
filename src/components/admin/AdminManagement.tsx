@@ -7,18 +7,31 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UserPlus, Eye, EyeOff, Shield, Upload } from 'lucide-react';
+import { UserPlus, Eye, EyeOff, Shield, Upload, UserCheck, Building, Megaphone, Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { StaffRole, ROLE_CONFIG } from '@/lib/permissions';
+import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
 
 interface AdminProfile {
   id: string;
   user_id: string;
   email: string;
   role: string;
+  display_name: string | null;
   created_at: string;
 }
+
+const roleIcons: Record<StaffRole, React.ElementType> = {
+  admin: Shield,
+  recruiter: UserCheck,
+  account_manager: Building,
+  marketing: Megaphone,
+  cv_uploader: Upload,
+  viewer: Eye,
+};
 
 export default function AdminManagement() {
   const [adminProfiles, setAdminProfiles] = useState<AdminProfile[]>([]);
@@ -26,7 +39,7 @@ export default function AdminManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [newAdminPassword, setNewAdminPassword] = useState('');
-  const [newAdminRole, setNewAdminRole] = useState('admin');
+  const [newAdminRole, setNewAdminRole] = useState<StaffRole>('admin');
   const [showPassword, setShowPassword] = useState(false);
   const [creating, setCreating] = useState(false);
   const { createAdminUser } = useAuth();
@@ -65,7 +78,8 @@ export default function AdminManagement() {
     if (error) {
       toast.error(error);
     } else {
-      toast.success(`${newAdminRole === 'admin' ? 'Admin' : 'CV Uploader'} account created successfully!`);
+      const roleConfig = ROLE_CONFIG[newAdminRole];
+      toast.success(`${roleConfig.label} account created successfully!`);
       setNewAdminEmail('');
       setNewAdminPassword('');
       setNewAdminRole('admin');
@@ -76,16 +90,19 @@ export default function AdminManagement() {
     setCreating(false);
   };
 
-  const getRoleBadgeVariant = (role: string) => {
-    return role === 'admin' ? 'default' : 'secondary';
+  const getRoleBadgeColor = (role: string) => {
+    const config = ROLE_CONFIG[role as StaffRole];
+    return config?.color || '';
   };
 
   const getRoleIcon = (role: string) => {
-    return role === 'admin' ? <Shield className="w-3 h-3" /> : <Upload className="w-3 h-3" />;
+    const RoleIcon = roleIcons[role as StaffRole] || Shield;
+    return <RoleIcon className="w-3 h-3" />;
   };
 
   const getRoleLabel = (role: string) => {
-    return role === 'admin' ? 'Full Admin' : 'CV Uploader';
+    const config = ROLE_CONFIG[role as StaffRole];
+    return config?.label || role;
   };
 
   if (loading) {
@@ -104,100 +121,110 @@ export default function AdminManagement() {
           <p className="text-muted-foreground">Manage staff accounts and permissions</p>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <UserPlus className="w-4 h-4 mr-2" />
-              Add Staff
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Staff Account</DialogTitle>
-              <DialogDescription>
-                Create a new staff account. Choose the role to control their access level.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleCreateAdmin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="admin-role">Role</Label>
-                <Select value={newAdminRole} onValueChange={setNewAdminRole}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">
-                      <div className="flex items-center gap-2">
-                        <Shield className="w-4 h-4" />
-                        <span>Full Admin</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="cv_uploader">
-                      <div className="flex items-center gap-2">
-                        <Upload className="w-4 h-4" />
-                        <span>CV Uploader (Limited)</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                {newAdminRole === 'cv_uploader' && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    CV Uploaders can only see their own CV submissions from the last 3 days. They cannot access other data or export emails.
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="admin-email">Email</Label>
-                <Input
-                  id="admin-email"
-                  type="email"
-                  value={newAdminEmail}
-                  onChange={(e) => setNewAdminEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="admin-password">Password</Label>
-                <div className="relative">
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link to="/admin?tab=permissions">
+              <Settings className="w-4 h-4 mr-2" />
+              Manage Permissions
+            </Link>
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add Staff
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Create New Staff Account</DialogTitle>
+                <DialogDescription>
+                  Create a new staff account. Role determines default permissions.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleCreateAdmin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="admin-role">Role</Label>
+                  <Select value={newAdminRole} onValueChange={(v) => setNewAdminRole(v as StaffRole)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.entries(ROLE_CONFIG) as [StaffRole, typeof ROLE_CONFIG[StaffRole]][]).map(([role, config]) => {
+                        const RoleIcon = roleIcons[role];
+                        return (
+                          <SelectItem key={role} value={role}>
+                            <div className="flex items-center gap-2">
+                              <RoleIcon className="w-4 h-4" />
+                              <span>{config.label}</span>
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                  <div className="mt-2 p-3 bg-muted/50 rounded-lg">
+                    <p className="text-sm font-medium text-muted-foreground">
+                      {ROLE_CONFIG[newAdminRole].description}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {ROLE_CONFIG[newAdminRole].defaultPermissions.length} default permissions
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-email">Email</Label>
                   <Input
-                    id="admin-password"
-                    type={showPassword ? "text" : "password"}
-                    value={newAdminPassword}
-                    onChange={(e) => setNewAdminPassword(e.target.value)}
+                    id="admin-email"
+                    type="email"
+                    value={newAdminEmail}
+                    onChange={(e) => setNewAdminEmail(e.target.value)}
                     required
-                    minLength={6}
                   />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-password">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="admin-password"
+                      type={showPassword ? "text" : "password"}
+                      value={newAdminPassword}
+                      onChange={(e) => setNewAdminPassword(e.target.value)}
+                      required
+                      minLength={6}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setIsDialogOpen(false)}
+                    disabled={creating}
                   >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={creating}>
+                    {creating ? 'Creating...' : 'Create Account'}
                   </Button>
                 </div>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsDialogOpen(false)}
-                  disabled={creating}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={creating}>
-                  {creating ? 'Creating...' : 'Create Account'}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card>
@@ -217,22 +244,36 @@ export default function AdminManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Email</TableHead>
+                  <TableHead>Display Name</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Created</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {adminProfiles.map((admin) => (
                   <TableRow key={admin.id}>
                     <TableCell className="font-medium">{admin.email}</TableCell>
+                    <TableCell>{admin.display_name || '-'}</TableCell>
                     <TableCell>
-                      <Badge variant={getRoleBadgeVariant(admin.role)} className="flex items-center gap-1 w-fit">
+                      <Badge 
+                        variant="secondary" 
+                        className={cn("flex items-center gap-1 w-fit", getRoleBadgeColor(admin.role))}
+                      >
                         {getRoleIcon(admin.role)}
                         {getRoleLabel(admin.role)}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       {new Date(admin.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link to={`/admin?tab=permissions`}>
+                          <Settings className="w-4 h-4 mr-1" />
+                          Permissions
+                        </Link>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}

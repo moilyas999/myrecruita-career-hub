@@ -164,6 +164,83 @@ Deno.serve(async (req) => {
 
     console.log('Admin profile created successfully')
 
+    // Assign role-based permissions
+    try {
+      const { error: permError } = await supabaseAdmin.rpc('assign_role_permissions', {
+        _user_id: userId,
+        _role: role
+      })
+      
+      if (permError) {
+        console.error('Permission assignment error:', permError)
+        // Non-critical, continue
+      } else {
+        console.log('Role permissions assigned successfully')
+      }
+    } catch (permErr) {
+      console.error('Permission assignment failed:', permErr)
+    }
+
+    // Create notification preferences with defaults
+    try {
+      const { error: prefError } = await supabaseAdmin
+        .from('notification_preferences')
+        .insert({
+          user_id: userId,
+          email_enabled: true,
+          push_enabled: true,
+          in_app_enabled: true,
+          event_preferences: {
+            cv_submission: true,
+            job_application: true,
+            contact_submission: true,
+            career_partner_request: true,
+            employer_job_submission: true,
+            talent_request: true,
+            staff_added: true,
+            permission_changed: true,
+            blog_published: true,
+            system_updates: true,
+            weekly_digest: true,
+          }
+        })
+      
+      if (prefError) {
+        console.error('Notification preferences error:', prefError)
+        // Non-critical, continue
+      } else {
+        console.log('Notification preferences created')
+      }
+    } catch (prefErr) {
+      console.error('Notification preferences failed:', prefErr)
+    }
+
+    // Send notification to admins about new staff
+    try {
+      // Create in-app notification for all admins
+      const { data: admins } = await supabaseAdmin
+        .from('admin_profiles')
+        .select('user_id')
+        .eq('role', 'admin')
+        .neq('user_id', userId)
+      
+      if (admins && admins.length > 0) {
+        const notifications = admins.map(admin => ({
+          user_id: admin.user_id,
+          title: 'New Staff Member',
+          message: `${email} has been added as ${role}`,
+          category: 'staff_added',
+          type: 'info',
+          link: '/admin?tab=admins'
+        }))
+        
+        await supabaseAdmin.from('notifications').insert(notifications)
+        console.log('Staff added notifications sent')
+      }
+    } catch (notifErr) {
+      console.error('Notification send failed:', notifErr)
+    }
+
     return new Response(
       JSON.stringify({ success: true, user_id: userId }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
