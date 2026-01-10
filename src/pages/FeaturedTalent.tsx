@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,7 @@ import { useSEO } from "@/hooks/useSEO";
 
 const FeaturedTalent = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   useSEO({
     title: "Hire Talent | Pre-vetted Professionals in Finance, IT & Law | MyRecruita",
@@ -139,6 +141,7 @@ const FeaturedTalent = () => {
       }
       
       setRequestFormData({ name: "", company: "", email: "", message: "", candidateRef: "" });
+      navigate('/thank-you?type=talent_request');
     } catch (error) {
       toast({
         title: "Error",

@@ -110,8 +110,8 @@ const CareerPartner = () => {
         console.log('Admin notification failed (non-critical):', notificationError);
       }
       
-      // Redirect to thank you page
-      navigate('/thank-you');
+      // Redirect to thank you page with submission type
+      navigate('/thank-you?type=career_partner');
     } catch (error) {
       toast({
         title: "Error",
@@ -163,8 +163,8 @@ const CareerPartner = () => {
         console.log('Admin notification failed (non-critical):', notificationError);
       }
       
-      // Redirect to thank you page
-      navigate('/thank-you');
+      // Redirect to thank you page with submission type
+      navigate('/thank-you?type=career_partner');
     } catch (error) {
       toast({
         title: "Error",

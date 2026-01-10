@@ -1,18 +1,20 @@
-
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Clock, Building2, Loader2, Heart } from "lucide-react";
+import { Search, MapPin, Clock, Building2, Heart, FileText, RefreshCw, Briefcase } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/useSEO";
+import { JobCardSkeleton } from "@/components/ui/skeleton-card";
+import { ScrollToTopButton } from "@/components/ui/scroll-to-top-button";
 
 const Jobs = () => {
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   
   useSEO({
     title: "Current Job Vacancies UK | Finance, IT & Legal Careers 2025 | MyRecruita",
@@ -21,14 +23,24 @@ const Jobs = () => {
     keywords: ["jobs UK 2025", "finance careers", "IT jobs London", "legal recruitment", "executive positions", "professional jobs", "current vacancies"]
   });
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedSector, setSelectedSector] = useState("all");
-  const [selectedLocation, setSelectedLocation] = useState("all");
+  // Initialize from URL params
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
+  const [selectedSector, setSelectedSector] = useState(searchParams.get("sector") || "all");
+  const [selectedLocation, setSelectedLocation] = useState(searchParams.get("location") || "all");
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [sectors, setSectors] = useState<string[]>([]);
   const [locations, setLocations] = useState<string[]>([]);
   const [savedJobs, setSavedJobs] = useState<string[]>([]);
+
+  // Sync filters to URL
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchTerm) params.set("search", searchTerm);
+    if (selectedSector !== "all") params.set("sector", selectedSector);
+    if (selectedLocation !== "all") params.set("location", selectedLocation);
+    setSearchParams(params, { replace: true });
+  }, [searchTerm, selectedSector, selectedLocation, setSearchParams]);
 
   useEffect(() => {
     fetchJobs();
@@ -92,6 +104,18 @@ const Jobs = () => {
     });
   };
 
+  const clearFilters = () => {
+    setSearchTerm("");
+    setSelectedSector("all");
+    setSelectedLocation("all");
+  };
+
+  const activeFilterCount = [
+    searchTerm,
+    selectedSector !== "all" ? selectedSector : null,
+    selectedLocation !== "all" ? selectedLocation : null
+  ].filter(Boolean).length;
+
   const filteredJobs = jobs.filter(job => {
     const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          job.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -147,8 +171,19 @@ const Jobs = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <Button className="w-full">
-                Apply Filters
+              <Button 
+                variant={activeFilterCount > 0 ? "secondary" : "outline"}
+                onClick={clearFilters}
+                disabled={activeFilterCount === 0}
+                className="gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Reset Filters
+                {activeFilterCount > 0 && (
+                  <Badge variant="default" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                    {activeFilterCount}
+                  </Badge>
+                )}
               </Button>
             </div>
           </CardContent>
@@ -161,11 +196,12 @@ const Jobs = () => {
           </p>
         </div>
 
-        {/* Loading State */}
+        {/* Loading State with Skeletons */}
         {loading && (
-          <div className="flex justify-center items-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <span className="ml-2 text-muted-foreground">Loading jobs...</span>
+          <div className="grid grid-cols-1 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <JobCardSkeleton key={i} />
+            ))}
           </div>
         )}
 
@@ -226,21 +262,31 @@ const Jobs = () => {
           </div>
         )}
 
-        {/* No results */}
+        {/* Enhanced Empty State */}
         {!loading && filteredJobs.length === 0 && (
-          <Card className="text-center p-8">
-            <CardContent>
-              <h3 className="text-xl font-semibold mb-2">No jobs found</h3>
-              <p className="text-muted-foreground mb-4">
-                Try adjusting your search criteria or browse all available positions.
-              </p>
-              <Button onClick={() => {
-                setSearchTerm("");
-                setSelectedSector("all");
-                setSelectedLocation("all");
-              }}>
-                Clear Filters
-              </Button>
+          <Card className="text-center p-12 shadow-card">
+            <CardContent className="space-y-6">
+              <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto">
+                <Briefcase className="h-10 w-10 text-muted-foreground" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-semibold mb-2">No jobs found</h3>
+                <p className="text-muted-foreground max-w-md mx-auto">
+                  We couldn't find any jobs matching your criteria. Try adjusting your filters or submit your CV and we'll notify you when new positions become available.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button onClick={clearFilters} variant="outline" className="gap-2">
+                  <RefreshCw className="h-4 w-4" />
+                  Clear All Filters
+                </Button>
+                <Button asChild className="gap-2">
+                  <Link to="/submit-cv">
+                    <FileText className="h-4 w-4" />
+                    Submit Your CV
+                  </Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
@@ -260,6 +306,8 @@ const Jobs = () => {
           </CardContent>
         </Card>
       </div>
+
+      <ScrollToTopButton />
     </div>
   );
 };
