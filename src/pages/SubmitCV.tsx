@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Upload, CheckCircle, ArrowRight, FileText, Users, Award } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/useSEO";
-import { supabase } from "@/integrations/supabase/client";
+import { uploadFile, submitCV, sendAdminNotification } from "@/services/publicSubmissions";
 
 const SubmitCV = () => {
   const { toast } = useToast();
@@ -72,20 +72,13 @@ const SubmitCV = () => {
     setIsSubmitting(true);
 
     try {
-      let cvFileUrl = null;
+      let cvFileUrl: string | null = null;
       
       // Upload CV file to Supabase Storage if provided
       if (formData.cv) {
-        const fileExt = formData.cv.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-        const filePath = `cv-submissions/${fileName}`;
-
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('cv-uploads')
-          .upload(filePath, formData.cv);
-
-        if (uploadError) {
-          console.error('Upload error:', uploadError);
+        const uploadResult = await uploadFile(formData.cv, 'cv-uploads', 'cv-submissions');
+        
+        if (uploadResult.error) {
           toast({
             title: "Upload Error",
             description: "Failed to upload CV. Please try again.",
@@ -93,65 +86,42 @@ const SubmitCV = () => {
           });
           return;
         }
-
-        // Get the file URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('cv-uploads')
-          .getPublicUrl(filePath);
         
-        cvFileUrl = publicUrl;
+        cvFileUrl = uploadResult.path;
       }
 
-      console.log('Submitting CV with data:', {
+      // Submit CV using centralized service (no .select() to avoid RLS issues)
+      const result = await submitCV({
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
-        cv_file_url: cvFileUrl,
-        message: formData.message
+        message: formData.message,
+        cvFileUrl,
+        source: 'website',
       });
 
-      const { data, error } = await supabase
-        .from('cv_submissions')
-        .insert({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          cv_file_url: cvFileUrl,
-          message: formData.message
-        })
-        .select();
-
-      if (error) {
-        console.error('Insert error:', error);
+      if (!result.success) {
         toast({
           title: "Error",
-          description: `Failed to submit CV: ${error.message}`,
+          description: `Failed to submit CV: ${result.error}`,
           variant: "destructive",
         });
         return;
       }
 
-      console.log('CV submitted successfully:', data);
       toast({
         title: "CV Submitted Successfully!",
         description: "We'll review your profile and be in touch within 24 hours.",
       });
       
-      // Send admin notification with rich content
-      try {
-        await supabase.functions.invoke('send-push-notification', {
-          body: {
-            title: 'New CV Submission',
-            message: `${formData.name} submitted their CV`,
-            category: 'cv_submission',
-            link: '/admin?tab=submissions',
-            targetRoles: ['admin', 'recruiter'],
-            icon: 'https://myrecruita.com/favicon.ico',
-          }
-        });
-      } catch (notificationError) {
-        console.log('Admin notification failed (non-critical):', notificationError);
-      }
+      // Send admin notification (non-blocking)
+      sendAdminNotification({
+        title: 'New CV Submission',
+        message: `${formData.name} submitted their CV`,
+        category: 'cv_submission',
+        link: '/admin?tab=submissions',
+        targetRoles: ['admin', 'recruiter'],
+      });
       
       // Redirect to thank you page with submission type
       navigate('/thank-you?type=cv');
