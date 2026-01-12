@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, ArrowRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { uploadFile, submitEmployerJob, sendAdminNotification } from "@/services/publicSubmissions";
 
 interface EmployerJobFormProps {
   isCompact?: boolean;
@@ -85,20 +85,13 @@ const EmployerJobForm = ({ isCompact = false }: EmployerJobFormProps) => {
     setIsSubmitting(true);
 
     try {
-      let jobSpecUrl = null;
+      let jobSpecUrl: string | null = null;
       
       // Upload job spec file to Supabase Storage if provided
       if (formData.jobSpec) {
-        const fileExt = formData.jobSpec.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-        const filePath = `employer-uploads/${fileName}`;
-
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('cv-uploads')
-          .upload(filePath, formData.jobSpec);
-
-        if (uploadError) {
-          console.error('Upload error:', uploadError);
+        const uploadResult = await uploadFile(formData.jobSpec, 'cv-uploads', 'employer-uploads');
+        
+        if (uploadResult.error) {
           toast({
             title: "Upload Error",
             description: "Failed to upload job specification. Please try again.",
@@ -106,61 +99,45 @@ const EmployerJobForm = ({ isCompact = false }: EmployerJobFormProps) => {
           });
           return;
         }
-
-        // Get the file URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('cv-uploads')
-          .getPublicUrl(filePath);
         
-        jobSpecUrl = publicUrl;
+        jobSpecUrl = uploadResult.path;
       }
 
-      const { data, error } = await supabase
-        .from('employer_job_submissions')
-        .insert({
-          company_name: formData.companyName,
-          contact_name: formData.contactName,
-          email: formData.email,
-          phone: formData.phone,
-          job_title: formData.jobTitle,
-          job_description: formData.jobDescription,
-          sector: formData.sector,
-          location: formData.location,
-          job_spec_file_url: jobSpecUrl
-        })
-        .select();
+      // Submit employer job using centralized service (no .select() to avoid RLS issues)
+      const result = await submitEmployerJob({
+        companyName: formData.companyName,
+        contactName: formData.contactName,
+        email: formData.email,
+        phone: formData.phone,
+        jobTitle: formData.jobTitle,
+        jobDescription: formData.jobDescription,
+        sector: formData.sector,
+        location: formData.location,
+        jobSpecFileUrl: jobSpecUrl,
+      });
 
-      if (error) {
-        console.error('Insert error:', error);
+      if (!result.success) {
         toast({
           title: "Error",
-          description: `Failed to submit job posting: ${error.message}`,
+          description: `Failed to submit job posting: ${result.error}`,
           variant: "destructive",
         });
         return;
       }
 
-      console.log('Job posting submitted successfully:', data);
       toast({
         title: "Job Posting Submitted!",
         description: "We'll review your requirements and contact you within 24 hours.",
       });
       
-      // Send admin notification with rich content
-      try {
-        await supabase.functions.invoke('send-push-notification', {
-          body: {
-            title: 'New Employer Job Submission',
-            message: `${formData.companyName} submitted a job: ${formData.jobTitle}`,
-            category: 'employer_job_submission',
-            link: '/admin?tab=employer-jobs',
-            targetRoles: ['admin', 'account_manager'],
-            icon: 'https://myrecruita.com/favicon.ico',
-          }
-        });
-      } catch (notificationError) {
-        console.log('Admin notification failed (non-critical):', notificationError);
-      }
+      // Send admin notification (non-blocking)
+      sendAdminNotification({
+        title: 'New Employer Job Submission',
+        message: `${formData.companyName} submitted a job: ${formData.jobTitle}`,
+        category: 'employer_job_submission',
+        link: '/admin?tab=employer-jobs',
+        targetRoles: ['admin', 'account_manager'],
+      });
       
       // Redirect to thank you page
       navigate('/thank-you');

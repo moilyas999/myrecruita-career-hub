@@ -13,7 +13,7 @@ import { SEOBreadcrumb } from "@/components/SEO/Breadcrumb";
 import { InternalLinking } from "@/components/SEO/InternalLinking";
 import { FAQSection, recruitmentFAQs } from "@/components/SEO/FAQ";
 import { StructuredData, generateLocalBusinessSchema } from "@/components/SEO/StructuredData";
-import { supabase } from "@/integrations/supabase/client";
+import { submitContact, sendAdminNotification } from "@/services/publicSubmissions";
 
 const Contact = () => {
   const { toast } = useToast();
@@ -104,50 +104,39 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
-      const { data, error } = await supabase
-        .from('contact_submissions')
-        .insert({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          company: formData.company,
-          subject: formData.subject,
-          message: formData.message,
-          inquiry_type: formData.inquiryType
-        })
-        .select();
+      // Submit contact form using centralized service (no .select() to avoid RLS issues)
+      const result = await submitContact({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        company: formData.company,
+        subject: formData.subject,
+        message: formData.message,
+        inquiryType: formData.inquiryType,
+      });
 
-      if (error) {
-        console.error('Insert error:', error);
+      if (!result.success) {
         toast({
           title: "Error",
-          description: `Failed to submit message: ${error.message}`,
+          description: `Failed to submit message: ${result.error}`,
           variant: "destructive",
         });
         return;
       }
 
-      console.log('Contact form submitted successfully:', data);
       toast({
         title: "Message Sent!",
         description: "We'll get back to you within 2 hours during business hours.",
       });
       
-      // Send admin notification with rich content
-      try {
-        await supabase.functions.invoke('send-push-notification', {
-          body: {
-            title: 'New Contact Form Submission',
-            message: `${formData.name} sent a message: ${formData.subject}`,
-            category: 'contact_submission',
-            link: '/admin?tab=contact',
-            targetRoles: ['admin', 'account_manager'],
-            icon: 'https://myrecruita.com/favicon.ico',
-          }
-        });
-      } catch (notificationError) {
-        console.log('Admin notification failed (non-critical):', notificationError);
-      }
+      // Send admin notification (non-blocking)
+      sendAdminNotification({
+        title: 'New Contact Form Submission',
+        message: `${formData.name} sent a message: ${formData.subject}`,
+        category: 'contact_submission',
+        link: '/admin?tab=contact',
+        targetRoles: ['admin', 'account_manager'],
+      });
       
       // Redirect to thank you page with submission type
       navigate('/thank-you?type=contact');
