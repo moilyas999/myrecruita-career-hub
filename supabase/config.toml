@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.send-daily-summary]
 verify_jwt = false
+
+[functions.match-cv-to-job]
+verify_jwt = true

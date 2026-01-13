@@ -7,6 +7,7 @@ import AdminErrorBoundary from '@/components/admin/AdminErrorBoundary';
 
 // Lazy load all admin components for code splitting
 const DashboardOverview = lazy(() => import('@/components/admin/DashboardOverview'));
+const CVMatchingTool = lazy(() => import('@/components/admin/CVMatchingTool'));
 const JobsManagement = lazy(() => import('@/components/admin/JobsManagement'));
 const SubmissionsManagement = lazy(() => import('@/components/admin/SubmissionsManagement'));
 const TalentManagement = lazy(() => import('@/components/admin/TalentManagement'));
@@ -46,6 +47,7 @@ interface TabConfig {
 const TAB_CONFIG: Record<string, TabConfig> = {
   '': { component: DashboardOverview, title: 'Dashboard', description: 'Overview of your recruitment pipeline' },
   'stats': { component: StatsDashboard, title: 'Analytics', description: 'View detailed statistics and insights', fullAdminOnly: true },
+  'cv-match': { component: CVMatchingTool, title: 'AI CV Matching', description: 'Find best candidates for a job description', fullAdminOnly: true },
   'jobs': { component: JobsManagement, title: 'Jobs Management', description: 'Manage job postings and listings', fullAdminOnly: true },
   'submissions': { component: SubmissionsManagement, title: 'CV Database', description: 'Manage CV submissions and candidates' },
   'add-cv': { component: SubmissionsManagement, title: 'Add CV', description: 'Add a new CV to the database' },

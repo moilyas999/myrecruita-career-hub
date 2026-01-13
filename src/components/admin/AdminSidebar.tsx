@@ -28,6 +28,7 @@ import {
   MessageSquare,
   Bell,
   Lock,
+  Target,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -85,6 +86,7 @@ export default function AdminSidebar({ isFullAdmin, isCvUploader }: AdminSidebar
         label: 'Talent Pool',
         items: [
           { title: 'CV Database', href: '/admin?tab=submissions', icon: FileText, permission: 'cv.view' },
+          { title: 'AI CV Matching', href: '/admin?tab=cv-match', icon: Target, permission: 'cv.view', badge: 'AI', badgeVariant: 'default' },
           { title: 'Featured Talent', href: '/admin?tab=talent', icon: Star, permission: 'talent.view' },
         ],
       },
