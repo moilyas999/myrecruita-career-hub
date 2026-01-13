@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { BUILD_VERSION } from '@/lib/version';
 
 const VERSION_STORAGE_KEY = 'app_build_version';
@@ -8,6 +8,9 @@ const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
 export const useAppUpdates = () => {
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  
+  // Use refs for stable references in event listeners
+  const checkDismissedRef = useRef<() => boolean>();
 
   // Check if update was recently dismissed
   const checkDismissed = useCallback(() => {
@@ -22,9 +25,12 @@ export const useAppUpdates = () => {
     return false;
   }, []);
 
+  // Keep ref updated
+  checkDismissedRef.current = checkDismissed;
+
   // Check for version mismatch
   const checkForUpdates = useCallback(() => {
-    if (checkDismissed()) {
+    if (checkDismissedRef.current?.()) {
       return;
     }
 
@@ -40,7 +46,7 @@ export const useAppUpdates = () => {
       console.log('[Update] New version detected:', BUILD_VERSION, 'vs stored:', storedVersion);
       setUpdateAvailable(true);
     }
-  }, [checkDismissed]);
+  }, []);
 
   // Check service worker for updates
   const checkServiceWorker = useCallback(async () => {
@@ -50,14 +56,14 @@ export const useAppUpdates = () => {
       const registration = await navigator.serviceWorker.getRegistration();
       if (registration?.waiting) {
         console.log('[Update] Service worker waiting');
-        if (!checkDismissed()) {
+        if (!checkDismissedRef.current?.()) {
           setUpdateAvailable(true);
         }
       }
     } catch (error) {
       console.error('[Update] Service worker check failed:', error);
     }
-  }, [checkDismissed]);
+  }, []);
 
   // Apply update by reloading
   const applyUpdate = useCallback(() => {
@@ -101,7 +107,7 @@ export const useAppUpdates = () => {
     const storedVersion = localStorage.getItem(VERSION_STORAGE_KEY);
     if (storedVersion && storedVersion !== BUILD_VERSION) {
       console.log('[Update] Version mismatch on mount:', BUILD_VERSION, 'vs stored:', storedVersion);
-      if (!checkDismissed()) {
+      if (!checkDismissedRef.current?.()) {
         setUpdateAvailable(true);
       }
     } else if (!storedVersion) {
@@ -131,22 +137,32 @@ export const useAppUpdates = () => {
       checkServiceWorker();
     };
 
+    // Service worker controller change handler
+    const handleControllerChange = () => {
+      console.log('[Update] Service worker controller changed');
+      if (!checkDismissedRef.current?.()) {
+        setUpdateAvailable(true);
+      }
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
 
     // Listen for service worker controller change
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.log('[Update] Service worker controller changed');
-      });
+      navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
     }
 
     return () => {
       clearInterval(intervalId);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
+      // Properly clean up service worker listener
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+      }
     };
-  }, [checkForUpdates, checkServiceWorker, checkDismissed]);
+  }, [checkForUpdates, checkServiceWorker]);
 
   return {
     updateAvailable: updateAvailable && !dismissed,

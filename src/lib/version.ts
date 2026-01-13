@@ -1,10 +1,9 @@
 // Build version for cache busting and version tracking
-// This timestamp updates on each build/reload
-export const BUILD_VERSION = import.meta.env.DEV 
-  ? `dev-${Date.now()}` 
-  : `v${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '')}`;
+// VITE_BUILD_TIMESTAMP is injected at BUILD time via vite.config.ts
+// This ensures the version is consistent across all page loads until a new build is deployed
+export const BUILD_VERSION = import.meta.env.VITE_BUILD_TIMESTAMP as string || 'dev';
 
-export const BUILD_TIMESTAMP = new Date().toISOString();
+export const BUILD_TIMESTAMP = import.meta.env.VITE_BUILD_TIMESTAMP as string || new Date().toISOString();
 
 // Force a hard refresh clearing all caches
 export const forceRefresh = () => {

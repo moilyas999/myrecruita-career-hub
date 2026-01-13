@@ -5,6 +5,11 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  // Inject build timestamp at BUILD time - this gets baked into the bundle
+  // and stays consistent until the next build/deployment
+  define: {
+    'import.meta.env.VITE_BUILD_TIMESTAMP': JSON.stringify(new Date().toISOString()),
+  },
   server: {
     host: "::",
     port: 8080,
