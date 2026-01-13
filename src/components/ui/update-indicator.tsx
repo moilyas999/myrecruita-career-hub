@@ -2,10 +2,38 @@ import { RefreshCw, X } from 'lucide-react';
 import { useAppUpdates } from '@/hooks/useAppUpdates';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Component, ReactNode } from 'react';
 
-const UpdateIndicator = () => {
+// Error boundary to prevent update indicator from crashing the app
+class UpdateIndicatorErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.warn('[UpdateIndicator] Error caught:', error.message);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return null; // Silently fail - don't break the app
+    }
+    return this.props.children;
+  }
+}
+
+const UpdateIndicatorContent = () => {
   const { updateAvailable, applyUpdate, dismissUpdate, buildVersion } = useAppUpdates();
 
+  // Early return after all hooks are called (hooks are always called above)
   if (!updateAvailable) {
     return null;
   }
@@ -65,6 +93,14 @@ const UpdateIndicator = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+const UpdateIndicator = () => {
+  return (
+    <UpdateIndicatorErrorBoundary>
+      <UpdateIndicatorContent />
+    </UpdateIndicatorErrorBoundary>
   );
 };
 
