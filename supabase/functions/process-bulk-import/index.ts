@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { session_id } = await req.json();
+    const { session_id, retry_failed = false, file_ids = [] } = await req.json();
     
     if (!session_id) {
       return new Response(
@@ -52,21 +52,45 @@ serve(async (req) => {
     // Use EdgeRuntime.waitUntil for background processing
     const processFiles = async () => {
       try {
-        // Update session status to processing
-        await supabase
-          .from('bulk_import_sessions')
-          .update({ 
-            status: 'processing', 
-            started_at: new Date().toISOString() 
-          })
-          .eq('id', session_id);
+        // If retrying, reset session status
+        if (retry_failed || file_ids.length > 0) {
+          await supabase
+            .from('bulk_import_sessions')
+            .update({ 
+              status: 'processing',
+              completed_at: null,
+              error_message: null
+            })
+            .eq('id', session_id);
+        } else {
+          // Update session status to processing
+          await supabase
+            .from('bulk_import_sessions')
+            .update({ 
+              status: 'processing', 
+              started_at: new Date().toISOString() 
+            })
+            .eq('id', session_id);
+        }
 
-        // Get all pending files for this session
-        const { data: files, error: filesError } = await supabase
+        // Get files to process based on mode
+        let filesQuery = supabase
           .from('bulk_import_files')
           .select('*')
-          .eq('session_id', session_id)
-          .eq('status', 'pending');
+          .eq('session_id', session_id);
+        
+        if (file_ids.length > 0) {
+          // Retry specific files
+          filesQuery = filesQuery.in('id', file_ids);
+        } else if (retry_failed) {
+          // Retry all failed files
+          filesQuery = filesQuery.eq('status', 'error');
+        } else {
+          // Process pending files
+          filesQuery = filesQuery.eq('status', 'pending');
+        }
+        
+        const { data: files, error: filesError } = await filesQuery;
 
         if (filesError) {
           throw new Error(`Failed to fetch files: ${filesError.message}`);
