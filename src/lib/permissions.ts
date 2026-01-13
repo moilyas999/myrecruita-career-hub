@@ -192,7 +192,8 @@ export type NotificationEventType =
   | 'blog_published'
   | 'system_updates'
   | 'weekly_digest'
-  | 'daily_summary';
+  | 'daily_summary'
+  | 'job_status_update';
 
 // Notification event configuration - Single source of truth
 export interface NotificationEventConfig {
@@ -298,6 +299,14 @@ export const NOTIFICATION_EVENT_CONFIG: NotificationEventConfig[] = [
     label: 'Daily Summary',
     description: 'End-of-day summary of all activity',
     icon: 'BarChart3',
+    defaultForRoles: ['admin', 'recruiter', 'account_manager'],
+    channels: ['push', 'email', 'in_app'],
+  },
+  {
+    id: 'job_status_update',
+    label: 'Job Status Update',
+    description: 'When a job status is updated via email',
+    icon: 'RefreshCw',
     defaultForRoles: ['admin', 'recruiter', 'account_manager'],
     channels: ['push', 'email', 'in_app'],
   },

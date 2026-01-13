@@ -28,6 +28,11 @@ export const queryKeys = {
   staffPermissions: ['staff-permissions'] as const,
   notifications: ['notifications'] as const,
   notificationPreferences: ['notification-preferences'] as const,
+  
+  // Job Status Tracking
+  jobStatusUpdates: ['job-status-updates'] as const,
+  emailIngestionLog: ['email-ingestion-log'] as const,
+  emailIngestionStats: ['email-ingestion-stats'] as const,
 } as const;
 
 // Helper to get all submission-related keys for bulk invalidation

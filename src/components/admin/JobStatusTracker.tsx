@@ -21,13 +21,16 @@ import {
   AlertCircle,
   Clock,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Webhook,
+  User
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { queryKeys } from '@/lib/queryKeys';
 import { cn } from '@/lib/utils';
+import EmailIngestionStatus from './EmailIngestionStatus';
 
 interface JobStatusUpdate {
   id: string;
@@ -45,6 +48,8 @@ interface JobStatusUpdate {
   reviewed_at: string | null;
   review_notes: string | null;
   created_at: string;
+  source?: string;
+  email_message_id?: string | null;
 }
 
 const STATUS_OPTIONS = [
@@ -84,6 +89,7 @@ async function fetchStatusUpdates() {
 export default function JobStatusTracker() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('pending');
+  const [showManualEntry, setShowManualEntry] = useState(false);
   const [emailForm, setEmailForm] = useState({ from: '', subject: '', body: '' });
   const [isProcessing, setIsProcessing] = useState(false);
   const [editDialog, setEditDialog] = useState<{ open: boolean; update: JobStatusUpdate | null; newStatus: string }>({
@@ -95,7 +101,7 @@ export default function JobStatusTracker() {
   // Real-time subscription for updates
   useRealtimeSubscription({
     table: 'job_status_updates',
-    queryKeys: [['job-status-updates']],
+    queryKeys: [queryKeys.jobStatusUpdates],
     showToasts: true,
     toastMessages: {
       insert: () => 'New job status update added to queue',
@@ -104,7 +110,7 @@ export default function JobStatusTracker() {
   });
 
   const { data: updates = [], isLoading, refetch } = useQuery({
-    queryKey: ['job-status-updates'],
+    queryKey: queryKeys.jobStatusUpdates,
     queryFn: fetchStatusUpdates,
   });
 
@@ -114,14 +120,14 @@ export default function JobStatusTracker() {
       if (!session) throw new Error('Not authenticated');
 
       const response = await supabase.functions.invoke('process-job-email', {
-        body: emailData
+        body: { ...emailData, source: 'manual' }
       });
 
       if (response.error) throw response.error;
       return response.data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['job-status-updates'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.jobStatusUpdates });
       
       const confidence = data.analysis?.confidence || 0;
       const matchedJob = data.analysis?.matched_job;
@@ -139,8 +145,9 @@ export default function JobStatusTracker() {
       }
       
       setEmailForm({ from: '', subject: '', body: '' });
+      setShowManualEntry(false);
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Process email error:', error);
       toast.error('Failed to process email', { description: error.message });
     },
@@ -170,11 +177,11 @@ export default function JobStatusTracker() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['job-status-updates'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.jobStatusUpdates });
       queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
       toast.success('Job status updated successfully');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error('Failed to approve update', { description: error.message });
     },
   });
@@ -193,10 +200,10 @@ export default function JobStatusTracker() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['job-status-updates'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.jobStatusUpdates });
       toast.success('Update rejected');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error('Failed to reject update', { description: error.message });
     },
   });
@@ -240,6 +247,7 @@ export default function JobStatusTracker() {
   });
 
   const pendingCount = updates.filter(u => u.status === 'pending').length;
+  const webhookCount = updates.filter(u => u.source === 'webhook').length;
 
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
@@ -259,7 +267,7 @@ export default function JobStatusTracker() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">Job Status Updates</h2>
-          <p className="text-muted-foreground">Process emails and update job statuses with AI assistance</p>
+          <p className="text-muted-foreground">Automated email processing with AI-powered job matching</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => refetch()}>
           <RefreshCw className="w-4 h-4 mr-2" />
@@ -268,68 +276,108 @@ export default function JobStatusTracker() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Email Input Panel */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mail className="w-5 h-5" />
-              Process Email
-            </CardTitle>
-            <CardDescription>
-              Paste email content from clients or team to identify job status changes
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleProcessEmail} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email-from">From (optional)</Label>
-                  <Input
-                    id="email-from"
-                    placeholder="client@company.com"
-                    value={emailForm.from}
-                    onChange={(e) => setEmailForm({ ...emailForm, from: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email-subject">Subject (optional)</Label>
-                  <Input
-                    id="email-subject"
-                    placeholder="RE: Finance Manager Position"
-                    value={emailForm.subject}
-                    onChange={(e) => setEmailForm({ ...emailForm, subject: e.target.value })}
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="email-body">Email Content *</Label>
-                <Textarea
-                  id="email-body"
-                  placeholder="Paste the email body here..."
-                  value={emailForm.body}
-                  onChange={(e) => setEmailForm({ ...emailForm, body: e.target.value })}
-                  rows={8}
-                  required
-                />
-              </div>
+        {/* Email Ingestion Status Panel */}
+        <div className="space-y-4">
+          <EmailIngestionStatus 
+            ingestEmail="jobs@myrecruita.com"
+            showManualFallback={true}
+            onManualEntry={() => setShowManualEntry(true)}
+          />
 
-              <Button type="submit" disabled={isProcessing} className="w-full">
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Processing with AI...
-                  </>
-                ) : (
-                  <>
-                    <Mail className="w-4 h-4 mr-2" />
-                    Process Email
-                  </>
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+          {/* Manual Entry Dialog */}
+          <Dialog open={showManualEntry} onOpenChange={setShowManualEntry}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Mail className="w-5 h-5" />
+                  Manual Email Processing
+                </DialogTitle>
+                <DialogDescription>
+                  Paste email content to process manually (fallback if webhook fails)
+                </DialogDescription>
+              </DialogHeader>
+              
+              <form onSubmit={handleProcessEmail} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email-from">From (optional)</Label>
+                    <Input
+                      id="email-from"
+                      placeholder="client@company.com"
+                      value={emailForm.from}
+                      onChange={(e) => setEmailForm({ ...emailForm, from: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email-subject">Subject (optional)</Label>
+                    <Input
+                      id="email-subject"
+                      placeholder="RE: Finance Manager Position"
+                      value={emailForm.subject}
+                      onChange={(e) => setEmailForm({ ...emailForm, subject: e.target.value })}
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="email-body">Email Content *</Label>
+                  <Textarea
+                    id="email-body"
+                    placeholder="Paste the email body here..."
+                    value={emailForm.body}
+                    onChange={(e) => setEmailForm({ ...emailForm, body: e.target.value })}
+                    rows={8}
+                    required
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => setShowManualEntry(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isProcessing}>
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="w-4 h-4 mr-2" />
+                        Process Email
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          {/* Quick Stats */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Processing Overview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+                  <Webhook className="w-4 h-4 text-primary" />
+                  <div>
+                    <p className="text-lg font-bold">{webhookCount}</p>
+                    <p className="text-xs text-muted-foreground">Via Webhook</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+                  <User className="w-4 h-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-lg font-bold">{updates.length - webhookCount}</p>
+                    <p className="text-xs text-muted-foreground">Manual</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Review Queue Panel */}
         <Card>
@@ -363,6 +411,7 @@ export default function JobStatusTracker() {
               <TabsContent value={activeTab} className="mt-0">
                 {isLoading ? (
                   <div className="text-center py-8 text-muted-foreground">
+                    <Loader2 className="w-6 h-6 mx-auto mb-2 animate-spin" />
                     Loading updates...
                   </div>
                 ) : filteredUpdates.length === 0 ? (
@@ -374,6 +423,7 @@ export default function JobStatusTracker() {
                   <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
                     {filteredUpdates.map((update) => {
                       const confidenceLevel = getConfidenceLevel(update.confidence_score);
+                      const isWebhook = update.source === 'webhook';
                       
                       return (
                         <Collapsible key={update.id}>
@@ -381,6 +431,22 @@ export default function JobStatusTracker() {
                             <div className="flex items-start justify-between gap-2">
                               <div className="space-y-1 flex-1 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
+                                  {/* Source badge */}
+                                  <Badge 
+                                    variant="outline" 
+                                    className={cn(
+                                      "text-[10px] px-1.5 py-0",
+                                      isWebhook 
+                                        ? "bg-primary/10 text-primary border-primary/30" 
+                                        : "bg-muted text-muted-foreground"
+                                    )}
+                                  >
+                                    {isWebhook ? (
+                                      <><Webhook className="w-2.5 h-2.5 mr-1" />WEBHOOK</>
+                                    ) : (
+                                      <><User className="w-2.5 h-2.5 mr-1" />MANUAL</>
+                                    )}
+                                  </Badge>
                                   {update.job_title ? (
                                     <span className="font-medium truncate">{update.job_title}</span>
                                   ) : (
