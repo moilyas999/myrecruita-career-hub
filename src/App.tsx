@@ -8,6 +8,7 @@ import { AuthProvider } from "./hooks/useAuth";
 import Navigation from "./components/layout/Navigation";
 import Footer from "./components/layout/Footer";
 import ScrollToTop from "./components/ScrollToTop";
+import UpdateIndicator from "./components/ui/update-indicator";
 import Home from "./pages/Home";
 import Jobs from "./pages/Jobs";
 import JobDetail from "./pages/JobDetail";
@@ -48,6 +49,7 @@ const App = () => (
       <AuthProvider>
         <Toaster />
         <Sonner />
+        <UpdateIndicator />
         <BrowserRouter>
           <ScrollToTop />
           <Routes>
