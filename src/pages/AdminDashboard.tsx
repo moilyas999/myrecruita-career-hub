@@ -9,6 +9,7 @@ import AdminErrorBoundary from '@/components/admin/AdminErrorBoundary';
 const DashboardOverview = lazy(() => import('@/components/admin/DashboardOverview'));
 const CVMatchingTool = lazy(() => import('@/components/admin/CVMatchingTool'));
 const JobsManagement = lazy(() => import('@/components/admin/JobsManagement'));
+const JobStatusTracker = lazy(() => import('@/components/admin/JobStatusTracker'));
 const SubmissionsManagement = lazy(() => import('@/components/admin/SubmissionsManagement'));
 const TalentManagement = lazy(() => import('@/components/admin/TalentManagement'));
 const StatsDashboard = lazy(() => import('@/components/admin/StatsDashboard'));
@@ -49,6 +50,7 @@ const TAB_CONFIG: Record<string, TabConfig> = {
   'stats': { component: StatsDashboard, title: 'Analytics', description: 'View detailed statistics and insights', fullAdminOnly: true },
   'cv-match': { component: CVMatchingTool, title: 'AI CV Matching', description: 'Find best candidates for a job description', fullAdminOnly: true },
   'jobs': { component: JobsManagement, title: 'Jobs Management', description: 'Manage job postings and listings', fullAdminOnly: true },
+  'job-status': { component: JobStatusTracker, title: 'Job Status Updates', description: 'Process emails and update job statuses with AI', fullAdminOnly: true },
   'submissions': { component: SubmissionsManagement, title: 'CV Database', description: 'Manage CV submissions and candidates' },
   'add-cv': { component: SubmissionsManagement, title: 'Add CV', description: 'Add a new CV to the database' },
   'bulk-import': { component: SubmissionsManagement, title: 'Bulk Import', description: 'Import multiple CVs at once' },

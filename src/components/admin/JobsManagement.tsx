@@ -256,6 +256,8 @@ export default function JobsManagement() {
                       <SelectContent>
                         <SelectItem value="active">Active</SelectItem>
                         <SelectItem value="paused">Paused</SelectItem>
+                        <SelectItem value="filled">Filled</SelectItem>
+                        <SelectItem value="expired">Expired</SelectItem>
                         <SelectItem value="archived">Archived</SelectItem>
                       </SelectContent>
                     </Select>
@@ -326,7 +328,18 @@ export default function JobsManagement() {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     {job.title}
-                    <Badge variant={job.status === 'active' ? 'default' : 'secondary'}>
+                    <Badge 
+                      variant={
+                        job.status === 'active' ? 'default' : 
+                        job.status === 'filled' ? 'outline' : 
+                        'secondary'
+                      }
+                      className={
+                        job.status === 'expired' ? 'bg-muted text-muted-foreground' :
+                        job.status === 'filled' ? 'border-blue-500 text-blue-600' :
+                        ''
+                      }
+                    >
                       {job.status}
                     </Badge>
                   </CardTitle>
