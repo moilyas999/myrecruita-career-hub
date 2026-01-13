@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.match-cv-to-job]
 verify_jwt = true
+
+[functions.process-job-email]
+verify_jwt = true

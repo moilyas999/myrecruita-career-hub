@@ -29,6 +29,7 @@ import {
   Bell,
   Lock,
   Target,
+  RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -94,6 +95,7 @@ export default function AdminSidebar({ isFullAdmin, isCvUploader }: AdminSidebar
         label: 'Jobs',
         items: [
           { title: 'All Jobs', href: '/admin?tab=jobs', icon: Briefcase, permission: 'jobs.view' },
+          { title: 'Status Updates', href: '/admin?tab=job-status', icon: RefreshCw, permission: 'jobs.update', badge: 'AI', badgeVariant: 'default' },
         ],
       },
       {

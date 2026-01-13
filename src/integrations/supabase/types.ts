@@ -477,6 +477,74 @@ export type Database = {
           },
         ]
       }
+      job_status_updates: {
+        Row: {
+          ai_reasoning: string | null
+          confidence_score: number
+          created_at: string
+          created_by: string | null
+          email_body: string
+          email_from: string | null
+          email_subject: string | null
+          id: string
+          job_id: string | null
+          job_reference: string | null
+          job_title: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          suggested_status: string
+          updated_at: string
+        }
+        Insert: {
+          ai_reasoning?: string | null
+          confidence_score?: number
+          created_at?: string
+          created_by?: string | null
+          email_body: string
+          email_from?: string | null
+          email_subject?: string | null
+          id?: string
+          job_id?: string | null
+          job_reference?: string | null
+          job_title?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          suggested_status?: string
+          updated_at?: string
+        }
+        Update: {
+          ai_reasoning?: string | null
+          confidence_score?: number
+          created_at?: string
+          created_by?: string | null
+          email_body?: string
+          email_from?: string | null
+          email_subject?: string | null
+          id?: string
+          job_id?: string | null
+          job_reference?: string | null
+          job_title?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          suggested_status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_status_updates_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           benefits: string | null
