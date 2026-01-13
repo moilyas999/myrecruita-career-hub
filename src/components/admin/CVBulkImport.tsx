@@ -109,9 +109,17 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
   const [showHistory, setShowHistory] = useState(false);
 
   const generateId = () => Math.random().toString(36).substring(2, 9);
+  
+  const ACTIVE_SESSION_KEY = 'cv_import_active_session';
 
-  // Fetch recent import sessions on mount
+  // Fetch recent import sessions on mount and restore active session from localStorage
   useEffect(() => {
+    // First, check localStorage for a persisted active session
+    const persistedSession = localStorage.getItem(ACTIVE_SESSION_KEY);
+    if (persistedSession) {
+      setActiveSession(persistedSession);
+    }
+    
     fetchRecentSessions();
   }, [user?.id]);
 
@@ -182,8 +190,9 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
       
       if (funcError) throw funcError;
       
-      // Set active session
+      // Set active session and persist to localStorage
       setActiveSession(session.id);
+      localStorage.setItem(ACTIVE_SESSION_KEY, session.id);
       
       // Clear files from local state
       setFiles([]);
@@ -205,11 +214,13 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
   };
 
   const handleSessionComplete = () => {
+    localStorage.removeItem(ACTIVE_SESSION_KEY);
     fetchRecentSessions();
     onSuccess?.();
   };
 
   const handleSessionClose = () => {
+    localStorage.removeItem(ACTIVE_SESSION_KEY);
     setActiveSession(null);
     fetchRecentSessions();
   };
