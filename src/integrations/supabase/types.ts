@@ -220,6 +220,101 @@ export type Database = {
         }
         Relationships: []
       }
+      bulk_import_files: {
+        Row: {
+          created_at: string
+          cv_submission_id: string | null
+          error_message: string | null
+          file_name: string
+          file_path: string
+          file_url: string
+          id: string
+          parsed_data: Json | null
+          processed_at: string | null
+          session_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          cv_submission_id?: string | null
+          error_message?: string | null
+          file_name: string
+          file_path: string
+          file_url: string
+          id?: string
+          parsed_data?: Json | null
+          processed_at?: string | null
+          session_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          cv_submission_id?: string | null
+          error_message?: string | null
+          file_name?: string
+          file_path?: string
+          file_url?: string
+          id?: string
+          parsed_data?: Json | null
+          processed_at?: string | null
+          session_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bulk_import_files_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "bulk_import_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bulk_import_sessions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          failed_count: number
+          id: string
+          imported_count: number
+          parsed_count: number
+          started_at: string | null
+          status: string
+          total_files: number
+          user_email: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          failed_count?: number
+          id?: string
+          imported_count?: number
+          parsed_count?: number
+          started_at?: string | null
+          status?: string
+          total_files?: number
+          user_email: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          failed_count?: number
+          id?: string
+          imported_count?: number
+          parsed_count?: number
+          started_at?: string | null
+          status?: string
+          total_files?: number
+          user_email?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       career_partner_requests: {
         Row: {
           created_at: string

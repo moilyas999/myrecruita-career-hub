@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -6,12 +6,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { Upload, FileText, Loader2, Check, X, AlertCircle, Brain, Trash2, ChevronDown, ChevronUp, Award, Briefcase, GraduationCap, Target } from 'lucide-react';
+import { Upload, FileText, Loader2, Check, X, AlertCircle, Brain, Trash2, ChevronDown, ChevronUp, Award, Briefcase, GraduationCap, Target, Cloud, History } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import CVScoreBadge, { CVScoreBreakdown, CVScoreBreakdownCard } from './CVScoreBadge';
-
+import ImportSessionProgress from './ImportSessionProgress';
 interface AIProfile {
   hard_skills: string[];
   soft_skills: string[];
@@ -80,6 +80,16 @@ const SENIORITY_LEVELS = [
   'C-Level'
 ];
 
+interface ImportSession {
+  id: string;
+  status: string;
+  total_files: number;
+  parsed_count: number;
+  imported_count: number;
+  failed_count: number;
+  created_at: string;
+}
+
 export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) {
   const { user, adminRole } = useAuth();
   const isFullAdmin = adminRole === 'admin';
@@ -91,8 +101,118 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
   const [importProgress, setImportProgress] = useState(0);
   const [importResults, setImportResults] = useState<{ success: number; failed: number } | null>(null);
   const [expandedProfiles, setExpandedProfiles] = useState<Set<string>>(new Set());
+  
+  // Background processing state
+  const [activeSession, setActiveSession] = useState<string | null>(null);
+  const [recentSessions, setRecentSessions] = useState<ImportSession[]>([]);
+  const [isStartingBackground, setIsStartingBackground] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   const generateId = () => Math.random().toString(36).substring(2, 9);
+
+  // Fetch recent import sessions on mount
+  useEffect(() => {
+    fetchRecentSessions();
+  }, [user?.id]);
+
+  const fetchRecentSessions = async () => {
+    if (!user?.id) return;
+    
+    const { data } = await supabase
+      .from('bulk_import_sessions')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(5);
+    
+    if (data) {
+      setRecentSessions(data);
+      // Check if there's an active session
+      const active = data.find(s => s.status === 'processing' || s.status === 'pending');
+      if (active) {
+        setActiveSession(active.id);
+      }
+    }
+  };
+
+  // Start background import
+  const startBackgroundImport = async () => {
+    const pendingFiles = files.filter(f => f.status === 'pending');
+    
+    if (pendingFiles.length === 0) {
+      toast.error('No pending files to import');
+      return;
+    }
+    
+    setIsStartingBackground(true);
+    
+    try {
+      // Create import session
+      const { data: session, error: sessionError } = await supabase
+        .from('bulk_import_sessions')
+        .insert({
+          user_id: user?.id,
+          user_email: user?.email || '',
+          status: 'pending',
+          total_files: pendingFiles.length
+        })
+        .select()
+        .single();
+      
+      if (sessionError) throw sessionError;
+      
+      // Create file records
+      const fileRecords = pendingFiles.map(f => ({
+        session_id: session.id,
+        file_name: f.fileName,
+        file_path: f.filePath,
+        file_url: f.fileUrl,
+        status: 'pending'
+      }));
+      
+      const { error: filesError } = await supabase
+        .from('bulk_import_files')
+        .insert(fileRecords);
+      
+      if (filesError) throw filesError;
+      
+      // Trigger background processing
+      const { error: funcError } = await supabase.functions.invoke('process-bulk-import', {
+        body: { session_id: session.id }
+      });
+      
+      if (funcError) throw funcError;
+      
+      // Set active session
+      setActiveSession(session.id);
+      
+      // Clear files from local state
+      setFiles([]);
+      
+      // Log activity
+      await logActivity('background_import_started', {
+        session_id: session.id,
+        file_count: pendingFiles.length
+      });
+      
+      toast.success(`Background import started for ${pendingFiles.length} files. You can navigate away safely.`);
+      
+    } catch (error: any) {
+      console.error('Error starting background import:', error);
+      toast.error(`Failed to start background import: ${error.message}`);
+    } finally {
+      setIsStartingBackground(false);
+    }
+  };
+
+  const handleSessionComplete = () => {
+    fetchRecentSessions();
+    onSuccess?.();
+  };
+
+  const handleSessionClose = () => {
+    setActiveSession(null);
+    fetchRecentSessions();
+  };
 
   // Log activity to the activity log table
   const logActivity = async (action: string, details: Record<string, any>) => {
@@ -463,6 +583,58 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Active Session Progress */}
+        {activeSession && (
+          <ImportSessionProgress 
+            sessionId={activeSession}
+            onClose={handleSessionClose}
+            onComplete={handleSessionComplete}
+          />
+        )}
+
+        {/* Recent Sessions History */}
+        {!activeSession && recentSessions.length > 0 && (
+          <Collapsible open={showHistory} onOpenChange={setShowHistory}>
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" size="sm" className="w-full flex items-center gap-2">
+                <History className="w-4 h-4" />
+                Recent Import Sessions ({recentSessions.length})
+                {showHistory ? <ChevronUp className="w-4 h-4 ml-auto" /> : <ChevronDown className="w-4 h-4 ml-auto" />}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2 space-y-2">
+              {recentSessions.map(session => (
+                <div 
+                  key={session.id}
+                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg text-sm"
+                >
+                  <div className="flex items-center gap-3">
+                    <Badge 
+                      variant={session.status === 'completed' ? 'default' : session.status === 'failed' ? 'destructive' : 'secondary'}
+                      className={session.status === 'completed' ? 'bg-green-500' : ''}
+                    >
+                      {session.status}
+                    </Badge>
+                    <span>{session.total_files} files</span>
+                    <span className="text-muted-foreground">
+                      {session.imported_count} imported, {session.failed_count} failed
+                    </span>
+                  </div>
+                  {(session.status === 'processing' || session.status === 'pending') && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setActiveSession(session.id)}
+                    >
+                      View Progress
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+
         {/* Workflow Steps Indicator */}
         <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
           <div className={`flex items-center gap-2 ${currentStep === 1 ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
@@ -476,14 +648,14 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
             <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${currentStep === 2 ? 'bg-primary text-primary-foreground' : currentStep > 2 ? 'bg-green-500 text-white' : 'bg-muted'}`}>
               {currentStep > 2 ? <Check className="w-3 h-3" /> : '2'}
             </div>
-            <span className="text-sm">Parse with AI</span>
+            <span className="text-sm">Parse & Import</span>
           </div>
           <div className="flex-1 h-0.5 bg-muted mx-2" />
           <div className={`flex items-center gap-2 ${currentStep === 3 ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
             <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${currentStep === 3 ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
               3
             </div>
-            <span className="text-sm">Import</span>
+            <span className="text-sm">Done</span>
           </div>
         </div>
 
@@ -539,23 +711,51 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
         )}
 
         {/* Action prompt for pending files */}
-        {pendingCount > 0 && !isParsing && (
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+        {pendingCount > 0 && !isParsing && !activeSession && (
+          <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg space-y-3">
             <div className="flex items-center gap-3">
               <Brain className="w-5 h-5 text-blue-600" />
               <div>
                 <p className="text-sm font-medium text-blue-800">
-                  {pendingCount} file{pendingCount > 1 ? 's' : ''} ready to parse
+                  {pendingCount} file{pendingCount > 1 ? 's' : ''} ready to process
                 </p>
                 <p className="text-xs text-blue-700">
-                  Click "Parse with AI" to extract candidate information
+                  Choose how to process your CVs
                 </p>
               </div>
             </div>
-            <Button onClick={parseAllFiles} size="sm" className="bg-blue-600 hover:bg-blue-700">
-              <Brain className="w-4 h-4 mr-2" />
-              Parse Now
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button 
+                onClick={startBackgroundImport} 
+                disabled={isStartingBackground}
+                size="sm" 
+                className="bg-indigo-600 hover:bg-indigo-700 flex-1"
+              >
+                {isStartingBackground ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Starting...
+                  </>
+                ) : (
+                  <>
+                    <Cloud className="w-4 h-4 mr-2" />
+                    Background Import (Recommended)
+                  </>
+                )}
+              </Button>
+              <Button 
+                onClick={parseAllFiles} 
+                variant="outline"
+                size="sm" 
+                className="flex-1"
+              >
+                <Brain className="w-4 h-4 mr-2" />
+                Parse Manually
+              </Button>
+            </div>
+            <p className="text-xs text-blue-600">
+              <strong>Background Import:</strong> Files are processed on the server - you can navigate away and check progress later.
+            </p>
           </div>
         )}
 
