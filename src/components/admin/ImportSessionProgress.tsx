@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Check, X, FileText, RefreshCw, Clock, AlertCircle } from 'lucide-react';
+import { Loader2, Check, X, FileText, RefreshCw, Clock, AlertCircle, RotateCcw } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { toast } from 'sonner';
 
 interface ImportSession {
   id: string;
@@ -38,6 +39,64 @@ export default function ImportSessionProgress({ sessionId, onClose, onComplete }
   const [session, setSession] = useState<ImportSession | null>(null);
   const [files, setFiles] = useState<ImportFile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRetrying, setIsRetrying] = useState(false);
+
+  const retryAllFailed = async () => {
+    if (!session || session.failed_count === 0) return;
+    
+    setIsRetrying(true);
+    try {
+      // Reset all failed file statuses to pending
+      const { error: resetError } = await supabase
+        .from('bulk_import_files')
+        .update({ status: 'pending', error_message: null })
+        .eq('session_id', sessionId)
+        .eq('status', 'error');
+
+      if (resetError) throw resetError;
+
+      // Trigger reprocessing with retry flag
+      const { error: invokeError } = await supabase.functions.invoke('process-bulk-import', {
+        body: { session_id: sessionId, retry_failed: true }
+      });
+
+      if (invokeError) throw invokeError;
+
+      toast.success('Retrying failed files...');
+    } catch (error: any) {
+      console.error('Retry failed:', error);
+      toast.error('Failed to retry: ' + error.message);
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
+  const retrySingleFile = async (fileId: string) => {
+    setIsRetrying(true);
+    try {
+      // Reset single file status to pending
+      const { error: resetError } = await supabase
+        .from('bulk_import_files')
+        .update({ status: 'pending', error_message: null })
+        .eq('id', fileId);
+
+      if (resetError) throw resetError;
+
+      // Trigger reprocessing for this specific file
+      const { error: invokeError } = await supabase.functions.invoke('process-bulk-import', {
+        body: { session_id: sessionId, file_ids: [fileId] }
+      });
+
+      if (invokeError) throw invokeError;
+
+      toast.success('Retrying file...');
+    } catch (error: any) {
+      console.error('Retry failed:', error);
+      toast.error('Failed to retry: ' + error.message);
+    } finally {
+      setIsRetrying(false);
+    }
+  };
 
   useEffect(() => {
     // Initial fetch
@@ -192,6 +251,22 @@ export default function ImportSessionProgress({ sessionId, onClose, onComplete }
           </CardTitle>
           <div className="flex items-center gap-2">
             {getStatusBadge(session.status)}
+            {session.failed_count > 0 && (session.status === 'completed' || session.status === 'failed') && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={retryAllFailed}
+                disabled={isRetrying}
+                className="gap-1"
+              >
+                {isRetrying ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <RotateCcw className="w-4 h-4" />
+                )}
+                Retry Failed ({session.failed_count})
+              </Button>
+            )}
             <Button variant="ghost" size="sm" onClick={fetchSessionData}>
               <RefreshCw className="w-4 h-4" />
             </Button>
@@ -268,6 +343,18 @@ export default function ImportSessionProgress({ sessionId, onClose, onComplete }
                   <span className="text-xs text-destructive truncate max-w-32" title={file.error_message}>
                     {file.error_message}
                   </span>
+                )}
+                {file.status === 'error' && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => retrySingleFile(file.id)}
+                    disabled={isRetrying}
+                    className="h-6 w-6 p-0"
+                    title="Retry this file"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                  </Button>
                 )}
                 <Badge variant="outline" className="text-xs capitalize">
                   {file.status}
