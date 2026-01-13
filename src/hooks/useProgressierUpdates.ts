@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
+import { isProgressierAvailable } from '@/lib/progressier';
 
 interface UseProgressierUpdatesOptions {
   autoReloadOnVisibility?: boolean;
@@ -83,7 +84,11 @@ export function useProgressierUpdates(
   // Initial check on mount
   useEffect(() => {
     // Delay initial check to allow Progressier to initialize
-    const timeout = setTimeout(checkForUpdates, 2000);
+    const timeout = setTimeout(() => {
+      if (isProgressierAvailable()) {
+        checkForUpdates();
+      }
+    }, 2000);
     return () => clearTimeout(timeout);
   }, [checkForUpdates]);
 
@@ -101,24 +106,27 @@ export function syncUserToProgressier(userData: {
   name?: string;
   role?: string;
 }) {
-  if (typeof window !== 'undefined' && window.progressier) {
-    const tags: string[] = [];
-    
-    // Add role as a tag for segment targeting
-    if (userData.role) {
-      tags.push(userData.role);
-    }
-    
-    // Add additional tags for targeting
-    tags.push('admin_user'); // All admin users get this tag
-    
-    window.progressier.add({
-      userId: userData.userId,
-      email: userData.email,
-      name: userData.name,
-      tags: tags.length > 0 ? tags : undefined,
-    });
-    
-    console.log('[Progressier] User synced with tags:', tags);
+  // Safety check - only sync if Progressier is available
+  if (!isProgressierAvailable()) {
+    return;
   }
+
+  const tags: string[] = [];
+  
+  // Add role as a tag for segment targeting
+  if (userData.role) {
+    tags.push(userData.role);
+  }
+  
+  // Add additional tags for targeting
+  tags.push('admin_user'); // All admin users get this tag
+  
+  window.progressier!.add({
+    userId: userData.userId,
+    email: userData.email,
+    name: userData.name,
+    tags: tags.length > 0 ? tags : undefined,
+  });
+  
+  console.log('[Progressier] User synced with tags:', tags);
 }
