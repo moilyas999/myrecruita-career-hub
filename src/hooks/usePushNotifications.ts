@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { isProgressierAvailable } from '@/lib/progressier';
 
 interface UsePushNotificationsReturn {
   isSupported: boolean;
@@ -54,8 +55,8 @@ export function usePushNotifications(userData?: UserData): UsePushNotificationsR
       
       setIsSupported(supported);
 
-      // Check if already subscribed via Progressier
-      if (supported && window.progressier) {
+      // Check if already subscribed via Progressier (only if loaded)
+      if (supported && isProgressierAvailable() && window.progressier) {
         try {
           const subscribed = await window.progressier.isSubscribed();
           setIsSubscribed(subscribed);
@@ -109,7 +110,7 @@ export function usePushNotifications(userData?: UserData): UsePushNotificationsR
   }, [isSupported]);
 
   const syncUserToProgressier = useCallback((data?: UserData) => {
-    if (!window.progressier) return;
+    if (!isProgressierAvailable() || !window.progressier) return;
     
     const syncData = data || userData;
     if (!syncData) return;
@@ -142,7 +143,7 @@ export function usePushNotifications(userData?: UserData): UsePushNotificationsR
         return;
       }
 
-      if (window.progressier) {
+      if (isProgressierAvailable() && window.progressier) {
         await window.progressier.subscribe();
         setIsSubscribed(true);
         
@@ -151,7 +152,7 @@ export function usePushNotifications(userData?: UserData): UsePushNotificationsR
         
         toast.success('Push notifications enabled!');
       } else {
-        toast.error('Push notification service not available');
+        toast.error('Push notification service not available. Please try again later.');
       }
     } catch (error) {
       console.error('Failed to subscribe to push notifications:', error);
@@ -164,7 +165,7 @@ export function usePushNotifications(userData?: UserData): UsePushNotificationsR
   const unsubscribe = useCallback(async () => {
     setIsLoading(true);
     try {
-      if (window.progressier) {
+      if (isProgressierAvailable() && window.progressier) {
         await window.progressier.unsubscribe();
         setIsSubscribed(false);
         toast.success('Push notifications disabled');

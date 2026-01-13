@@ -10,6 +10,7 @@ import { AlertTriangle } from 'lucide-react';
 import { PushNotificationPrompt } from '@/components/admin/PushNotificationPrompt';
 import { supabase } from '@/integrations/supabase/client';
 import { useProgressierUpdates, syncUserToProgressier } from '@/hooks/useProgressierUpdates';
+import { loadProgressier } from '@/lib/progressier';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -36,6 +37,13 @@ export default function AdminLayout({ children, title, description }: AdminLayou
       navigate('/admin/login');
     }
   }, [user, isAdmin, loading, isAdminLoading, navigate]);
+
+  // Load Progressier dynamically only for authenticated admin users
+  useEffect(() => {
+    if (user && isAdmin) {
+      loadProgressier();
+    }
+  }, [user, isAdmin]);
 
   // Fetch admin profile for push notification sync
   useEffect(() => {
