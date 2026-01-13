@@ -23,7 +23,9 @@ import {
   CheckCircle2,
   XCircle,
   Webhook,
-  User
+  User,
+  Filter,
+  RotateCcw
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -50,6 +52,17 @@ interface JobStatusUpdate {
   created_at: string;
   source?: string;
   email_message_id?: string | null;
+}
+
+interface FilteredEmail {
+  id: string;
+  message_id: string;
+  from_email: string;
+  from_name: string | null;
+  subject: string | null;
+  email_type: string | null;
+  filter_reason: string | null;
+  created_at: string;
 }
 
 const STATUS_OPTIONS = [
@@ -86,6 +99,18 @@ async function fetchStatusUpdates() {
   return data as JobStatusUpdate[];
 }
 
+async function fetchFilteredEmails() {
+  const { data, error } = await supabase
+    .from('email_ingestion_log')
+    .select('id, message_id, from_email, from_name, subject, email_type, filter_reason, created_at')
+    .eq('status', 'filtered')
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (error) throw error;
+  return data as FilteredEmail[];
+}
+
 export default function JobStatusTracker() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('pending');
@@ -112,6 +137,11 @@ export default function JobStatusTracker() {
   const { data: updates = [], isLoading, refetch } = useQuery({
     queryKey: queryKeys.jobStatusUpdates,
     queryFn: fetchStatusUpdates,
+  });
+
+  const { data: filteredEmails = [], isLoading: isLoadingFiltered, refetch: refetchFiltered } = useQuery({
+    queryKey: [...queryKeys.emailIngestionLog, 'filtered'],
+    queryFn: fetchFilteredEmails,
   });
 
   const processEmailMutation = useMutation({
@@ -269,7 +299,7 @@ export default function JobStatusTracker() {
           <h2 className="text-2xl font-bold">Job Status Updates</h2>
           <p className="text-muted-foreground">Automated email processing with AI-powered job matching</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()}>
+        <Button variant="outline" size="sm" onClick={() => { refetch(); refetchFiltered(); }}>
           <RefreshCw className="w-4 h-4 mr-2" />
           Refresh
         </Button>
@@ -394,7 +424,7 @@ export default function JobStatusTracker() {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-4 mb-4">
+              <TabsList className="grid w-full grid-cols-5 mb-4">
                 <TabsTrigger value="pending" className="relative">
                   Pending
                   {pendingCount > 0 && (
@@ -405,9 +435,83 @@ export default function JobStatusTracker() {
                 </TabsTrigger>
                 <TabsTrigger value="approved">Approved</TabsTrigger>
                 <TabsTrigger value="rejected">Rejected</TabsTrigger>
+                <TabsTrigger value="filtered" className="relative">
+                  <Filter className="w-3 h-3 mr-1" />
+                  Filtered
+                  {filteredEmails.length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-muted text-muted-foreground text-xs rounded-full flex items-center justify-center">
+                      {filteredEmails.length}
+                    </span>
+                  )}
+                </TabsTrigger>
                 <TabsTrigger value="all">All</TabsTrigger>
               </TabsList>
 
+              {/* Filtered emails tab content */}
+              {activeTab === 'filtered' ? (
+                <div className="mt-0">
+                  {isLoadingFiltered ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Loader2 className="w-6 h-6 mx-auto mb-2 animate-spin" />
+                      Loading filtered emails...
+                    </div>
+                  ) : filteredEmails.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Filter className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p>No filtered emails</p>
+                      <p className="text-xs mt-1">Irrelevant emails will appear here</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                      {filteredEmails.map((email) => (
+                        <div key={email.id} className="border rounded-lg p-4 space-y-2 bg-muted/30">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="space-y-1 flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-muted">
+                                  <Filter className="w-2.5 h-2.5 mr-1" />
+                                  {email.email_type?.toUpperCase() || 'FILTERED'}
+                                </Badge>
+                                {email.subject ? (
+                                  <span className="font-medium text-sm truncate">{email.subject}</span>
+                                ) : (
+                                  <span className="text-muted-foreground text-sm italic">(no subject)</span>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                From: {email.from_name ? `${email.from_name} <${email.from_email}>` : email.from_email}
+                              </p>
+                              {email.filter_reason && (
+                                <p className="text-xs text-muted-foreground bg-muted/50 rounded p-2 mt-2">
+                                  <span className="font-medium">Reason:</span> {email.filter_reason}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex flex-col items-end gap-1 shrink-0">
+                              <span className="text-[10px] text-muted-foreground">
+                                {formatTimeAgo(email.created_at)}
+                              </span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs h-7"
+                                onClick={async () => {
+                                  toast.info('Reprocess feature coming soon', {
+                                    description: 'Manual reprocessing of filtered emails will be available in a future update'
+                                  });
+                                }}
+                              >
+                                <RotateCcw className="w-3 h-3 mr-1" />
+                                Reprocess
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
               <TabsContent value={activeTab} className="mt-0">
                 {isLoading ? (
                   <div className="text-center py-8 text-muted-foreground">
@@ -556,6 +660,7 @@ export default function JobStatusTracker() {
                   </div>
                 )}
               </TabsContent>
+              )}
             </Tabs>
           </CardContent>
         </Card>
