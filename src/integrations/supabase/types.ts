@@ -391,6 +391,59 @@ export type Database = {
         }
         Relationships: []
       }
+      email_ingestion_log: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          from_email: string
+          from_name: string | null
+          id: string
+          job_status_update_id: string | null
+          message_id: string
+          processed_at: string | null
+          received_at: string
+          status: string
+          subject: string | null
+          to_email: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          from_email: string
+          from_name?: string | null
+          id?: string
+          job_status_update_id?: string | null
+          message_id: string
+          processed_at?: string | null
+          received_at?: string
+          status?: string
+          subject?: string | null
+          to_email: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          from_email?: string
+          from_name?: string | null
+          id?: string
+          job_status_update_id?: string | null
+          message_id?: string
+          processed_at?: string | null
+          received_at?: string
+          status?: string
+          subject?: string | null
+          to_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_ingestion_log_job_status_update_id_fkey"
+            columns: ["job_status_update_id"]
+            isOneToOne: false
+            referencedRelation: "job_status_updates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employer_job_submissions: {
         Row: {
           company_name: string
@@ -485,6 +538,7 @@ export type Database = {
           created_by: string | null
           email_body: string
           email_from: string | null
+          email_message_id: string | null
           email_subject: string | null
           id: string
           job_id: string | null
@@ -493,6 +547,7 @@ export type Database = {
           review_notes: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          source: string
           status: string
           suggested_status: string
           updated_at: string
@@ -504,6 +559,7 @@ export type Database = {
           created_by?: string | null
           email_body: string
           email_from?: string | null
+          email_message_id?: string | null
           email_subject?: string | null
           id?: string
           job_id?: string | null
@@ -512,6 +568,7 @@ export type Database = {
           review_notes?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          source?: string
           status?: string
           suggested_status?: string
           updated_at?: string
@@ -523,6 +580,7 @@ export type Database = {
           created_by?: string | null
           email_body?: string
           email_from?: string | null
+          email_message_id?: string | null
           email_subject?: string | null
           id?: string
           job_id?: string | null
@@ -531,6 +589,7 @@ export type Database = {
           review_notes?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          source?: string
           status?: string
           suggested_status?: string
           updated_at?: string

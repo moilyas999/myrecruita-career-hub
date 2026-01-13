@@ -51,6 +51,7 @@ const eventIcons: Record<NotificationEventType, React.ElementType> = {
   system_updates: Settings,
   weekly_digest: Calendar,
   daily_summary: BarChart3,
+  job_status_update: Briefcase,
 };
 
 // Get event descriptions from config
