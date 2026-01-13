@@ -394,10 +394,13 @@ export type Database = {
       email_ingestion_log: {
         Row: {
           created_at: string
+          email_type: string | null
           error_message: string | null
+          filter_reason: string | null
           from_email: string
           from_name: string | null
           id: string
+          is_relevant: boolean | null
           job_status_update_id: string | null
           message_id: string
           processed_at: string | null
@@ -408,10 +411,13 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          email_type?: string | null
           error_message?: string | null
+          filter_reason?: string | null
           from_email: string
           from_name?: string | null
           id?: string
+          is_relevant?: boolean | null
           job_status_update_id?: string | null
           message_id: string
           processed_at?: string | null
@@ -422,10 +428,13 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          email_type?: string | null
           error_message?: string | null
+          filter_reason?: string | null
           from_email?: string
           from_name?: string | null
           id?: string
+          is_relevant?: boolean | null
           job_status_update_id?: string | null
           message_id?: string
           processed_at?: string | null

@@ -12,7 +12,8 @@ import {
   ChevronDown, 
   Zap,
   AlertTriangle,
-  TrendingUp
+  TrendingUp,
+  Filter
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -27,6 +28,7 @@ interface IngestionStats {
   received: number;
   processed: number;
   failed: number;
+  filtered: number;
 }
 
 async function fetchIngestionStats(): Promise<IngestionStats> {
@@ -40,13 +42,14 @@ async function fetchIngestionStats(): Promise<IngestionStats> {
 
   if (error) {
     console.error('Error fetching ingestion stats:', error);
-    return { received: 0, processed: 0, failed: 0 };
+    return { received: 0, processed: 0, failed: 0, filtered: 0 };
   }
 
   const stats = {
     received: data?.length || 0,
     processed: data?.filter(d => d.status === 'processed').length || 0,
     failed: data?.filter(d => d.status === 'failed').length || 0,
+    filtered: data?.filter(d => d.status === 'filtered').length || 0,
   };
 
   return stats;
@@ -60,7 +63,7 @@ export default function EmailIngestionStatus({
   const [copied, setCopied] = useState(false);
   const [isManualOpen, setIsManualOpen] = useState(false);
 
-  const { data: stats = { received: 0, processed: 0, failed: 0 } } = useQuery({
+  const { data: stats = { received: 0, processed: 0, failed: 0, filtered: 0 } } = useQuery({
     queryKey: ['email-ingestion-stats'],
     queryFn: fetchIngestionStats,
     refetchInterval: 30000, // Refresh every 30 seconds
@@ -130,7 +133,7 @@ export default function EmailIngestionStatus({
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-3">
           <div className="text-center p-3 bg-muted/50 rounded-lg">
             <p className="text-2xl font-bold">{stats.received}</p>
             <p className="text-xs text-muted-foreground">Emails (24h)</p>
@@ -138,6 +141,13 @@ export default function EmailIngestionStatus({
           <div className="text-center p-3 bg-muted/50 rounded-lg">
             <p className="text-2xl font-bold text-green-600">{stats.processed}</p>
             <p className="text-xs text-muted-foreground">Processed</p>
+          </div>
+          <div className="text-center p-3 bg-muted/50 rounded-lg">
+            <div className="flex items-center justify-center gap-1">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <p className="text-2xl font-bold text-muted-foreground">{stats.filtered}</p>
+            </div>
+            <p className="text-xs text-muted-foreground">Filtered</p>
           </div>
           <div className="text-center p-3 bg-muted/50 rounded-lg">
             <div className="flex items-center justify-center gap-1">
