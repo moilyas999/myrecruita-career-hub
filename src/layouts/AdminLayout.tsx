@@ -26,9 +26,9 @@ export default function AdminLayout({ children, title, description }: AdminLayou
   const isFullAdmin = adminRole === 'admin';
   const isCvUploader = adminRole === 'cv_uploader';
 
-  // Enable PWA auto-updates via Progressier
+  // Enable PWA updates via Progressier - NO auto-reload to preserve upload state
   const { updateAvailable } = useProgressierUpdates({
-    autoReloadOnVisibility: true,
+    autoReloadOnVisibility: false,
     showToast: true,
   });
 

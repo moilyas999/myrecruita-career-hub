@@ -43,25 +43,21 @@ export function useProgressierUpdates(
     window.location.reload();
   }, []);
 
-  // Listen for visibility changes to auto-reload when app comes back to foreground
+  // Listen for visibility changes to check for updates (no auto-reload)
   useEffect(() => {
     if (!autoReloadOnVisibility) return;
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        // Check for updates when app becomes visible
-        const hasUpdate = checkForUpdates();
-        
-        if (hasUpdate) {
-          // Auto-reload when coming back to the app
-          applyUpdate();
-        }
+        // Just check for updates - NEVER auto-reload
+        // This preserves user state during uploads and other operations
+        checkForUpdates();
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [autoReloadOnVisibility, checkForUpdates, applyUpdate]);
+  }, [autoReloadOnVisibility, checkForUpdates]);
 
   // Check for updates periodically and show toast
   useEffect(() => {
