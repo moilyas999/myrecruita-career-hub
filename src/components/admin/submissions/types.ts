@@ -13,10 +13,13 @@ export interface JobApplication {
   };
 }
 
+// Skill can be either a string or an object with skill/proficiency (legacy format)
+export type SkillEntry = string | { skill: string; proficiency?: string };
+
 export interface AIProfile {
   summary_for_matching?: string;
-  hard_skills?: string[];
-  soft_skills?: string[];
+  hard_skills?: SkillEntry[];
+  soft_skills?: SkillEntry[];
   ideal_roles?: string[];
   industries?: string[];
   key_achievements?: string[];

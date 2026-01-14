@@ -2,7 +2,15 @@ import { Brain, Sparkles, Target, Briefcase, ChevronDown, ChevronUp } from 'luci
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
-import type { AIProfile } from './types';
+import type { AIProfile, SkillEntry } from './types';
+
+// Normalize skill format - handles both string and {skill, proficiency} object formats
+function normalizeSkill(skill: SkillEntry): string {
+  if (typeof skill === 'string') {
+    return skill;
+  }
+  return skill?.skill || '';
+}
 
 interface AIProfilePreviewProps {
   aiProfile: AIProfile;
@@ -64,11 +72,14 @@ export function AIProfilePreview({ aiProfile, cvScore }: AIProfilePreviewProps) 
             <span>Skills</span>
           </div>
           <div className="flex flex-wrap gap-1.5">
-            {aiProfile.hard_skills.slice(0, expanded ? undefined : 5).map((skill) => (
-              <Badge key={skill} variant="secondary" className="text-xs bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
-                {skill}
-              </Badge>
-            ))}
+            {aiProfile.hard_skills.slice(0, expanded ? undefined : 5).map((skill, index) => {
+              const skillName = normalizeSkill(skill);
+              return (
+                <Badge key={`${skillName}-${index}`} variant="secondary" className="text-xs bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
+                  {skillName}
+                </Badge>
+              );
+            })}
             {!expanded && aiProfile.hard_skills.length > 5 && (
               <Badge variant="outline" className="text-xs">
                 +{aiProfile.hard_skills.length - 5} more
@@ -89,11 +100,14 @@ export function AIProfilePreview({ aiProfile, cvScore }: AIProfilePreviewProps) 
                 <span>Soft Skills</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {aiProfile.soft_skills.map((skill) => (
-                  <Badge key={skill} variant="secondary" className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
-                    {skill}
-                  </Badge>
-                ))}
+                {aiProfile.soft_skills.map((skill, index) => {
+                  const skillName = normalizeSkill(skill);
+                  return (
+                    <Badge key={`${skillName}-${index}`} variant="secondary" className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                      {skillName}
+                    </Badge>
+                  );
+                })}
               </div>
             </div>
           )}
