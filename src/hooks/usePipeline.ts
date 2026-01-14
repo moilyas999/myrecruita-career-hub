@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 import { queryKeys } from '@/lib/queryKeys';
+import { logActivity } from '@/services/activityLogger';
 import type {
   CandidatePipeline,
   PipelineActivity,
@@ -165,9 +166,15 @@ export function useAddToPipeline() {
 
       return pipelineEntry;
     },
-    onSuccess: () => {
+    onSuccess: (entry) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.candidatePipeline });
       toast.success('Candidate added to pipeline');
+      logActivity({
+        action: 'pipeline_candidate_added',
+        resourceType: 'pipeline',
+        resourceId: entry.id,
+        details: { job_id: entry.job_id, cv_submission_id: entry.cv_submission_id, stage: entry.stage },
+      });
     },
     onError: (error: Error) => {
       if (error.message.includes('duplicate key')) {
@@ -222,10 +229,16 @@ export function useUpdatePipelineStage() {
 
       return updated;
     },
-    onSuccess: () => {
+    onSuccess: (entry) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.candidatePipeline });
       queryClient.invalidateQueries({ queryKey: queryKeys.pipelineActivity });
       toast.success('Stage updated');
+      logActivity({
+        action: 'pipeline_stage_changed',
+        resourceType: 'pipeline',
+        resourceId: entry.id,
+        details: { stage: entry.stage },
+      });
     },
     onError: (error: Error) => {
       toast.error('Failed to update stage: ' + error.message);
@@ -259,10 +272,16 @@ export function useUpdatePipelineNotes() {
 
       return updated;
     },
-    onSuccess: () => {
+    onSuccess: (entry) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.candidatePipeline });
       queryClient.invalidateQueries({ queryKey: queryKeys.pipelineActivity });
       toast.success('Notes updated');
+      logActivity({
+        action: 'pipeline_note_added',
+        resourceType: 'pipeline',
+        resourceId: entry.id,
+        details: { notes: entry.notes?.substring(0, 100) },
+      });
     },
     onError: (error: Error) => {
       toast.error('Failed to update notes: ' + error.message);
@@ -319,10 +338,16 @@ export function useDeletePipelineEntry() {
         .eq('id', id);
 
       if (error) throw error;
+      return id;
     },
-    onSuccess: () => {
+    onSuccess: (id) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.candidatePipeline });
       toast.success('Removed from pipeline');
+      logActivity({
+        action: 'pipeline_candidate_removed',
+        resourceType: 'pipeline',
+        resourceId: id,
+      });
     },
     onError: (error: Error) => {
       toast.error('Failed to remove: ' + error.message);

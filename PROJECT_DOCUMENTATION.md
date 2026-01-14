@@ -34,6 +34,7 @@
 18. [Job Management System](#18-job-management-system)
 19. [Blog & Content Management](#19-blog--content-management)
 20. [Notification System](#20-notification-system)
+20.5. [Staff Accountability System](#155-staff-accountability-system-new)
 21. [PWA & Progressive Features](#21-pwa--progressive-features)
 22. [SEO & Structured Data](#22-seo--structured-data)
 23. [Public-Facing Features](#23-public-facing-features)
@@ -2138,6 +2139,96 @@ interface NotificationPreferences {
 
 ---
 
+## 15.5 Staff Accountability System (NEW)
+
+### Overview
+
+The Staff Accountability System provides comprehensive audit logging and tracking of all admin actions. It enables:
+- **Activity Logging**: Track who did what and when
+- **Personal Dashboards**: Staff can see their own work and history
+- **Team Oversight**: Admins can monitor all team activity
+- **Staff Assignments**: Jobs and talent profiles can be assigned to specific staff
+
+### Activity Logger Service
+
+**Location**: `src/services/activityLogger.ts`
+
+```typescript
+interface LogActivityParams {
+  action: ActivityAction;      // What action was performed
+  resourceType: ResourceType;  // Type of resource (cv, job, etc.)
+  resourceId?: string;         // ID of the affected resource
+  details?: Record<string, unknown>;  // Additional context
+}
+
+// Fire-and-forget logging function
+logActivity({
+  action: 'cv_created',
+  resourceType: 'cv',
+  resourceId: newCV.id,
+  details: { name: 'John Doe', source: 'admin_manual' },
+});
+```
+
+### Action Types
+
+| Category | Actions |
+|----------|---------|
+| **CV** | `cv_created`, `cv_updated`, `cv_deleted`, `cv_exported`, `cv_bulk_imported`, `cv_matched`, `cv_scored` |
+| **Job** | `job_created`, `job_updated`, `job_deleted`, `job_status_changed`, `job_assigned` |
+| **Talent** | `talent_created`, `talent_updated`, `talent_deleted`, `talent_visibility_changed` |
+| **Blog** | `blog_created`, `blog_updated`, `blog_published`, `blog_unpublished`, `blog_deleted` |
+| **Staff** | `staff_created`, `staff_updated`, `staff_deleted`, `permissions_changed` |
+| **Pipeline** | `pipeline_candidate_added`, `pipeline_stage_changed`, `pipeline_note_added`, `pipeline_candidate_removed` |
+| **Auth** | `login`, `logout` |
+
+### Admin Dashboard Tabs
+
+| Tab | Component | Purpose | Permission |
+|-----|-----------|---------|------------|
+| **My Work** | `MyWorkDashboard.tsx` | Personal assignments (jobs, CVs, talent, pipeline) | Any admin |
+| **My Activity** | `MyActivityLog.tsx` | Personal action history | Any admin |
+| **Team Activity** | `TeamActivityLog.tsx` | All team activity (admin only) | `staff.view` |
+
+### Database Columns for Staff Assignment
+
+| Table | Column | Purpose |
+|-------|--------|---------|
+| `jobs` | `assigned_to` | UUID of recruiter assigned to job |
+| `jobs` | `created_by` | UUID of user who created the job |
+| `cv_submissions` | `processed_by` | UUID of user who processed/reviewed CV |
+| `cv_submissions` | `added_by` | UUID of user who manually added CV |
+| `talent_profiles` | `managed_by` | UUID of account manager for talent |
+| `candidate_pipeline` | `assigned_to` | UUID of recruiter managing candidate |
+
+### Query Keys
+
+```typescript
+// src/lib/queryKeys.ts
+export const queryKeys = {
+  // ... existing keys
+  userActivity: ['user-activity'] as const,
+  teamActivity: ['team-activity'] as const,
+  myWork: ['my-work'] as const,
+  userActivityStats: ['user-activity-stats'] as const,
+};
+```
+
+### Integration Points
+
+Activity logging is integrated in:
+- `JobsManagement.tsx` - Job CRUD operations
+- `TalentManagement.tsx` - Talent CRUD operations
+- `BlogManagement.tsx` - Blog CRUD operations
+- `AdminManagement.tsx` - Staff creation
+- `PermissionsManagement.tsx` - Permission changes
+- `useSubmissionsActions.ts` - CV delete/score/export
+- `CVManualEntry.tsx` - Manual CV creation
+- `usePipeline.ts` - Pipeline stage changes, notes, additions
+- `useAuth.tsx` - Login/logout tracking
+
+---
+
 ## 16. PWA & Progressive Features
 
 ### Progressier Integration
@@ -2447,6 +2538,18 @@ supabase/
 ---
 
 ## 25. Changelog
+
+### Version 2.1 (January 2025)
+
+**Staff Accountability System**:
+- ✅ Activity logging service (`src/services/activityLogger.ts`)
+- ✅ My Work dashboard for personal assignments
+- ✅ My Activity log for personal action history
+- ✅ Team Activity log for admin oversight
+- ✅ Login/logout tracking in `useAuth`
+- ✅ Activity logging integrated across all admin operations
+- ✅ Pipeline activity logging (add, stage change, notes, remove)
+- ✅ New query keys: `userActivity`, `teamActivity`, `myWork`, `userActivityStats`
 
 ### Version 2.0 (January 2025)
 

@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logActivity } from '@/services/activityLogger';
 
 interface AuthContextType {
   user: User | null;
@@ -84,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string, rememberMe = false) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -98,6 +99,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('supabase.auth.rememberMe', 'true');
       } else {
         localStorage.removeItem('supabase.auth.rememberMe');
+      }
+      
+      // Log successful login
+      if (data.user) {
+        // Use setTimeout to avoid blocking the login flow
+        setTimeout(() => {
+          logActivity({
+            action: 'login',
+            resourceType: 'auth',
+            resourceId: data.user.id,
+            details: { email: data.user.email },
+          });
+        }, 100);
       }
       
       return {};
@@ -155,6 +169,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    // Log logout before signing out (while we still have user context)
+    if (user) {
+      await logActivity({
+        action: 'logout',
+        resourceType: 'auth',
+        resourceId: user.id,
+        details: { email: user.email },
+      });
+    }
+    
     await supabase.auth.signOut();
     setIsAdmin(false);
     setAdminRole(null);
