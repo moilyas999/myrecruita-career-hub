@@ -61,6 +61,7 @@ import {
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
+import { logActivity } from '@/services/activityLogger';
 
 interface StaffMember {
   id: string;
@@ -142,9 +143,21 @@ export default function PermissionsManagement() {
         if (insertError) throw insertError;
       }
     },
-    onSuccess: async (_, { userId }) => {
+    onSuccess: async (_, { userId, permissions }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.staffPermissions });
       toast.success('Permissions updated successfully');
+      
+      // Log the permission change
+      const userProfile = staffMembers.find(s => s.user_id === userId);
+      logActivity({
+        action: 'permissions_changed',
+        resourceType: 'staff',
+        resourceId: userId,
+        details: { 
+          email: userProfile?.email,
+          permission_count: permissions.length,
+        },
+      });
       
       // Send notification to the affected user
       try {

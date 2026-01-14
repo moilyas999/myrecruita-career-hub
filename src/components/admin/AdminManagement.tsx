@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { StaffRole, ROLE_CONFIG } from '@/lib/permissions';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
+import { logActivity } from '@/services/activityLogger';
 
 interface AdminProfile {
   id: string;
@@ -80,6 +81,13 @@ export default function AdminManagement() {
     } else {
       const roleConfig = ROLE_CONFIG[newAdminRole];
       toast.success(`${roleConfig.label} account created successfully!`);
+      
+      logActivity({
+        action: 'staff_created',
+        resourceType: 'staff',
+        details: { email: newAdminEmail.toLowerCase(), role: newAdminRole },
+      });
+      
       setNewAdminEmail('');
       setNewAdminPassword('');
       setNewAdminRole('admin');

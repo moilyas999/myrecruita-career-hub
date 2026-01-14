@@ -17,6 +17,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import { Skeleton } from "@/components/ui/skeleton";
+import { logActivity } from '@/services/activityLogger';
 
 interface BlogPost {
   id: string;
@@ -119,20 +120,51 @@ const BlogManagement = () => {
       };
 
       if (postData.id) {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('blog_posts')
           .update(payload)
-          .eq('id', postData.id);
+          .eq('id', postData.id)
+          .select()
+          .single();
         if (error) throw error;
+        return { post: data, isNew: false, wasPublished: editingPost?.is_published };
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('blog_posts')
-          .insert([payload]);
+          .insert([payload])
+          .select()
+          .single();
         if (error) throw error;
+        return { post: data, isNew: true };
       }
     },
-    onSuccess: () => {
-      toast.success(`Blog post ${editingPost ? 'updated' : 'created'} successfully`);
+    onSuccess: (result) => {
+      toast.success(`Blog post ${result.isNew ? 'created' : 'updated'} successfully`);
+      
+      // Log appropriate activity
+      if (result.isNew) {
+        logActivity({
+          action: 'blog_created',
+          resourceType: 'blog',
+          resourceId: result.post.id,
+          details: { title: result.post.title, slug: result.post.slug },
+        });
+      } else if (result.post.is_published && !result.wasPublished) {
+        logActivity({
+          action: 'blog_published',
+          resourceType: 'blog',
+          resourceId: result.post.id,
+          details: { title: result.post.title, slug: result.post.slug },
+        });
+      } else {
+        logActivity({
+          action: 'blog_updated',
+          resourceType: 'blog',
+          resourceId: result.post.id,
+          details: { title: result.post.title },
+        });
+      }
+      
       setDialogOpen(false);
       resetForm();
       queryClient.invalidateQueries({ queryKey: queryKeys.blogPosts });
@@ -145,28 +177,35 @@ const BlogManagement = () => {
 
   // Delete mutation with optimistic update
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (post: BlogPost) => {
       const { error } = await supabase
         .from('blog_posts')
         .delete()
-        .eq('id', id);
+        .eq('id', post.id);
       if (error) throw error;
+      return post;
     },
-    onMutate: async (id) => {
+    onMutate: async (post) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.blogPosts });
       const previousPosts = queryClient.getQueryData<BlogPost[]>(queryKeys.blogPosts);
       queryClient.setQueryData<BlogPost[]>(queryKeys.blogPosts, (old) =>
-        old?.filter((post) => post.id !== id) || []
+        old?.filter((p) => p.id !== post.id) || []
       );
       return { previousPosts };
     },
-    onError: (err, id, context) => {
+    onError: (err, post, context) => {
       queryClient.setQueryData(queryKeys.blogPosts, context?.previousPosts);
       toast.error('Failed to delete blog post');
       console.error('Delete error:', err);
     },
-    onSuccess: () => {
+    onSuccess: (post) => {
       toast.success('Blog post deleted successfully');
+      logActivity({
+        action: 'blog_deleted',
+        resourceType: 'blog',
+        resourceId: post.id,
+        details: { title: post.title, slug: post.slug },
+      });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.blogPosts });
@@ -257,9 +296,9 @@ const BlogManagement = () => {
     setDialogOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (post: BlogPost) => {
     if (!confirm('Are you sure you want to delete this blog post?')) return;
-    deleteMutation.mutate(id);
+    deleteMutation.mutate(post);
   };
 
   const resetForm = () => {
@@ -546,7 +585,7 @@ const BlogManagement = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDelete(post.id)}
+                          onClick={() => handleDelete(post)}
                           disabled={deleteMutation.isPending}
                           className="text-muted-foreground hover:text-destructive"
                         >

@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { queryKeys } from '@/lib/queryKeys';
+import { logActivity } from '@/services/activityLogger';
 
 interface TalentProfile {
   id: string;
@@ -68,11 +69,18 @@ export default function TalentManagement() {
 
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData & { reference_id: string }) => {
-      const { error } = await supabase.from('talent_profiles').insert(data);
+      const { data: newTalent, error } = await supabase.from('talent_profiles').insert(data).select().single();
       if (error) throw error;
+      return newTalent;
     },
-    onSuccess: () => {
+    onSuccess: (newTalent) => {
       toast.success('Talent profile created successfully');
+      logActivity({
+        action: 'talent_created',
+        resourceType: 'talent',
+        resourceId: newTalent.id,
+        details: { role: newTalent.role, sector: newTalent.sector },
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.talentProfiles });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardOverview });
       setIsDialogOpen(false);
@@ -87,9 +95,16 @@ export default function TalentManagement() {
     mutationFn: async ({ id, data }: { id: string; data: typeof formData }) => {
       const { error } = await supabase.from('talent_profiles').update(data).eq('id', id);
       if (error) throw error;
+      return { id, data };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       toast.success('Talent profile updated successfully');
+      logActivity({
+        action: 'talent_updated',
+        resourceType: 'talent',
+        resourceId: result.id,
+        details: { role: result.data.role, sector: result.data.sector },
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.talentProfiles });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardOverview });
       setIsDialogOpen(false);
@@ -101,15 +116,16 @@ export default function TalentManagement() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('talent_profiles').delete().eq('id', id);
+    mutationFn: async (talent: TalentProfile) => {
+      const { error } = await supabase.from('talent_profiles').delete().eq('id', talent.id);
       if (error) throw error;
+      return talent;
     },
-    onMutate: async (id) => {
+    onMutate: async (talent) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.talentProfiles });
       const previous = queryClient.getQueryData<TalentProfile[]>(queryKeys.talentProfiles);
       queryClient.setQueryData<TalentProfile[]>(queryKeys.talentProfiles, (old) => 
-        old?.filter(t => t.id !== id) || []
+        old?.filter(t => t.id !== talent.id) || []
       );
       return { previous };
     },
@@ -121,24 +137,31 @@ export default function TalentManagement() {
       queryClient.invalidateQueries({ queryKey: queryKeys.talentProfiles });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardOverview });
     },
-    onSuccess: () => {
+    onSuccess: (talent) => {
       toast.success('Talent profile deleted successfully');
+      logActivity({
+        action: 'talent_deleted',
+        resourceType: 'talent',
+        resourceId: talent.id,
+        details: { role: talent.role, reference_id: talent.reference_id },
+      });
     },
   });
 
   const toggleVisibilityMutation = useMutation({
-    mutationFn: async ({ id, is_visible }: { id: string; is_visible: boolean }) => {
+    mutationFn: async ({ talent, is_visible }: { talent: TalentProfile; is_visible: boolean }) => {
       const { error } = await supabase
         .from('talent_profiles')
         .update({ is_visible })
-        .eq('id', id);
+        .eq('id', talent.id);
       if (error) throw error;
+      return { talent, is_visible };
     },
-    onMutate: async ({ id, is_visible }) => {
+    onMutate: async ({ talent, is_visible }) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.talentProfiles });
       const previous = queryClient.getQueryData<TalentProfile[]>(queryKeys.talentProfiles);
       queryClient.setQueryData<TalentProfile[]>(queryKeys.talentProfiles, (old) => 
-        old?.map(t => t.id === id ? { ...t, is_visible } : t) || []
+        old?.map(t => t.id === talent.id ? { ...t, is_visible } : t) || []
       );
       return { previous };
     },
@@ -150,8 +173,14 @@ export default function TalentManagement() {
       queryClient.invalidateQueries({ queryKey: queryKeys.talentProfiles });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardOverview });
     },
-    onSuccess: (_, { is_visible }) => {
+    onSuccess: ({ talent, is_visible }) => {
       toast.success(`Talent profile ${is_visible ? 'shown' : 'hidden'} successfully`);
+      logActivity({
+        action: 'talent_visibility_changed',
+        resourceType: 'talent',
+        resourceId: talent.id,
+        details: { role: talent.role, is_visible },
+      });
     },
   });
 
@@ -191,13 +220,13 @@ export default function TalentManagement() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (talentId: string) => {
+  const handleDelete = async (talent: TalentProfile) => {
     if (!confirm('Are you sure you want to delete this talent profile?')) return;
-    deleteMutation.mutate(talentId);
+    deleteMutation.mutate(talent);
   };
 
   const toggleVisibility = (talent: TalentProfile) => {
-    toggleVisibilityMutation.mutate({ id: talent.id, is_visible: !talent.is_visible });
+    toggleVisibilityMutation.mutate({ talent, is_visible: !talent.is_visible });
   };
 
   const isPending = createMutation.isPending || updateMutation.isPending;
@@ -348,7 +377,7 @@ export default function TalentManagement() {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => handleDelete(talent.id)}
+                    onClick={() => handleDelete(talent)}
                     disabled={deleteMutation.isPending}
                   >
                     <Trash2 className="w-4 h-4" />

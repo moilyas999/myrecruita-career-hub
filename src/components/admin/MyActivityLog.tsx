@@ -6,6 +6,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { queryKeys } from '@/lib/queryKeys';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -120,7 +121,7 @@ export default function MyActivityLog() {
   const { user } = useAuth();
 
   const { data: activities = [], isLoading, refetch, isFetching } = useQuery({
-    queryKey: ['my-activity', user?.id],
+    queryKey: [...queryKeys.userActivity, user?.id],
     queryFn: () => getUserActivity(user?.id || '', 100),
     enabled: !!user?.id,
     staleTime: 30000,

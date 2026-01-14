@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import { queryKeys } from '@/lib/queryKeys';
+import { logActivity } from '@/services/activityLogger';
 
 interface Job {
   id: string;
@@ -72,11 +73,18 @@ export default function JobsManagement() {
 
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData & { reference_id: string }) => {
-      const { error } = await supabase.from('jobs').insert(data);
+      const { data: newJob, error } = await supabase.from('jobs').insert(data).select().single();
       if (error) throw error;
+      return newJob;
     },
-    onSuccess: () => {
+    onSuccess: (newJob) => {
       toast.success('Job created successfully');
+      logActivity({
+        action: 'job_created',
+        resourceType: 'job',
+        resourceId: newJob.id,
+        details: { title: newJob.title, reference_id: newJob.reference_id },
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardOverview });
       setIsDialogOpen(false);
@@ -91,9 +99,16 @@ export default function JobsManagement() {
     mutationFn: async ({ id, data }: { id: string; data: typeof formData }) => {
       const { error } = await supabase.from('jobs').update(data).eq('id', id);
       if (error) throw error;
+      return { id, data };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       toast.success('Job updated successfully');
+      logActivity({
+        action: 'job_updated',
+        resourceType: 'job',
+        resourceId: result.id,
+        details: { title: result.data.title, status: result.data.status },
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardOverview });
       setIsDialogOpen(false);
@@ -105,16 +120,17 @@ export default function JobsManagement() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('jobs').delete().eq('id', id);
+    mutationFn: async (job: Job) => {
+      const { error } = await supabase.from('jobs').delete().eq('id', job.id);
       if (error) throw error;
+      return job;
     },
-    onMutate: async (id) => {
+    onMutate: async (job) => {
       // Optimistic update
       await queryClient.cancelQueries({ queryKey: queryKeys.jobs });
       const previous = queryClient.getQueryData<Job[]>(queryKeys.jobs);
       queryClient.setQueryData<Job[]>(queryKeys.jobs, (old) => 
-        old?.filter(job => job.id !== id) || []
+        old?.filter(j => j.id !== job.id) || []
       );
       return { previous };
     },
@@ -126,8 +142,14 @@ export default function JobsManagement() {
       queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboardOverview });
     },
-    onSuccess: () => {
+    onSuccess: (job) => {
       toast.success('Job deleted successfully');
+      logActivity({
+        action: 'job_deleted',
+        resourceType: 'job',
+        resourceId: job.id,
+        details: { title: job.title, reference_id: job.reference_id },
+      });
     },
   });
 
@@ -171,9 +193,9 @@ export default function JobsManagement() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (jobId: string) => {
+  const handleDelete = async (job: Job) => {
     if (!confirm('Are you sure you want to delete this job?')) return;
-    deleteMutation.mutate(jobId);
+    deleteMutation.mutate(job);
   };
 
   const isPending = createMutation.isPending || updateMutation.isPending;
@@ -354,7 +376,7 @@ export default function JobsManagement() {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => handleDelete(job.id)}
+                    onClick={() => handleDelete(job)}
                     disabled={deleteMutation.isPending}
                   >
                     <Trash2 className="w-4 h-4" />
