@@ -260,39 +260,51 @@ export type Database = {
         Row: {
           created_at: string
           cv_submission_id: string | null
+          error_category: string | null
           error_message: string | null
           file_name: string
           file_path: string
+          file_size_bytes: number | null
           file_url: string
           id: string
           parsed_data: Json | null
           processed_at: string | null
+          processing_started_at: string | null
+          retry_count: number | null
           session_id: string
           status: string
         }
         Insert: {
           created_at?: string
           cv_submission_id?: string | null
+          error_category?: string | null
           error_message?: string | null
           file_name: string
           file_path: string
+          file_size_bytes?: number | null
           file_url: string
           id?: string
           parsed_data?: Json | null
           processed_at?: string | null
+          processing_started_at?: string | null
+          retry_count?: number | null
           session_id: string
           status?: string
         }
         Update: {
           created_at?: string
           cv_submission_id?: string | null
+          error_category?: string | null
           error_message?: string | null
           file_name?: string
           file_path?: string
+          file_size_bytes?: number | null
           file_url?: string
           id?: string
           parsed_data?: Json | null
           processed_at?: string | null
+          processing_started_at?: string | null
+          retry_count?: number | null
           session_id?: string
           status?: string
         }
@@ -308,44 +320,62 @@ export type Database = {
       }
       bulk_import_sessions: {
         Row: {
+          avg_parse_time_ms: number | null
+          batch_size: number | null
           completed_at: string | null
           created_at: string
+          error_breakdown: Json | null
           error_message: string | null
           failed_count: number
           id: string
           imported_count: number
+          last_heartbeat: string | null
           parsed_count: number
+          processing_file_id: string | null
           started_at: string | null
           status: string
           total_files: number
+          total_retry_count: number | null
           user_email: string
           user_id: string
         }
         Insert: {
+          avg_parse_time_ms?: number | null
+          batch_size?: number | null
           completed_at?: string | null
           created_at?: string
+          error_breakdown?: Json | null
           error_message?: string | null
           failed_count?: number
           id?: string
           imported_count?: number
+          last_heartbeat?: string | null
           parsed_count?: number
+          processing_file_id?: string | null
           started_at?: string | null
           status?: string
           total_files?: number
+          total_retry_count?: number | null
           user_email: string
           user_id: string
         }
         Update: {
+          avg_parse_time_ms?: number | null
+          batch_size?: number | null
           completed_at?: string | null
           created_at?: string
+          error_breakdown?: Json | null
           error_message?: string | null
           failed_count?: number
           id?: string
           imported_count?: number
+          last_heartbeat?: string | null
           parsed_count?: number
+          processing_file_id?: string | null
           started_at?: string | null
           status?: string
           total_files?: number
+          total_retry_count?: number | null
           user_email?: string
           user_id?: string
         }

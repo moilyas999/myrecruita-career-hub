@@ -149,6 +149,13 @@ export interface BulkImportSession {
   completed_at?: string | null;
   error_message?: string | null;
   created_at: string;
+  // New fields for robust processing
+  last_heartbeat?: string | null;
+  processing_file_id?: string | null;
+  batch_size?: number;
+  avg_parse_time_ms?: number | null;
+  total_retry_count?: number;
+  error_breakdown?: Record<string, number>;
 }
 
 export interface BulkImportFile {
@@ -163,6 +170,11 @@ export interface BulkImportFile {
   error_message?: string | null;
   processed_at?: string | null;
   created_at: string;
+  // New fields for robust processing
+  retry_count?: number;
+  error_category?: string | null;
+  processing_started_at?: string | null;
+  file_size_bytes?: number | null;
 }
 
 // ============================================================================
