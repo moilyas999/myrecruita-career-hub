@@ -159,17 +159,23 @@ async function prepareAIMessages(
   
   if (fileType === 'docx') {
     textContent = await extractTextFromDocx(fileData);
+    console.log(`[CV Parser] DOCX text extracted: ${textContent.length} chars`);
   } else if (fileType === 'doc') {
     textContent = extractTextFromDoc(fileData);
+    console.log(`[CV Parser] DOC text extracted: ${textContent.length} chars`);
   } else {
     // Try to read as text for unknown formats
     const decoder = new TextDecoder('utf-8', { fatal: false });
     textContent = decoder.decode(fileData);
+    console.log(`[CV Parser] Unknown format text extracted: ${textContent.length} chars`);
   }
 
   if (!textContent || textContent.length < 50) {
-    throw new Error('Could not extract sufficient text content from document');
+    console.error(`[CV Parser] Insufficient text content: ${textContent?.length || 0} chars. Sample: ${textContent?.substring(0, 100) || 'EMPTY'}`);
+    throw new Error(`Could not extract sufficient text content from document (got ${textContent?.length || 0} chars, need 50+)`);
   }
+  
+  console.log(`[CV Parser] Sending ${textContent.length} chars to AI for parsing`);
 
   return [
     systemMessage,

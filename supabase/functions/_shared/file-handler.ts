@@ -157,41 +157,95 @@ export async function downloadFromUrl(url: string): Promise<DownloadResult> {
 // ============================================================================
 
 /**
+ * Extract text from a single DOCX XML file
+ */
+function extractTextFromXml(xml: string): string {
+  return xml
+    // Handle table cells - add tab separator
+    .replace(/<\/w:tc>/g, '\t')
+    // Handle table rows - add newline
+    .replace(/<\/w:tr>/g, '\n')
+    // Replace paragraph breaks with newlines
+    .replace(/<\/w:p>/g, '\n')
+    // Replace line breaks
+    .replace(/<w:br[^>]*>/g, '\n')
+    // Replace tabs
+    .replace(/<w:tab[^>]*>/g, '\t')
+    // Handle soft hyphens and other special chars
+    .replace(/<w:softHyphen[^>]*>/g, '-')
+    // Remove all remaining XML tags
+    .replace(/<[^>]+>/g, '')
+    // Decode common XML entities
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code)))
+    // Clean up whitespace within lines (preserve structure)
+    .replace(/\t{2,}/g, '\t')
+    .replace(/ {2,}/g, ' ')
+    .trim();
+}
+
+/**
  * Extract text content from a DOCX file
+ * Handles main document, headers, and footers
  */
 export async function extractTextFromDocx(arrayBuffer: ArrayBuffer): Promise<string> {
   try {
     const zip = new JSZip();
     const zipContent = await zip.loadAsync(arrayBuffer);
     
-    const documentXml = await zipContent.file('word/document.xml')?.async('string');
+    const textParts: string[] = [];
     
+    // Extract headers (header1.xml, header2.xml, etc.)
+    const headerFiles = Object.keys(zipContent.files).filter(f => f.match(/^word\/header\d*\.xml$/));
+    for (const headerFile of headerFiles) {
+      const headerXml = await zipContent.file(headerFile)?.async('string');
+      if (headerXml) {
+        const headerText = extractTextFromXml(headerXml);
+        if (headerText.trim()) {
+          textParts.push(headerText);
+        }
+      }
+    }
+    
+    // Extract main document
+    const documentXml = await zipContent.file('word/document.xml')?.async('string');
     if (!documentXml) {
       console.warn('No document.xml found in DOCX');
       return '';
     }
+    
+    const mainText = extractTextFromXml(documentXml);
+    textParts.push(mainText);
+    
+    // Extract footers (footer1.xml, footer2.xml, etc.)
+    const footerFiles = Object.keys(zipContent.files).filter(f => f.match(/^word\/footer\d*\.xml$/));
+    for (const footerFile of footerFiles) {
+      const footerXml = await zipContent.file(footerFile)?.async('string');
+      if (footerXml) {
+        const footerText = extractTextFromXml(footerXml);
+        if (footerText.trim()) {
+          textParts.push(footerText);
+        }
+      }
+    }
+    
+    // Combine all parts
+    let text = textParts.join('\n\n');
+    
+    // Final cleanup - reduce excessive newlines
+    text = text.replace(/\n{3,}/g, '\n\n').trim();
 
-    // Extract text from XML by removing tags and handling common elements
-    let text = documentXml
-      // Replace paragraph breaks with newlines
-      .replace(/<\/w:p>/g, '\n')
-      // Replace line breaks
-      .replace(/<w:br[^>]*>/g, '\n')
-      // Replace tabs
-      .replace(/<w:tab[^>]*>/g, '\t')
-      // Remove all remaining XML tags
-      .replace(/<[^>]+>/g, '')
-      // Decode common XML entities
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&apos;/g, "'")
-      // Clean up excessive whitespace
-      .replace(/\n{3,}/g, '\n\n')
-      .trim();
-
-    console.log(`Extracted ${text.length} characters from DOCX`);
+    console.log(`Extracted ${text.length} characters from DOCX (${headerFiles.length} headers, ${footerFiles.length} footers)`);
+    
+    // Log sample for debugging (first 300 chars)
+    if (text.length > 0) {
+      console.log(`DOCX sample: ${text.substring(0, 300).replace(/\n/g, '\\n')}...`);
+    }
+    
     return text;
   } catch (error) {
     console.error('DOCX extraction error:', error);
