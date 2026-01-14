@@ -229,7 +229,9 @@ function validateAndCleanData(data: ExtractedCVData): ExtractedCVData {
     soft_skills: Array.isArray(data.ai_profile?.soft_skills) ? data.ai_profile.soft_skills : [],
     certifications: Array.isArray(data.ai_profile?.certifications) ? data.ai_profile.certifications : [],
     industries: Array.isArray(data.ai_profile?.industries) ? data.ai_profile.industries : [],
-    experience_years: typeof data.ai_profile?.experience_years === 'number' ? data.ai_profile.experience_years : (data.years_experience || 0),
+    experience_years: typeof data.ai_profile?.experience_years === 'number' 
+      ? Math.round(data.ai_profile.experience_years) 
+      : Math.round(data.years_experience || 0),
     seniority: data.ai_profile?.seniority || data.seniority_level || 'Mid-Level',
     education: {
       level: data.ai_profile?.education?.level || data.education_level || 'Other',
@@ -262,7 +264,7 @@ function validateAndCleanData(data: ExtractedCVData): ExtractedCVData {
     job_title: data.job_title?.trim() || 'Not specified',
     sector: data.sector || 'Other',
     seniority_level: data.seniority_level || 'Mid-Level',
-    years_experience: typeof data.years_experience === 'number' ? data.years_experience : 0,
+    years_experience: typeof data.years_experience === 'number' ? Math.round(data.years_experience) : 0,
     
     // Details
     skills: data.skills?.trim() || '',
@@ -273,7 +275,7 @@ function validateAndCleanData(data: ExtractedCVData): ExtractedCVData {
     ai_profile: aiProfile,
     
     // Scoring (aligned with frontend)
-    cv_score: typeof data.cv_score === 'number' ? Math.min(100, Math.max(0, data.cv_score)) : 50,
+    cv_score: typeof data.cv_score === 'number' ? Math.round(Math.min(100, Math.max(0, data.cv_score))) : 50,
     cv_score_breakdown: scoreBreakdown
   };
 }
