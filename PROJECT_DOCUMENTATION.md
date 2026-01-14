@@ -2537,43 +2537,70 @@ supabase/
 
 ---
 
-## 25. Email Configuration (SMTP via Resend)
+## 25. Email Configuration (Direct Resend API)
 
 ### Overview
 
-All authentication emails (magic links, OTP codes, password resets, email confirmations) are routed through **Resend SMTP** for reliable delivery with MyRecruita branding.
+All authentication emails (magic links, OTP codes, password resets, email confirmations) are sent **directly via Resend API** through an edge function, completely bypassing Supabase's built-in email system for maximum reliability and control.
 
-### Supabase Dashboard Configuration
+### Architecture
 
-**Location**: https://supabase.com/dashboard/project/yoegksjmdtubnkgdtttj/auth/templates → SMTP Settings
+```
+User Request → Frontend → Edge Function (send-auth-email) → Resend API → User's Inbox
+                                ↓
+                    Supabase Admin API (generate auth links/tokens)
+```
 
-| Setting | Value |
-|---------|-------|
-| **Host** | `smtp.resend.com` |
-| **Port** | `465` (SSL) |
-| **User** | `resend` |
-| **Password** | RESEND_API_KEY value |
-| **Sender Email** | `no-reply@myrecruita.com` |
-| **Sender Name** | `MyRecruita` |
+### Edge Function: `send-auth-email`
+
+**Location**: `supabase/functions/send-auth-email/index.ts`
+
+**Endpoint**: Invoked via `supabase.functions.invoke('send-auth-email', { body: {...} })`
+
+**Supported Email Types**:
+| Type | Description |
+|------|-------------|
+| `magic_link` | OTP code + clickable magic link for passwordless login |
+| `password_reset` | Password recovery link |
+| `signup_confirmation` | Email verification for new accounts |
+
+**Request Body**:
+```typescript
+{
+  email: string;           // Recipient email
+  type: 'magic_link' | 'password_reset' | 'signup_confirmation';
+  redirectUrl?: string;    // Where to redirect after action
+}
+```
+
+### Secret Configuration
+
+**Required Secret**: `RESEND_API_KEY`
+- Already configured in project secrets
+- Obtain from: https://resend.com/api-keys
 
 ### Domain Verification
 
 Verify `myrecruita.com` domain in Resend: https://resend.com/domains
 
-### Rate Limits (Supabase Dashboard)
+### Email Templates
 
-Adjust at: Authentication → Rate Limits
-- **Email rate limit per hour**: Increase to 100+
-- **Email rate limit per IP**: Adjust based on traffic
+Custom branded HTML templates are defined in the edge function:
+- **Magic Link**: Blue gradient header, 6-digit code in monospace, clickable button
+- **Password Reset**: Professional layout with reset button
+- **Signup Confirmation**: Welcome message with confirm button
+
+All emails sent from: `MyRecruita <no-reply@myrecruita.com>`
 
 ### Password Reset Flow
 
 **Admin Users** (`/admin/login`):
 1. Click "Forgot password?" link below login form
 2. Enter email address
-3. Receive reset email via Resend SMTP
-4. Click link → redirects to `/auth?type=recovery`
-5. Enter new password on the recovery form
+3. Edge function generates recovery link via Supabase Admin API
+4. Resend sends branded email directly
+5. Click link → redirects to `/auth?type=recovery`
+6. Enter new password on the recovery form
 
 **Regular Users** (`/auth`):
 1. Recovery mode detected via `?type=recovery` URL parameter
@@ -2581,14 +2608,25 @@ Adjust at: Authentication → Rate Limits
 3. Password updated via `supabase.auth.updateUser()`
 4. Auto-redirect to dashboard
 
-### Email Templates
+### Magic Link Flow
 
-Customize in Supabase Dashboard: Authentication → Email Templates
+1. User enters email on `/auth` → clicks "Send Magic Link"
+2. Frontend calls `send-auth-email` edge function
+3. Edge function uses `supabase.auth.admin.generateLink()` to create token
+4. Resend sends email with OTP code + clickable link
+5. User can either:
+   - Enter 6-digit OTP on page
+   - Click magic link in email
+6. Verified via `supabase.auth.verifyOtp()`
 
-Templates to customize:
-- Magic Link
-- Password Reset
-- Confirmation Email
+### Benefits Over Supabase SMTP
+
+- ✅ **No manual SMTP configuration** in Supabase Dashboard
+- ✅ **Full control** over email templates in code
+- ✅ **Better deliverability** via Resend's infrastructure
+- ✅ **No Supabase rate limits** - only Resend limits apply
+- ✅ **Easier debugging** via edge function logs
+
 
 ---
 

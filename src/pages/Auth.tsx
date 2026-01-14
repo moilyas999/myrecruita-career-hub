@@ -134,15 +134,22 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: magicLinkEmail,
-        options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+      // Use custom edge function to send email via Resend
+      const { data, error } = await supabase.functions.invoke('send-auth-email', {
+        body: {
+          email: magicLinkEmail,
+          type: 'magic_link',
+          redirectUrl: `${window.location.origin}/dashboard`,
         }
       });
 
       if (error) {
         toast.error(getErrorMessage(error));
+        return;
+      }
+
+      if (data?.error) {
+        toast.error(data.error);
         return;
       }
 
@@ -224,21 +231,23 @@ const Auth = () => {
     
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: magicLinkEmail,
-        options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+      // Use custom edge function to resend email via Resend
+      const { data, error } = await supabase.functions.invoke('send-auth-email', {
+        body: {
+          email: magicLinkEmail,
+          type: 'magic_link',
+          redirectUrl: `${window.location.origin}/dashboard`,
         }
       });
 
       if (error) {
         const errorMsg = getErrorMessage(error);
         toast.error(errorMsg);
-        
-        // If rate limited, set a longer cooldown
-        if (error.message?.toLowerCase().includes('rate limit') || error.message?.toLowerCase().includes('too many')) {
-          setResendCooldown(300); // 5 minutes
-        }
+        return;
+      }
+
+      if (data?.error) {
+        toast.error(data.error);
         return;
       }
 
