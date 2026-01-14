@@ -70,9 +70,11 @@ serve(async (req) => {
         if (file_ids.length > 0) {
           filesQuery = filesQuery.in('id', file_ids);
         } else if (retry_failed) {
-          filesQuery = filesQuery.eq('status', 'error');
+          // Include both error AND pending (for cases where retry reset them to pending)
+          filesQuery = filesQuery.in('status', ['error', 'pending']);
         } else {
-          filesQuery = filesQuery.eq('status', 'pending');
+          // Normal mode: process pending, parsing, parsed (stuck states)
+          filesQuery = filesQuery.in('status', ['pending', 'parsing', 'parsed', 'importing']);
         }
         
         const { data: files, error: filesError } = await filesQuery;
@@ -81,17 +83,36 @@ serve(async (req) => {
           throw new Error(`Failed to fetch files: ${filesError.message}`);
         }
 
+        // Recompute counts from actual file statuses for accuracy
+        const { data: allFiles } = await supabase
+          .from('bulk_import_files')
+          .select('status')
+          .eq('session_id', session_id);
+
+        let parsedCount = allFiles?.filter(f => f.status === 'parsed').length || 0;
+        let importedCount = allFiles?.filter(f => f.status === 'imported').length || 0;
+        let failedCount = allFiles?.filter(f => f.status === 'error').length || 0;
+
         if (!files || files.length === 0) {
-          await supabase
-            .from('bulk_import_sessions')
-            .update({ status: 'completed', completed_at: new Date().toISOString() })
-            .eq('id', session_id);
+          // No files to process - check if we should mark as completed
+          const pendingWork = allFiles?.filter(f => 
+            ['pending', 'parsing', 'parsed', 'importing'].includes(f.status)
+          ).length || 0;
+
+          if (pendingWork === 0) {
+            await supabase
+              .from('bulk_import_sessions')
+              .update({ 
+                status: 'completed', 
+                completed_at: new Date().toISOString(),
+                parsed_count: parsedCount,
+                imported_count: importedCount,
+                failed_count: failedCount
+              })
+              .eq('id', session_id);
+          }
           return;
         }
-
-        let parsedCount = (session as BulkImportSession).parsed_count || 0;
-        let importedCount = (session as BulkImportSession).imported_count || 0;
-        let failedCount = (session as BulkImportSession).failed_count || 0;
 
         for (const file of files as BulkImportFile[]) {
           try {
@@ -208,15 +229,30 @@ serve(async (req) => {
           }
         }
 
-        // Mark session as completed
+        // Recompute final counts from actual file statuses
+        const { data: finalFiles } = await supabase
+          .from('bulk_import_files')
+          .select('status')
+          .eq('session_id', session_id);
+
+        const finalParsedCount = finalFiles?.filter(f => f.status === 'parsed').length || 0;
+        const finalImportedCount = finalFiles?.filter(f => f.status === 'imported').length || 0;
+        const finalFailedCount = finalFiles?.filter(f => f.status === 'error').length || 0;
+        const finalPendingCount = finalFiles?.filter(f => 
+          ['pending', 'parsing', 'importing'].includes(f.status)
+        ).length || 0;
+
+        // Only mark completed if no pending work remains
+        const finalStatus = finalPendingCount > 0 ? 'processing' : 'completed';
+        
         await supabase
           .from('bulk_import_sessions')
           .update({ 
-            status: 'completed',
-            completed_at: new Date().toISOString(),
-            parsed_count: parsedCount,
-            imported_count: importedCount,
-            failed_count: failedCount
+            status: finalStatus,
+            completed_at: finalStatus === 'completed' ? new Date().toISOString() : null,
+            parsed_count: finalParsedCount,
+            imported_count: finalImportedCount,
+            failed_count: finalFailedCount
           })
           .eq('id', session_id);
 
