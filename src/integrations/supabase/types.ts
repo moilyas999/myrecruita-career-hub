@@ -483,12 +483,16 @@ export type Database = {
           education_level: string | null
           email: string
           experience_summary: string | null
+          extraction_confidence: number | null
+          extraction_method: string | null
           id: string
           job_title: string | null
           location: string | null
           message: string | null
           name: string
+          parse_correlation_id: string | null
           phone: string
+          potential_duplicate_of: string | null
           processed_at: string | null
           processed_by: string | null
           scored_at: string | null
@@ -510,12 +514,16 @@ export type Database = {
           education_level?: string | null
           email: string
           experience_summary?: string | null
+          extraction_confidence?: number | null
+          extraction_method?: string | null
           id?: string
           job_title?: string | null
           location?: string | null
           message?: string | null
           name: string
+          parse_correlation_id?: string | null
           phone: string
+          potential_duplicate_of?: string | null
           processed_at?: string | null
           processed_by?: string | null
           scored_at?: string | null
@@ -537,12 +545,16 @@ export type Database = {
           education_level?: string | null
           email?: string
           experience_summary?: string | null
+          extraction_confidence?: number | null
+          extraction_method?: string | null
           id?: string
           job_title?: string | null
           location?: string | null
           message?: string | null
           name?: string
+          parse_correlation_id?: string | null
           phone?: string
+          potential_duplicate_of?: string | null
           processed_at?: string | null
           processed_by?: string | null
           scored_at?: string | null
@@ -553,7 +565,15 @@ export type Database = {
           user_id?: string | null
           years_experience?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cv_submissions_potential_duplicate_of_fkey"
+            columns: ["potential_duplicate_of"]
+            isOneToOne: false
+            referencedRelation: "cv_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cv_upload_activity_log: {
         Row: {
@@ -921,6 +941,63 @@ export type Database = {
           title?: string
           type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      parse_analytics: {
+        Row: {
+          ai_model: string
+          confidence_scores: Json | null
+          correlation_id: string
+          created_at: string
+          errors: string[] | null
+          extracted_fields: Json | null
+          extraction_method: string
+          file_name: string
+          file_size_bytes: number
+          file_type: string
+          id: string
+          parse_time_ms: number
+          retry_count: number
+          success: boolean
+          text_length: number
+          warnings: string[] | null
+        }
+        Insert: {
+          ai_model?: string
+          confidence_scores?: Json | null
+          correlation_id: string
+          created_at?: string
+          errors?: string[] | null
+          extracted_fields?: Json | null
+          extraction_method?: string
+          file_name: string
+          file_size_bytes?: number
+          file_type: string
+          id?: string
+          parse_time_ms?: number
+          retry_count?: number
+          success?: boolean
+          text_length?: number
+          warnings?: string[] | null
+        }
+        Update: {
+          ai_model?: string
+          confidence_scores?: Json | null
+          correlation_id?: string
+          created_at?: string
+          errors?: string[] | null
+          extracted_fields?: Json | null
+          extraction_method?: string
+          file_name?: string
+          file_size_bytes?: number
+          file_type?: string
+          id?: string
+          parse_time_ms?: number
+          retry_count?: number
+          success?: boolean
+          text_length?: number
+          warnings?: string[] | null
         }
         Relationships: []
       }
