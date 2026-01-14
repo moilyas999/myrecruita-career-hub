@@ -5,13 +5,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Mail, Phone, Calendar, FileText, User, Briefcase, Download, RefreshCw, Plus, Upload, List, MapPin, Trash2, Zap, Loader2, Activity, AlertTriangle } from 'lucide-react';
+import { Mail, Phone, Calendar, FileText, User, Briefcase, Download, RefreshCw, Plus, Upload, List, MapPin, Trash2, Zap, Loader2, Activity, AlertTriangle, Kanban } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import CVManualEntry from './CVManualEntry';
 import CVBulkImport from './CVBulkImport';
 import CVScoreBadge from './CVScoreBadge';
 import CVUploaderActivityLog from './CVUploaderActivityLog';
+import AddToPipelineDialog from './pipeline/AddToPipelineDialog';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys, submissionQueryKeys } from '@/lib/queryKeys';
 import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
@@ -186,6 +188,14 @@ export default function SubmissionsManagement() {
   const [cvSubTab, setCvSubTab] = useState('all-cvs');
   const [isRescoring, setIsRescoring] = useState(false);
   const [rescoreProgress, setRescoreProgress] = useState({ current: 0, total: 0 });
+  const [pipelineDialogOpen, setPipelineDialogOpen] = useState(false);
+  const [selectedCVForPipeline, setSelectedCVForPipeline] = useState<{
+    id: string;
+    name: string;
+    email: string;
+    job_title?: string | null;
+  } | null>(null);
+  const { hasPermission } = usePermissions();
 
   // React Query hooks for each submission type
   const { data: jobApplications = [], isLoading: loadingJobs, isError: errorJobs, refetch: refetchJobs } = useQuery({
@@ -447,6 +457,16 @@ export default function SubmissionsManagement() {
   const handleCVSuccess = () => {
     queryClient.invalidateQueries({ queryKey: queryKeys.cvSubmissions });
     queryClient.invalidateQueries({ queryKey: queryKeys.dashboardOverview });
+  };
+
+  const handleAddToPipeline = (cv: CVSubmission) => {
+    setSelectedCVForPipeline({ 
+      id: cv.id, 
+      name: cv.name, 
+      email: cv.email,
+      job_title: cv.job_title 
+    });
+    setPipelineDialogOpen(true);
   };
 
   // Combined loading state for initial load
@@ -889,6 +909,17 @@ export default function SubmissionsManagement() {
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           )}
+                          {hasPermission('pipeline.create') && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleAddToPipeline(submission)}
+                              className="h-8 w-8 text-muted-foreground hover:text-primary"
+                              title="Add to Pipeline"
+                            >
+                              <Kanban className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                       <CardDescription className="flex flex-wrap gap-2">
@@ -1270,6 +1301,12 @@ export default function SubmissionsManagement() {
         </TabsContent>
         </Tabs>
       )}
+
+      <AddToPipelineDialog
+        open={pipelineDialogOpen}
+        onOpenChange={setPipelineDialogOpen}
+        cvSubmission={selectedCVForPipeline}
+      />
     </div>
   );
 }
