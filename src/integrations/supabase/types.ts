@@ -315,6 +315,60 @@ export type Database = {
         }
         Relationships: []
       }
+      candidate_pipeline: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          cv_submission_id: string
+          id: string
+          job_id: string
+          notes: string | null
+          priority: number | null
+          rejection_reason: string | null
+          stage: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          cv_submission_id: string
+          id?: string
+          job_id: string
+          notes?: string | null
+          priority?: number | null
+          rejection_reason?: string | null
+          stage?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          cv_submission_id?: string
+          id?: string
+          job_id?: string
+          notes?: string | null
+          priority?: number | null
+          rejection_reason?: string | null
+          stage?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_pipeline_cv_submission_id_fkey"
+            columns: ["cv_submission_id"]
+            isOneToOne: false
+            referencedRelation: "cv_submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "candidate_pipeline_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       career_partner_requests: {
         Row: {
           created_at: string
@@ -821,6 +875,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      pipeline_activity: {
+        Row: {
+          action: string
+          created_at: string
+          created_by: string | null
+          from_stage: string | null
+          id: string
+          note: string | null
+          pipeline_id: string
+          to_stage: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          created_by?: string | null
+          from_stage?: string | null
+          id?: string
+          note?: string | null
+          pipeline_id: string
+          to_stage?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          created_by?: string | null
+          from_stage?: string | null
+          id?: string
+          note?: string | null
+          pipeline_id?: string
+          to_stage?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pipeline_activity_pipeline_id_fkey"
+            columns: ["pipeline_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_pipeline"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       staff_permissions: {
         Row: {

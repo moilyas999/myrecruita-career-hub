@@ -33,6 +33,10 @@ export const queryKeys = {
   jobStatusUpdates: ['job-status-updates'] as const,
   emailIngestionLog: ['email-ingestion-log'] as const,
   emailIngestionStats: ['email-ingestion-stats'] as const,
+  
+  // Pipeline
+  candidatePipeline: ['candidate-pipeline'] as const,
+  pipelineActivity: ['pipeline-activity'] as const,
 } as const;
 
 // Helper to get all submission-related keys for bulk invalidation
