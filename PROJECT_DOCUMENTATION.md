@@ -2537,7 +2537,62 @@ supabase/
 
 ---
 
-## 25. Changelog
+## 25. Email Configuration (SMTP via Resend)
+
+### Overview
+
+All authentication emails (magic links, OTP codes, password resets, email confirmations) are routed through **Resend SMTP** for reliable delivery with MyRecruita branding.
+
+### Supabase Dashboard Configuration
+
+**Location**: https://supabase.com/dashboard/project/yoegksjmdtubnkgdtttj/auth/templates → SMTP Settings
+
+| Setting | Value |
+|---------|-------|
+| **Host** | `smtp.resend.com` |
+| **Port** | `465` (SSL) |
+| **User** | `resend` |
+| **Password** | RESEND_API_KEY value |
+| **Sender Email** | `no-reply@myrecruita.com` |
+| **Sender Name** | `MyRecruita` |
+
+### Domain Verification
+
+Verify `myrecruita.com` domain in Resend: https://resend.com/domains
+
+### Rate Limits (Supabase Dashboard)
+
+Adjust at: Authentication → Rate Limits
+- **Email rate limit per hour**: Increase to 100+
+- **Email rate limit per IP**: Adjust based on traffic
+
+### Password Reset Flow
+
+**Admin Users** (`/admin/login`):
+1. Click "Forgot password?" link below login form
+2. Enter email address
+3. Receive reset email via Resend SMTP
+4. Click link → redirects to `/auth?type=recovery`
+5. Enter new password on the recovery form
+
+**Regular Users** (`/auth`):
+1. Recovery mode detected via `?type=recovery` URL parameter
+2. User enters new password
+3. Password updated via `supabase.auth.updateUser()`
+4. Auto-redirect to dashboard
+
+### Email Templates
+
+Customize in Supabase Dashboard: Authentication → Email Templates
+
+Templates to customize:
+- Magic Link
+- Password Reset
+- Confirmation Email
+
+---
+
+## 26. Changelog
 
 ### Version 2.1 (January 2025)
 
