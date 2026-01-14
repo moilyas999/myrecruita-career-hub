@@ -501,6 +501,155 @@ export type Database = {
         }
         Relationships: []
       }
+      cv_match_history: {
+        Row: {
+          ai_analyzed_count: number | null
+          algo_prescreened_count: number | null
+          created_at: string | null
+          filters_applied: Json | null
+          id: string
+          job_description: string
+          job_id: string | null
+          matched_by: string
+          parsed_requirements: Json | null
+          processing_time_ms: number | null
+          total_candidates_evaluated: number | null
+          weights_used: Json | null
+        }
+        Insert: {
+          ai_analyzed_count?: number | null
+          algo_prescreened_count?: number | null
+          created_at?: string | null
+          filters_applied?: Json | null
+          id?: string
+          job_description: string
+          job_id?: string | null
+          matched_by: string
+          parsed_requirements?: Json | null
+          processing_time_ms?: number | null
+          total_candidates_evaluated?: number | null
+          weights_used?: Json | null
+        }
+        Update: {
+          ai_analyzed_count?: number | null
+          algo_prescreened_count?: number | null
+          created_at?: string | null
+          filters_applied?: Json | null
+          id?: string
+          job_description?: string
+          job_id?: string | null
+          matched_by?: string
+          parsed_requirements?: Json | null
+          processing_time_ms?: number | null
+          total_candidates_evaluated?: number | null
+          weights_used?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cv_match_history_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cv_match_results: {
+        Row: {
+          ai_explanation: string | null
+          ai_score: number | null
+          algorithmic_score: number | null
+          career_trajectory_fit: string | null
+          created_at: string | null
+          cv_id: string
+          final_score: number
+          fit_concerns: string[] | null
+          id: string
+          interview_questions: string[] | null
+          match_history_id: string
+          outcome: string | null
+          outcome_at: string | null
+          outcome_notes: string | null
+          overqualification_risk: string | null
+          salary_expectation_fit: string | null
+          shortlisted: boolean | null
+          shortlisted_at: string | null
+          skills_matched: string[] | null
+          skills_missing: string[] | null
+          skills_partial: string[] | null
+          strengths: string[] | null
+          submitted_at: string | null
+          submitted_to_client: boolean | null
+        }
+        Insert: {
+          ai_explanation?: string | null
+          ai_score?: number | null
+          algorithmic_score?: number | null
+          career_trajectory_fit?: string | null
+          created_at?: string | null
+          cv_id: string
+          final_score: number
+          fit_concerns?: string[] | null
+          id?: string
+          interview_questions?: string[] | null
+          match_history_id: string
+          outcome?: string | null
+          outcome_at?: string | null
+          outcome_notes?: string | null
+          overqualification_risk?: string | null
+          salary_expectation_fit?: string | null
+          shortlisted?: boolean | null
+          shortlisted_at?: string | null
+          skills_matched?: string[] | null
+          skills_missing?: string[] | null
+          skills_partial?: string[] | null
+          strengths?: string[] | null
+          submitted_at?: string | null
+          submitted_to_client?: boolean | null
+        }
+        Update: {
+          ai_explanation?: string | null
+          ai_score?: number | null
+          algorithmic_score?: number | null
+          career_trajectory_fit?: string | null
+          created_at?: string | null
+          cv_id?: string
+          final_score?: number
+          fit_concerns?: string[] | null
+          id?: string
+          interview_questions?: string[] | null
+          match_history_id?: string
+          outcome?: string | null
+          outcome_at?: string | null
+          outcome_notes?: string | null
+          overqualification_risk?: string | null
+          salary_expectation_fit?: string | null
+          shortlisted?: boolean | null
+          shortlisted_at?: string | null
+          skills_matched?: string[] | null
+          skills_missing?: string[] | null
+          skills_partial?: string[] | null
+          strengths?: string[] | null
+          submitted_at?: string | null
+          submitted_to_client?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cv_match_results_cv_id_fkey"
+            columns: ["cv_id"]
+            isOneToOne: false
+            referencedRelation: "cv_submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_match_results_match_history_id_fkey"
+            columns: ["match_history_id"]
+            isOneToOne: false
+            referencedRelation: "cv_match_history"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cv_submissions: {
         Row: {
           added_by: string | null
@@ -1224,6 +1373,22 @@ export type Database = {
       generate_job_reference: { Args: never; Returns: string }
       generate_talent_reference: { Args: never; Returns: string }
       get_admin_role: { Args: { user_id: string }; Returns: string }
+      get_match_success_rate: {
+        Args: { days_back?: number; recruiter_id: string }
+        Returns: {
+          placements: number
+          success_rate: number
+          total_matches: number
+        }[]
+      }
+      get_successful_skill_patterns: {
+        Args: { min_placements?: number }
+        Returns: {
+          avg_final_score: number
+          placements: number
+          skill_combination: string[]
+        }[]
+      }
       get_user_permissions: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["permission_type"][]
