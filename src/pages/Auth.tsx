@@ -318,7 +318,8 @@ const Auth = () => {
     try {
       const redirectUrl = `${window.location.origin}/dashboard`;
       
-      const { error } = await supabase.auth.signUp({
+      // Step 1: Create user in Supabase
+      const { error: signUpError } = await supabase.auth.signUp({
         email: signupEmail,
         password: signupPassword,
         options: {
@@ -329,14 +330,28 @@ const Auth = () => {
         }
       });
 
-      if (error) {
-        if (error.message.includes('User already registered')) {
+      if (signUpError) {
+        if (signUpError.message.includes('User already registered')) {
           toast.error('An account with this email already exists. Please login instead.');
           setActiveTab('login');
         } else {
-          toast.error(error.message);
+          toast.error(signUpError.message);
         }
         return;
+      }
+
+      // Step 2: Send branded confirmation email via Resend
+      const { data, error: emailError } = await supabase.functions.invoke('send-auth-email', {
+        body: {
+          email: signupEmail,
+          type: 'signup_confirmation',
+          redirectUrl: redirectUrl,
+        }
+      });
+
+      if (emailError || data?.error) {
+        // User was created but email failed - still show success as they can verify later
+        console.error('Failed to send confirmation email:', emailError || data?.error);
       }
 
       toast.success('Account created! Please check your email to verify your account.');

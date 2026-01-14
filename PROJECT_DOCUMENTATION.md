@@ -2541,7 +2541,7 @@ supabase/
 
 ### Overview
 
-All authentication emails (magic links, OTP codes, password resets, email confirmations) are sent **directly via Resend API** through an edge function, completely bypassing Supabase's built-in email system for maximum reliability and control.
+All authentication emails (magic links, OTP codes, password resets, signup confirmations) are sent **directly via Resend API** through an edge function, completely bypassing Supabase's built-in email system for maximum reliability and control.
 
 ### Architecture
 
@@ -2555,6 +2555,8 @@ User Request → Frontend → Edge Function (send-auth-email) → Resend API →
 
 **Location**: `supabase/functions/send-auth-email/index.ts`
 
+**Config**: `verify_jwt = false` (allows unauthenticated users to request emails)
+
 **Endpoint**: Invoked via `supabase.functions.invoke('send-auth-email', { body: {...} })`
 
 **Supported Email Types**:
@@ -2567,11 +2569,24 @@ User Request → Frontend → Edge Function (send-auth-email) → Resend API →
 **Request Body**:
 ```typescript
 {
-  email: string;           // Recipient email
-  type: 'magic_link' | 'password_reset' | 'signup_confirmation';
-  redirectUrl?: string;    // Where to redirect after action
+  email: string;           // Recipient email (required, validated)
+  type: 'magic_link' | 'password_reset' | 'signup_confirmation'; // Required
+  redirectUrl: string;     // REQUIRED - Where to redirect after action
 }
 ```
+
+### Input Validation
+
+The edge function validates all inputs:
+- **Email**: Must be a valid email format
+- **Type**: Must be one of the valid types listed above
+- **redirectUrl**: REQUIRED - prevents broken redirect URLs
+
+### OTP Handling
+
+- OTP codes are generated exclusively by Supabase via `supabase.auth.admin.generateLink()`
+- No fallback random OTP generation - ensures codes are always verifiable
+- If Supabase fails to generate an OTP, the function returns a 500 error
 
 ### Secret Configuration
 
@@ -2611,13 +2626,21 @@ All emails sent from: `MyRecruita <no-reply@myrecruita.com>`
 ### Magic Link Flow
 
 1. User enters email on `/auth` → clicks "Send Magic Link"
-2. Frontend calls `send-auth-email` edge function
+2. Frontend calls `send-auth-email` edge function with `redirectUrl`
 3. Edge function uses `supabase.auth.admin.generateLink()` to create token
 4. Resend sends email with OTP code + clickable link
 5. User can either:
    - Enter 6-digit OTP on page
    - Click magic link in email
 6. Verified via `supabase.auth.verifyOtp()`
+
+### Signup Flow
+
+1. User fills signup form on `/auth` or admin creates user
+2. Frontend calls `supabase.auth.signUp()` to create user
+3. Frontend calls `send-auth-email` with `type: 'signup_confirmation'`
+4. Branded confirmation email sent via Resend
+5. User clicks link → redirects to `redirectUrl`
 
 ### Benefits Over Supabase SMTP
 
@@ -2626,6 +2649,7 @@ All emails sent from: `MyRecruita <no-reply@myrecruita.com>`
 - ✅ **Better deliverability** via Resend's infrastructure
 - ✅ **No Supabase rate limits** - only Resend limits apply
 - ✅ **Easier debugging** via edge function logs
+- ✅ **Consistent branding** across all email types
 
 
 ---
