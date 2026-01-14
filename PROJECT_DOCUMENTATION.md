@@ -9,32 +9,44 @@
 
 ## Table of Contents
 
+### Core Documentation
 1. [Executive Summary & Project Vision](#1-executive-summary--project-vision)
 2. [Application Identity & Branding](#2-application-identity--branding)
 3. [Technology Stack](#3-technology-stack)
 4. [Architecture Overview](#4-architecture-overview)
 5. [Database Schema](#5-database-schema)
 6. [Permission & Role System](#6-permission--role-system)
-7. [Supabase Edge Functions](#7-supabase-edge-functions)
-8. [AI Features & Capabilities](#8-ai-features--capabilities)
-9. [Application Routes & Navigation](#9-application-routes--navigation)
-10. [Admin Dashboard](#10-admin-dashboard)
-11. [CV Management System](#11-cv-management-system)
-12. [Candidate Pipeline](#12-candidate-pipeline)
-13. [Job Management System](#13-job-management-system)
-14. [Blog & Content Management](#14-blog--content-management)
-15. [Notification System](#15-notification-system)
-16. [PWA & Progressive Features](#16-pwa--progressive-features)
-17. [SEO & Structured Data](#17-seo--structured-data)
-18. [Public-Facing Features](#18-public-facing-features)
-19. [Authentication & Security](#19-authentication--security)
-20. [Key Hooks & Utilities](#20-key-hooks--utilities)
-21. [Component Patterns & Best Practices](#21-component-patterns--best-practices)
-22. [Development Guidelines](#22-development-guidelines)
-23. [Feature Implementation Checklist](#23-feature-implementation-checklist)
-24. [Future Roadmap](#24-future-roadmap)
-25. [Changelog](#25-changelog)
-26. [Knowledge Base Instructions](#26-knowledge-base-instructions)
+
+### Industry Standards & Best Practices (NEW)
+7. [Personas & Role Boundaries](#7-personas--role-boundaries-industry-standard)
+8. [User Journeys (Critical Flows)](#8-user-journeys-critical-flows)
+9. [UX/UI Rules](#9-uxui-rules-industry-standards)
+10. [Engineering Standards](#10-engineering-standards-best-practices)
+11. [Data & Security](#11-data--security-industry-standards)
+
+### Technical Implementation
+12. [Supabase Edge Functions](#12-supabase-edge-functions)
+13. [AI Features & Capabilities](#13-ai-features--capabilities)
+14. [Application Routes & Navigation](#14-application-routes--navigation)
+15. [Admin Dashboard](#15-admin-dashboard)
+16. [CV Management System](#16-cv-management-system)
+17. [Candidate Pipeline](#17-candidate-pipeline)
+18. [Job Management System](#18-job-management-system)
+19. [Blog & Content Management](#19-blog--content-management)
+20. [Notification System](#20-notification-system)
+21. [PWA & Progressive Features](#21-pwa--progressive-features)
+22. [SEO & Structured Data](#22-seo--structured-data)
+23. [Public-Facing Features](#23-public-facing-features)
+24. [Authentication & Security](#24-authentication--security)
+25. [Key Hooks & Utilities](#25-key-hooks--utilities)
+
+### Development & Maintenance
+26. [Component Patterns](#26-component-patterns)
+27. [Development Guidelines](#27-development-guidelines)
+28. [Feature Implementation Checklist](#28-feature-implementation-checklist)
+29. [Future Roadmap](#29-future-roadmap)
+30. [Changelog](#30-changelog)
+31. [Knowledge Base Instructions](#31-knowledge-base-instructions)
 
 ---
 
@@ -438,7 +450,7 @@ type PermissionType =
 | **cv_uploader** | Data entry personnel | cv.create only |
 | **viewer** | Read-only stakeholders | View permissions for CV, Jobs, Talent, Pipeline |
 
-### Role-Permission Matrix
+### Complete Role-Permission Matrix
 
 | Permission | Admin | Recruiter | Account Mgr | Marketing | CV Uploader | Viewer |
 |------------|:-----:|:---------:|:-----------:|:---------:|:-----------:|:------:|
@@ -451,16 +463,30 @@ type PermissionType =
 | jobs.create | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
 | jobs.update | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
 | jobs.delete | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| applications.view | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| applications.manage | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| talent.view | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+| talent.create | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| talent.update | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| talent.delete | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
 | pipeline.view | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ |
 | pipeline.create | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
 | pipeline.update | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
 | pipeline.delete | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| submissions.view | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| submissions.delete | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | blog.view | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
 | blog.create | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
 | blog.update | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
 | blog.delete | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
-| staff.* | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| settings.* | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| analytics.view | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
+| staff.view | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| staff.create | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| staff.update | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| staff.delete | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| settings.view | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| settings.update | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| notifications.manage | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 ### Permission Checking in Code
 
@@ -484,7 +510,883 @@ if (isFullAdmin) {
 
 ---
 
-## 7. Supabase Edge Functions
+## 7. Personas & Role Boundaries (Industry Standard)
+
+### 7.1 Detailed Persona Definitions
+
+#### Administrator (Full Access)
+| Attribute | Details |
+|-----------|---------|
+| **Access Level** | Full System Access |
+| **Primary Functions** | User management, system configuration, full data access, security oversight |
+| **Key Permissions** | All 28 permissions |
+| **Can Access** | Every module, all data, system settings, audit logs |
+| **Cannot Do** | N/A - unrestricted access |
+| **Notification Defaults** | All events enabled |
+
+#### Recruiter (High Access)
+| Attribute | Details |
+|-----------|---------|
+| **Access Level** | High - Core Operations |
+| **Primary Functions** | CV management, job posting, candidate pipeline, talent management |
+| **Key Permissions** | CV (full), Jobs (full), Pipeline (create/update/view), Talent (full), Analytics (view) |
+| **Can Access** | CV database, job listings, pipeline board, talent profiles, analytics |
+| **Cannot Do** | Manage staff/admins, modify system settings, delete pipeline entries, access blog CMS |
+| **Notification Defaults** | cv_submission, job_application, employer_job_submission, talent_request, permission_changed, system_updates |
+
+#### Account Manager (Medium Access)
+| Attribute | Details |
+|-----------|---------|
+| **Access Level** | Medium - Client-Focused |
+| **Primary Functions** | Client relationship management, submission tracking, talent viewing |
+| **Key Permissions** | Jobs (view), Applications (view), Talent (view), Submissions (view), Analytics (view), Pipeline (view) |
+| **Can Access** | View-only for jobs, talent, submissions, pipeline, analytics |
+| **Cannot Do** | Create/modify CVs, create/modify jobs, manage pipeline, access blog, manage staff |
+| **Notification Defaults** | contact_submission, career_partner_request, employer_job_submission, talent_request, permission_changed, system_updates, weekly_digest |
+
+#### Marketing (Limited Access)
+| Attribute | Details |
+|-----------|---------|
+| **Access Level** | Limited - Content Focus |
+| **Primary Functions** | Blog management, content creation, employer branding |
+| **Key Permissions** | Blog (full), Jobs (view), Talent (view), Analytics (view) |
+| **Can Access** | Blog CMS, view job listings, view talent profiles, marketing analytics |
+| **Cannot Do** | Access CV database, manage applications, modify pipeline, manage staff |
+| **Notification Defaults** | blog_published, permission_changed, system_updates |
+
+#### CV Uploader (Minimal Access)
+| Attribute | Details |
+|-----------|---------|
+| **Access Level** | Minimal - Data Entry Only |
+| **Primary Functions** | Upload and create CV entries |
+| **Key Permissions** | cv.create only |
+| **Can Access** | CV creation form, bulk import (own uploads only for 3 days) |
+| **Cannot Do** | View other CVs, export data, delete CVs, access any other module |
+| **Notification Defaults** | cv_submission, permission_changed, system_updates |
+| **Special Restrictions** | Time-limited access to own uploads (72 hours visibility) |
+
+#### Viewer (Read-Only Access)
+| Attribute | Details |
+|-----------|---------|
+| **Access Level** | Read-Only - Stakeholder View |
+| **Primary Functions** | Observe data, review metrics, audit compliance |
+| **Key Permissions** | cv.view, jobs.view, talent.view, pipeline.view |
+| **Can Access** | Read-only view of CVs, jobs, talent, pipeline |
+| **Cannot Do** | Create, modify, or delete any data; export data; access settings |
+| **Notification Defaults** | permission_changed, system_updates |
+
+### 7.2 Role Boundaries - Explicit Restrictions
+
+> **Security Principle**: Each role has explicitly defined boundaries to enforce least-privilege access.
+
+| Role | Explicitly CANNOT Do |
+|------|---------------------|
+| **Recruiter** | ❌ Create/delete staff accounts ❌ Modify system settings ❌ Delete pipeline entries ❌ Manage blog content ❌ Access submissions module directly |
+| **Account Manager** | ❌ Create/modify CV entries ❌ Post new jobs ❌ Move pipeline stages ❌ Manage blog ❌ View CV files ❌ Export any data |
+| **Marketing** | ❌ Access CV database ❌ View applications ❌ Manage pipeline ❌ Create jobs ❌ Manage staff ❌ View submissions |
+| **CV Uploader** | ❌ View CVs older than 3 days ❌ View other users' uploads ❌ Delete any CV ❌ Export CV data ❌ Access any module except bulk import |
+| **Viewer** | ❌ Modify ANY data ❌ Export ANY data ❌ Access settings ❌ Access analytics ❌ Create submissions |
+
+### 7.3 Permission Enforcement Layers
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    FRONTEND (UI Layer)                       │
+│  • usePermissions() hook checks before rendering            │
+│  • hasPermission() guards action buttons                    │
+│  • Route-level guards in AdminDashboard                     │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│                    BACKEND (API Layer)                       │
+│  • Edge Functions validate JWT + check permissions          │
+│  • Service functions verify authorization                   │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────┐
+│                   DATABASE (RLS Layer)                       │
+│  • Row Level Security policies on ALL tables                │
+│  • is_admin(), has_permission() SQL functions               │
+│  • SECURITY DEFINER functions with SET search_path          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 8. User Journeys (Critical Flows)
+
+### 8.1 Journey 1: Public User CV Submission
+
+```mermaid
+graph TD
+    A[1. User visits /submit-cv] --> B[2. Fills form: name, email, phone]
+    B --> C[3. Uploads CV file PDF/DOC/DOCX max 5MB]
+    C --> D[4. Clicks Submit]
+    D --> E[5. Client-side validation runs]
+    E --> F{Validation passes?}
+    F -->|No| G[Show error messages]
+    G --> B
+    F -->|Yes| H[6. File uploads to Supabase Storage]
+    H --> I[7. Record created in cv_submissions]
+    I --> J[8. parse-cv Edge Function triggered]
+    J --> K[9. AI extracts data + scores CV]
+    K --> L[10. Database record updated]
+    L --> M[11. Admin notifications sent]
+    M --> N[12. User redirected to /thank-you]
+```
+
+**Validation Rules**:
+| Field | Validation | Error Message |
+|-------|------------|---------------|
+| Name | Required, 2-100 chars | "Name is required" |
+| Email | Required, valid format | "Enter a valid email address" |
+| Phone | Required, valid format | "Enter a valid phone number" |
+| CV File | Required, PDF/DOC/DOCX, max 5MB | "File must be PDF, DOC, or DOCX under 5MB" |
+| Consent | Required checkbox | "You must accept the privacy policy" |
+
+**Success Criteria**: Record created in database, file stored, parsing initiated, notifications sent.
+
+### 8.2 Journey 2: Admin CV-to-Pipeline Flow
+
+```mermaid
+graph TD
+    A[1. Admin logs into /admin-login] --> B[2. Credentials verified]
+    B --> C[3. admin_profiles checked]
+    C --> D[4. Permissions loaded]
+    D --> E[5. Navigate to CV Database tab]
+    E --> F[6. Search/filter candidates]
+    F --> G[7. Click Add to Pipeline on CV card]
+    G --> H[8. Select target Job from dropdown]
+    H --> I[9. Choose initial stage sourced/screening]
+    I --> J[10. Add optional notes]
+    J --> K[11. Click Confirm]
+    K --> L[12. Pipeline entry created]
+    L --> M[13. Activity logged]
+    M --> N[14. Toast confirmation shown]
+```
+
+**Permission Requirements**:
+- `cv.view` - View CV cards
+- `pipeline.create` - Add to pipeline button visible
+- `pipeline.view` - See pipeline dropdown options
+
+**Error Handling**:
+- Duplicate check: Same CV + Job combination not allowed
+- Job status check: Cannot add to expired/filled jobs
+
+### 8.3 Journey 3: Bulk CV Import
+
+```mermaid
+graph TD
+    A[1. Navigate to Bulk Import tab] --> B[2. Drag/drop files max 50]
+    B --> C[3. Files validated client-side]
+    C --> D{Valid files?}
+    D -->|No| E[Show file errors]
+    D -->|Yes| F[4. Click Process All]
+    F --> G[5. Files upload to cv-uploads bucket]
+    G --> H[6. Session created status pending]
+    H --> I[7. File records created]
+    I --> J[8. process-bulk-import triggered]
+    J --> K[9. Background processing begins]
+    K --> L[10. Realtime updates via Supabase]
+    L --> M[11. Progress bar updates]
+    M --> N{All files processed?}
+    N -->|No| K
+    N -->|Yes| O[12. Session marked complete]
+    O --> P[13. Summary displayed]
+    P --> Q[14. Admin notified]
+```
+
+**Session Statuses**:
+| Status | Description |
+|--------|-------------|
+| `pending` | Awaiting processing |
+| `processing` | Currently being processed |
+| `completed` | All files processed successfully |
+| `completed_with_errors` | Some files failed |
+| `failed` | Critical error stopped processing |
+
+### 8.4 Journey 4: Job Posting by Recruiter
+
+```mermaid
+graph TD
+    A[1. Navigate to Jobs tab] --> B[2. Check jobs.create permission]
+    B --> C{Has permission?}
+    C -->|No| D[Hide Add Job button]
+    C -->|Yes| E[3. Click Add Job button]
+    E --> F[4. Fill job form]
+    F --> G[5. Validate required fields]
+    G --> H{Valid?}
+    H -->|No| I[Show validation errors]
+    H -->|Yes| J[6. Submit to database]
+    J --> K[7. Reference auto-generated MR-2025-XXX]
+    K --> L[8. Job status set to active]
+    L --> M[9. Job visible on public /jobs page]
+    M --> N[10. Success toast shown]
+```
+
+**Required Fields**:
+- Title, Location, Sector, Description, Requirements
+
+**Auto-Generated Fields**:
+- `reference_id`: MR-YYYY-NNN format
+- `created_at`, `updated_at`: Timestamps
+- `status`: Defaults to "active"
+
+### 8.5 Journey 5: Staff Onboarding
+
+```mermaid
+graph TD
+    A[1. Admin navigates to Team tab] --> B[2. Click Add Admin]
+    B --> C[3. Enter email address]
+    C --> D[4. Select role from dropdown]
+    D --> E[5. Click Create]
+    E --> F[6. create-admin-user Edge Function called]
+    F --> G[7. Auth user created in Supabase]
+    G --> H[8. admin_profiles record created]
+    H --> I[9. assign_role_permissions DB function called]
+    I --> J[10. Permission records created]
+    J --> K[11. notification_preferences created]
+    K --> L[12. Welcome notification sent]
+    L --> M[13. New admin can log in]
+```
+
+**Role-Based Permission Assignment**:
+```sql
+-- Triggered by assign_role_permissions(_user_id, _role)
+-- Automatically assigns all default permissions for the role
+```
+
+### 8.6 Journey 6: Pipeline Candidate Progression
+
+```mermaid
+graph TD
+    A[sourced] -->|Screen CV| B[screening]
+    B -->|Approve| C[shortlisted]
+    B -->|Reject| H[rejected]
+    C -->|Schedule Interview| D[interviewing]
+    C -->|Reject| H
+    D -->|Positive Feedback| E[offered]
+    D -->|Reject| H
+    D -->|Candidate Declines| I[withdrawn]
+    E -->|Accept Offer| F[placed]
+    E -->|Decline Offer| I
+    E -->|Reject| H
+```
+
+**Stage Transition Rules**:
+| From Stage | Allowed Transitions |
+|------------|---------------------|
+| sourced | screening, rejected, withdrawn |
+| screening | shortlisted, rejected, withdrawn |
+| shortlisted | interviewing, rejected, withdrawn |
+| interviewing | offered, rejected, withdrawn |
+| offered | placed, rejected, withdrawn |
+| placed | (terminal - no transitions) |
+| rejected | (terminal - no transitions) |
+| withdrawn | (terminal - no transitions) |
+
+**Activity Logging**:
+Every transition creates a `pipeline_activity` record with:
+- `action`: "stage_change"
+- `from_stage`: Previous stage
+- `to_stage`: New stage
+- `created_by`: User ID who made change
+- `note`: Optional note
+
+---
+
+## 9. UX/UI Rules (Industry Standards)
+
+### 9.1 Layout Rules
+
+| Area | Rule | Implementation |
+|------|------|----------------|
+| **Public Navigation** | Fixed top on scroll | `position: sticky`, `top-0`, `z-50` |
+| **Admin Navigation** | Collapsible sidebar | `SidebarProvider`, `Collapsible` components |
+| **Content Max Width** | Max 7xl (1280px) for readability | `max-w-7xl mx-auto` |
+| **Content Padding** | Consistent horizontal padding | `px-4 sm:px-6 lg:px-8` |
+| **Section Spacing** | Vertical rhythm 16-24 units | `py-16` or `py-24` between sections |
+| **Card Spacing** | Consistent gap in grids | `gap-4` or `gap-6` |
+
+### 9.2 Responsive Breakpoints
+
+| Breakpoint | Width | Use Case |
+|------------|-------|----------|
+| `sm` | 640px | Mobile landscape, tablets portrait |
+| `md` | 768px | Tablets, small laptops |
+| `lg` | 1024px | Laptops, desktops |
+| `xl` | 1280px | Large desktops |
+| `2xl` | 1536px | Ultra-wide monitors |
+
+**Mobile-First Pattern**:
+```tsx
+// ✅ Correct: Mobile first, scale up
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+
+// ❌ Incorrect: Desktop first
+<div className="grid grid-cols-3 md:grid-cols-2 sm:grid-cols-1">
+```
+
+### 9.3 Navigation Rules
+
+**Public Site**:
+- Maximum 8 items in horizontal nav
+- Mobile: Hamburger menu with slide-out drawer
+- Active state: Underline or color change
+- Logo always links to home
+
+**Admin Dashboard**:
+- Sidebar with collapsible groups
+- Current tab highlighted
+- Breadcrumbs on all pages
+- Tab-based content switching (no page reload)
+
+### 9.4 Component Conventions
+
+| Component | Usage | Notes |
+|-----------|-------|-------|
+| `Card` | Container for content groups | Use `shadow-card` or default shadow |
+| `Button` | Primary actions | Variants: default, destructive, outline, secondary, ghost, link |
+| `Dialog` | Modal forms, confirmations | Max width 2xl, always have close button |
+| `Sheet` | Side panels for details | Use for pipeline details, CV preview |
+| `Toast` | Feedback messages | Success (green), Error (destructive), Info (default) |
+| `Skeleton` | Loading states | Match exact layout dimensions |
+| `Alert` | Inline status messages | Types: default, destructive |
+| `Badge` | Status indicators | Colors match stage/status |
+| `Table` | Data display | Sticky headers, sortable columns |
+
+### 9.5 Color Usage (Semantic Tokens)
+
+```css
+/* MUST USE semantic tokens - never hardcode colors */
+
+/* Primary Actions */
+--primary: 217 91% 60%;           /* Blue - buttons, links, brand */
+--primary-foreground: 0 0% 98%;   /* White text on primary */
+
+/* Accent/Highlight */
+--accent: 43 96% 56%;             /* Gold - CTAs, achievements */
+--accent-foreground: 20 14% 4%;   /* Dark text on accent */
+
+/* Destructive/Error */
+--destructive: 0 84% 60%;         /* Red - delete, errors */
+--destructive-foreground: 0 0% 98%;
+
+/* Muted/Secondary */
+--muted: 210 40% 96%;             /* Light gray background */
+--muted-foreground: 215 16% 47%;  /* Secondary text */
+
+/* Status Colors */
+success: green → Placed, completed
+warning: orange → Attention needed, offered
+info: blue → Active, interviewing
+error: red → Rejected, failed
+```
+
+**Usage Pattern**:
+```tsx
+// ✅ Correct: Semantic tokens
+<div className="bg-background text-foreground border-border">
+<Button className="bg-primary text-primary-foreground">
+
+// ❌ Incorrect: Hardcoded colors
+<div className="bg-white text-black border-gray-200">
+<Button className="bg-blue-600 text-white">
+```
+
+### 9.6 Accessibility Baseline (WCAG 2.1 AA)
+
+| Requirement | Implementation |
+|-------------|----------------|
+| **Skip Links** | `<a href="#main-content" className="sr-only focus:not-sr-only">Skip to content</a>` |
+| **Focus Visible** | `focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2` |
+| **Color Contrast** | 4.5:1 minimum for normal text, 3:1 for large text (18px+) |
+| **Keyboard Navigation** | All interactive elements reachable via Tab key |
+| **Screen Reader Labels** | `aria-label`, `aria-describedby`, `role` attributes on interactive elements |
+| **Motion Preference** | `motion-reduce:animate-none` for users who prefer reduced motion |
+| **Form Labels** | Every `<Input>` has associated `<Label htmlFor>` |
+| **Error States** | `aria-invalid="true"` + `aria-describedby` pointing to error message |
+| **Loading States** | `aria-busy="true"` on loading containers |
+| **Image Alt Text** | Descriptive alt text on all images; decorative images use `alt=""` |
+
+### 9.7 Loading States Pattern
+
+| Context | Implementation |
+|---------|----------------|
+| **Page Load** | Full-screen centered spinner with "Loading..." |
+| **Tab Switch** | `<Suspense fallback={<TabSkeleton />}>` for lazy components |
+| **Data Fetch** | Skeleton cards matching final layout dimensions |
+| **Button Submit** | `disabled={isLoading}` + spinner icon + "Submitting..." text |
+| **Table Load** | Skeleton rows (3-5 rows of skeleton cells) |
+
+```tsx
+// Button loading pattern
+<Button disabled={mutation.isPending}>
+  {mutation.isPending ? (
+    <>
+      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      Saving...
+    </>
+  ) : (
+    "Save Changes"
+  )}
+</Button>
+```
+
+### 9.8 Form UX Standards
+
+| Rule | Implementation |
+|------|----------------|
+| **Inline Validation** | Validate on blur, not on every keystroke |
+| **Error Messages** | Display below field, descriptive text, red color |
+| **Required Indicators** | Asterisk (*) next to required field labels |
+| **Disabled State** | Reduced opacity (50%), cursor-not-allowed |
+| **Success Feedback** | Toast notification + optional redirect |
+| **Form Reset** | Clear form after successful submission |
+| **Confirm Dialogs** | For destructive actions (delete, remove) |
+
+---
+
+## 10. Engineering Standards (Best Practices)
+
+### 10.1 File/Folder Conventions
+
+```
+src/
+├── components/
+│   ├── admin/              # Admin-only components (PascalCase)
+│   │   ├── pipeline/       # Feature sub-modules
+│   │   └── [Feature]Management.tsx  # Management pattern
+│   ├── layout/             # App shell (Navigation, Footer)
+│   ├── SEO/                # SEO-specific components
+│   └── ui/                 # shadcn/ui primitives (lowercase)
+├── hooks/                  # Custom hooks (use*.ts/tsx)
+├── lib/                    # Utilities, configs, constants
+├── pages/                  # Route-level components (PascalCase)
+├── services/               # API service functions
+├── types/                  # TypeScript interfaces/types
+└── integrations/           # Third-party integrations (Supabase)
+
+supabase/
+├── functions/
+│   ├── _shared/           # Shared utilities (underscore prefix)
+│   │   ├── cors.ts        # CORS headers
+│   │   ├── types.ts       # Shared types
+│   │   └── cv-parser.ts   # CV parsing logic
+│   └── [function-name]/   # Individual functions (kebab-case)
+│       └── index.ts       # Entry point (required name)
+└── migrations/            # Database migrations (timestamp prefix)
+```
+
+### 10.2 Naming Conventions
+
+| Entity | Convention | Example |
+|--------|------------|---------|
+| **React Components** | PascalCase | `CVMatchingTool.tsx` |
+| **Component Files** | PascalCase matching export | `SubmissionsManagement.tsx` |
+| **Hooks** | camelCase with `use` prefix | `usePipeline.ts` |
+| **Services** | camelCase | `publicSubmissions.ts` |
+| **Types/Interfaces** | PascalCase | `PipelineEntry`, `CVSubmission` |
+| **Type Files** | lowercase | `pipeline.ts`, `cv.ts` |
+| **Constants** | SCREAMING_SNAKE_CASE | `PERMISSION_CATEGORIES`, `MAX_FILE_SIZE` |
+| **Database Tables** | snake_case | `cv_submissions`, `candidate_pipeline` |
+| **Database Columns** | snake_case | `cv_file_url`, `created_at` |
+| **Edge Functions** | kebab-case | `parse-cv`, `match-cv-to-job` |
+| **Query Keys** | camelCase | `cvSubmissions`, `candidatePipeline` |
+| **CSS Classes** | kebab-case (Tailwind) | `bg-primary`, `text-muted-foreground` |
+| **Event Handlers** | camelCase with `handle` prefix | `handleSubmit`, `handleDelete` |
+
+### 10.3 Error Handling Patterns
+
+**Frontend - React Query Mutations**:
+```typescript
+const mutation = useMutation({
+  mutationFn: async (data: FormData) => {
+    const { error } = await supabase.from('table').insert(data);
+    if (error) throw error;
+    return data;
+  },
+  onSuccess: () => {
+    toast.success('Action completed successfully');
+    queryClient.invalidateQueries({ queryKey: queryKeys.table });
+  },
+  onError: (error: Error) => {
+    console.error('Mutation error:', error);
+    toast.error('Failed: ' + error.message);
+  },
+});
+```
+
+**Frontend - Form Submissions**:
+```typescript
+const handleSubmit = async (formData: FormData) => {
+  setIsSubmitting(true);
+  try {
+    const result = await submitData(formData);
+    if (!result.success) {
+      toast({ 
+        title: 'Error', 
+        description: result.error, 
+        variant: 'destructive' 
+      });
+      return;
+    }
+    toast({ title: 'Success', description: 'Data saved successfully' });
+    navigate('/success');
+  } catch (error) {
+    console.error('Submission error:', error);
+    toast({ 
+      title: 'Unexpected Error', 
+      description: 'Please try again later', 
+      variant: 'destructive' 
+    });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+```
+
+**Backend - Edge Functions**:
+```typescript
+import { corsHeaders, errorResponse } from "../_shared/cors.ts";
+
+Deno.serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    // Validate input
+    const { id } = await req.json();
+    if (!id) {
+      return errorResponse('Missing required field: id', 400);
+    }
+
+    // Business logic...
+    const data = await processData(id);
+
+    return new Response(JSON.stringify({ success: true, data }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Edge function error:', error);
+    return errorResponse(
+      error instanceof Error ? error.message : 'Unknown error occurred',
+      500
+    );
+  }
+});
+```
+
+**Error Boundaries**:
+```typescript
+// Wrap lazy-loaded components
+<AdminErrorBoundary fallbackTitle="Failed to load section">
+  <Suspense fallback={<Skeleton className="h-48" />}>
+    <LazyComponent />
+  </Suspense>
+</AdminErrorBoundary>
+```
+
+### 10.4 Testing Expectations
+
+| Test Type | Scope | Tools | When to Use |
+|-----------|-------|-------|-------------|
+| **Type Checking** | Build-time validation | TypeScript strict mode | Always enabled |
+| **Component Tests** | UI rendering, interactions | Vitest + React Testing Library | Complex components |
+| **Hook Tests** | Custom hook behavior | Vitest + @testing-library/react-hooks | Custom hooks |
+| **Integration Tests** | Full user flows | Playwright | Critical paths |
+| **Edge Function Tests** | API behavior | Deno test runner | All edge functions |
+| **E2E Tests** | Complete user journeys | Playwright | Before releases |
+
+**Test File Naming**:
+- `*.test.ts` or `*.test.tsx` for unit tests
+- `*.spec.ts` for integration tests
+- Place tests next to source files or in `__tests__/` directory
+
+### 10.5 Code Organization Patterns
+
+**Query Keys (Centralized)**:
+```typescript
+// src/lib/queryKeys.ts - ALWAYS use for React Query
+export const queryKeys = {
+  cvSubmissions: ['cv-submissions'] as const,
+  jobs: ['jobs'] as const,
+  candidatePipeline: ['candidate-pipeline'] as const,
+  blogPosts: ['blog-posts'] as const,
+  staffPermissions: ['staff-permissions'] as const,
+};
+```
+
+**Permission-Based Rendering**:
+```typescript
+const { hasPermission } = usePermissions();
+
+// Conditional rendering based on permissions
+{hasPermission('pipeline.create') && (
+  <Button onClick={handleAddToPipeline}>Add to Pipeline</Button>
+)}
+
+// Hide entire sections
+{hasPermission('analytics.view') && <AnalyticsCard />}
+```
+
+**Service Layer Pattern**:
+```typescript
+// src/services/publicSubmissions.ts
+export interface SubmissionResult {
+  success: boolean;
+  data?: CVSubmission;
+  error?: string;
+}
+
+export async function submitCV(data: CVFormData): Promise<SubmissionResult> {
+  try {
+    // Validate
+    const validated = cvSchema.parse(data);
+    
+    // Upload file
+    const fileUrl = await uploadFile(data.cvFile);
+    
+    // Insert record
+    const { data: record, error } = await supabase
+      .from('cv_submissions')
+      .insert({ ...validated, cv_file_url: fileUrl })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    return { success: true, data: record };
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    };
+  }
+}
+```
+
+### 10.6 TypeScript Best Practices
+
+```typescript
+// ✅ Use explicit types for function parameters and returns
+function calculateScore(cv: CVSubmission): ScoreBreakdown {
+  // ...
+}
+
+// ✅ Use type guards for runtime checks
+function isCVSubmission(obj: unknown): obj is CVSubmission {
+  return typeof obj === 'object' && obj !== null && 'email' in obj;
+}
+
+// ✅ Use const assertions for static arrays
+const STAGES = ['sourced', 'screening', 'shortlisted'] as const;
+type Stage = typeof STAGES[number];
+
+// ✅ Use Pick/Omit for partial types
+type CVCreateInput = Omit<CVSubmission, 'id' | 'created_at' | 'cv_score'>;
+
+// ❌ Avoid `any` - use `unknown` and type guards instead
+function processData(data: unknown) {
+  if (isCVSubmission(data)) {
+    // data is now typed as CVSubmission
+  }
+}
+```
+
+---
+
+## 11. Data & Security (Industry Standards)
+
+### 11.1 Data Model Assumptions
+
+| Principle | Implementation |
+|-----------|----------------|
+| **User Identity** | Supabase Auth `auth.uid()` - never trust client-side values |
+| **Admin Identity** | `admin_profiles` table with `user_id` FK to auth.users |
+| **Role Storage** | `admin_profiles.role` column (not stored in JWT or client) |
+| **Permissions** | Separate `staff_permissions` table for granular control |
+| **Soft Deletes** | Not implemented - use status fields instead (e.g., `status = 'inactive'`) |
+| **Audit Trail** | `created_at`, `updated_at` on all tables; `pipeline_activity` for changes |
+| **File Storage** | Supabase Storage with signed URLs, never expose raw paths |
+| **Timestamps** | Always UTC, converted to local time on display |
+
+### 11.2 Authentication Approach
+
+**Public Users (Candidates)**:
+```
+Email + Password → OTP Verification → Session Cookie (httpOnly)
+                                    → user_profiles record created
+```
+
+**Admin Users**:
+```
+Admin Login Page → Verify credentials
+                → Check admin_profiles exists
+                → Load role from admin_profiles
+                → Load permissions from staff_permissions
+                → Redirect to /admin?tab=overview
+```
+
+**Session Management**:
+- Sessions stored server-side (Supabase Auth)
+- Client receives JWT via httpOnly cookie
+- Auto-refresh on token expiry (1 hour)
+- Sign out clears all tokens and session data
+
+### 11.3 Access Control Expectations
+
+**Row Level Security (RLS)** - MANDATORY on ALL tables:
+
+```sql
+-- Pattern 1: Users can only see their own data
+CREATE POLICY "Users can view own data" ON user_profiles
+  FOR SELECT USING (auth.uid() = user_id);
+
+-- Pattern 2: Admins can see everything
+CREATE POLICY "Admins can view all" ON cv_submissions
+  FOR SELECT USING (public.is_admin(auth.uid()));
+
+-- Pattern 3: Permission-based access
+CREATE POLICY "Staff with cv.view permission" ON cv_submissions
+  FOR SELECT USING (public.has_permission(auth.uid(), 'cv.view'));
+
+-- Pattern 4: Public read access (no auth required)
+CREATE POLICY "Public can view active jobs" ON jobs
+  FOR SELECT USING (status = 'active');
+
+-- Pattern 5: Insert with ownership
+CREATE POLICY "Users can insert own applications" ON job_applications
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+```
+
+**Database Helper Functions**:
+```sql
+-- is_admin(uuid): Checks if user has ANY admin role
+-- is_full_admin(uuid): Checks if user has 'admin' role specifically
+-- has_permission(uuid, permission_type): Granular permission check
+-- get_admin_role(uuid): Returns user's role string
+-- get_user_permissions(uuid): Returns array of permissions
+```
+
+### 11.4 Security Practices - MUST DO ✅
+
+| Practice | Implementation |
+|----------|----------------|
+| ✅ **RLS on ALL tables** | No exceptions - every table has RLS enabled |
+| ✅ **Server-side validation** | Edge functions validate all inputs with Zod |
+| ✅ **Parameterized queries** | Supabase SDK prevents SQL injection |
+| ✅ **CORS headers** | Edge functions use shared `corsHeaders` object |
+| ✅ **API keys in secrets** | Supabase Edge Function secrets, never in code |
+| ✅ **Input sanitization** | Never trust user input, validate and escape |
+| ✅ **Error message safety** | Never expose internal errors/stack traces to users |
+| ✅ **HTTPS only** | Enforced by Supabase and hosting |
+| ✅ **Permission checks** | Both frontend (UI) and backend (RLS) |
+| ✅ **Audit logging** | Activity tables for sensitive operations |
+| ✅ **File type validation** | Check MIME type AND extension |
+| ✅ **File size limits** | Enforce maximum file sizes (5MB for CVs) |
+
+### 11.5 Security Practices - NEVER DO ❌
+
+| Anti-Pattern | Why Dangerous | Correct Approach |
+|--------------|---------------|------------------|
+| ❌ Store roles in localStorage | XSS can steal/modify | Fetch from DB on each request |
+| ❌ Check admin status client-side only | Easily bypassed in DevTools | Use RLS + server-side checks |
+| ❌ Hardcode credentials in code | Exposed in source control | Use Supabase secrets |
+| ❌ Disable RLS for convenience | Exposes ALL data to ANY user | Always enable RLS |
+| ❌ Use `SELECT *` without limits | DoS via large responses | Always use `.limit()` |
+| ❌ Expose stack traces to users | Information leakage | Generic error messages |
+| ❌ Store sensitive data in localStorage | XSS vulnerability | Use httpOnly cookies |
+| ❌ Trust file extensions only | Can be spoofed | Validate MIME types server-side |
+| ❌ Allow unlimited file uploads | Storage exhaustion DoS | Enforce size + count limits |
+| ❌ Skip CORS on Edge Functions | Cross-origin attacks | Always include corsHeaders |
+| ❌ Use `SECURITY DEFINER` without `search_path` | SQL injection via path | Always `SET search_path = 'public'` |
+| ❌ Modify auth/storage/realtime schemas | Breaks Supabase internals | Only use public schema |
+| ❌ Log sensitive data | Credential leakage | Never log passwords, tokens |
+| ❌ Use `eval()` or `dangerouslySetInnerHTML` | XSS vulnerabilities | Sanitize or avoid entirely |
+
+### 11.6 File Upload Security
+
+```typescript
+// src/services/fileUpload.ts
+
+// Allowed file types - validate BOTH extension AND MIME type
+const ALLOWED_CV_TYPES = {
+  'application/pdf': ['.pdf'],
+  'application/msword': ['.doc'],
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+};
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+export function validateFile(file: File): { valid: boolean; error?: string } {
+  // Check file size
+  if (file.size > MAX_FILE_SIZE) {
+    return { valid: false, error: 'File must be under 5MB' };
+  }
+  
+  // Check MIME type
+  const allowedMimes = Object.keys(ALLOWED_CV_TYPES);
+  if (!allowedMimes.includes(file.type)) {
+    return { valid: false, error: 'File must be PDF, DOC, or DOCX' };
+  }
+  
+  // Check extension matches MIME type
+  const extension = '.' + file.name.split('.').pop()?.toLowerCase();
+  const validExtensions = ALLOWED_CV_TYPES[file.type as keyof typeof ALLOWED_CV_TYPES];
+  if (!validExtensions?.includes(extension)) {
+    return { valid: false, error: 'File extension does not match content type' };
+  }
+  
+  return { valid: true };
+}
+```
+
+### 11.7 Input Validation Schema Example
+
+```typescript
+// Using Zod for validation - ALWAYS validate before database operations
+import { z } from 'zod';
+
+export const cvSubmissionSchema = z.object({
+  name: z.string()
+    .trim()
+    .min(2, 'Name must be at least 2 characters')
+    .max(100, 'Name must be less than 100 characters'),
+  
+  email: z.string()
+    .trim()
+    .email('Invalid email address')
+    .max(255, 'Email must be less than 255 characters'),
+  
+  phone: z.string()
+    .trim()
+    .min(10, 'Phone number too short')
+    .max(20, 'Phone number too long')
+    .regex(/^[\d\s\-\+\(\)]+$/, 'Invalid phone number format'),
+  
+  message: z.string()
+    .trim()
+    .max(1000, 'Message must be less than 1000 characters')
+    .optional(),
+  
+  consent: z.boolean()
+    .refine(val => val === true, 'You must accept the privacy policy'),
+});
+
+// Usage
+const result = cvSubmissionSchema.safeParse(formData);
+if (!result.success) {
+  return { errors: result.error.flatten().fieldErrors };
+}
+```
+
+---
+
+## 12. Supabase Edge Functions
 
 ### Function Overview (11 Functions)
 
