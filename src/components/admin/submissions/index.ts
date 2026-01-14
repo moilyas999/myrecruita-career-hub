@@ -1,6 +1,7 @@
 export * from './types';
 export * from './hooks/useSubmissionsData';
 export * from './hooks/useSubmissionsActions';
+export { AIProfilePreview } from './AIProfilePreview';
 export { JobApplicationsList } from './JobApplicationsList';
 export { CVSubmissionsList } from './CVSubmissionsList';
 export { CareerRequestsList } from './CareerRequestsList';
