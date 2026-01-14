@@ -1,12 +1,16 @@
 /**
  * Core CV parsing orchestration
  * Single entry point for parsing CVs from any source
+ * Enhanced with validation, fallback extraction, and structured logging
  */
 
 import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import { callAI, extractToolCallArguments, AIMessage, AIMessageContent, AIClientError } from './ai-client.ts';
 import { CV_EXTRACTION_SYSTEM_PROMPT, getExtractionToolSchema, buildExtractionUserPrompt } from './prompts.ts';
 import { downloadFromStorage, downloadFromUrl, extractTextFromDocx, extractTextFromDoc, getFileType, toBase64 } from './file-handler.ts';
+import { validateExtractedData, validateTextQuality, validateEmail, validatePhone, validateName } from './validation.ts';
+import { extractWithFallback, mergeExtractions } from './fallback-parser.ts';
+import { ParseLogger, storeParseAnalytics } from './logger.ts';
 import type { ExtractedCVData, ParseResult, AIProfile, CVScoreBreakdown } from './types.ts';
 
 // ============================================================================
