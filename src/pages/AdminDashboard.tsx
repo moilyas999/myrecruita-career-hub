@@ -19,6 +19,7 @@ const BlogManagement = lazy(() => import('@/components/admin/BlogManagement'));
 const PermissionsManagement = lazy(() => import('@/components/admin/PermissionsManagement'));
 const NotificationSettings = lazy(() => import('@/components/admin/NotificationSettings'));
 const UserNotificationManagement = lazy(() => import('@/components/admin/UserNotificationManagement'));
+const CandidatePipeline = lazy(() => import('@/components/admin/CandidatePipeline'));
 
 // Loading fallback component
 function TabSkeleton() {
@@ -66,6 +67,7 @@ const TAB_CONFIG: Record<string, TabConfig> = {
   'user-notifications': { component: UserNotificationManagement, title: 'User Notifications', description: 'Manage notification preferences for all staff', fullAdminOnly: true },
   'settings': { component: SettingsManagement, title: 'System Settings', description: 'Configure application settings', fullAdminOnly: true },
   'blog': { component: BlogManagement, title: 'Blog Management', description: 'Manage blog posts and content', fullAdminOnly: true },
+  'pipeline': { component: CandidatePipeline, title: 'Candidate Pipeline', description: 'Track candidates through the recruitment process' },
 };
 
 export default function AdminDashboard() {
