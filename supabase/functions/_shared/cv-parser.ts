@@ -7,7 +7,7 @@ import { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import { callAI, extractToolCallArguments, AIMessage, AIMessageContent, AIClientError } from './ai-client.ts';
 import { CV_EXTRACTION_SYSTEM_PROMPT, getExtractionToolSchema, buildExtractionUserPrompt } from './prompts.ts';
 import { downloadFromStorage, downloadFromUrl, extractTextFromDocx, extractTextFromDoc, getFileType, toBase64 } from './file-handler.ts';
-import type { ExtractedCVData, ParseResult } from './types.ts';
+import type { ExtractedCVData, ParseResult, AIProfile, CVScoreBreakdown } from './types.ts';
 
 // ============================================================================
 // Types
@@ -182,8 +182,69 @@ async function prepareAIMessages(
 
 /**
  * Validate and clean extracted data, ensuring all required fields have values
+ * Aligned with frontend expectations for AIProfile and CVScoreBreakdown
  */
 function validateAndCleanData(data: ExtractedCVData): ExtractedCVData {
+  // Default AI profile structure (aligned with frontend)
+  const defaultAIProfile: AIProfile = {
+    summary_for_matching: '',
+    key_achievements: [],
+    hard_skills: [],
+    soft_skills: [],
+    certifications: [],
+    industries: [],
+    experience_years: 0,
+    seniority: 'Mid-Level',
+    education: {
+      level: 'Other',
+      field: '',
+      institution: ''
+    },
+    ideal_roles: [],
+    career_progression: ''
+  };
+
+  // Default score breakdown structure (aligned with frontend)
+  const defaultScoreBreakdown: CVScoreBreakdown = {
+    completeness: { score: 10, max: 20, notes: 'Not evaluated' },
+    skills_relevance: { score: 10, max: 20, notes: 'Not evaluated' },
+    experience_depth: { score: 12, max: 25, notes: 'Not evaluated' },
+    achievements: { score: 8, max: 15, notes: 'Not evaluated' },
+    education: { score: 5, max: 10, notes: 'Not evaluated' },
+    presentation: { score: 5, max: 10, notes: 'Not evaluated' },
+    summary: 'CV has not been fully evaluated.'
+  };
+
+  // Clean AI profile
+  const aiProfile: AIProfile = {
+    summary_for_matching: data.ai_profile?.summary_for_matching || '',
+    key_achievements: Array.isArray(data.ai_profile?.key_achievements) ? data.ai_profile.key_achievements : [],
+    hard_skills: Array.isArray(data.ai_profile?.hard_skills) ? data.ai_profile.hard_skills : [],
+    soft_skills: Array.isArray(data.ai_profile?.soft_skills) ? data.ai_profile.soft_skills : [],
+    certifications: Array.isArray(data.ai_profile?.certifications) ? data.ai_profile.certifications : [],
+    industries: Array.isArray(data.ai_profile?.industries) ? data.ai_profile.industries : [],
+    experience_years: typeof data.ai_profile?.experience_years === 'number' ? data.ai_profile.experience_years : (data.years_experience || 0),
+    seniority: data.ai_profile?.seniority || data.seniority_level || 'Mid-Level',
+    education: {
+      level: data.ai_profile?.education?.level || data.education_level || 'Other',
+      field: data.ai_profile?.education?.field || '',
+      institution: data.ai_profile?.education?.institution || ''
+    },
+    ideal_roles: Array.isArray(data.ai_profile?.ideal_roles) ? data.ai_profile.ideal_roles : [],
+    career_progression: data.ai_profile?.career_progression || ''
+  };
+
+  // Clean score breakdown
+  const scoreBreakdown: CVScoreBreakdown = {
+    completeness: data.cv_score_breakdown?.completeness || defaultScoreBreakdown.completeness,
+    skills_relevance: data.cv_score_breakdown?.skills_relevance || defaultScoreBreakdown.skills_relevance,
+    experience_depth: data.cv_score_breakdown?.experience_depth || defaultScoreBreakdown.experience_depth,
+    achievements: data.cv_score_breakdown?.achievements || defaultScoreBreakdown.achievements,
+    education: data.cv_score_breakdown?.education || defaultScoreBreakdown.education,
+    presentation: data.cv_score_breakdown?.presentation || defaultScoreBreakdown.presentation,
+    summary: data.cv_score_breakdown?.summary || defaultScoreBreakdown.summary
+  };
+
   return {
     // Required fields with fallbacks
     name: data.name?.trim() || 'Unknown',
@@ -202,29 +263,12 @@ function validateAndCleanData(data: ExtractedCVData): ExtractedCVData {
     experience_summary: data.experience_summary?.trim() || '',
     education_level: data.education_level || 'Other',
     
-    // AI profile with defaults
-    ai_profile: {
-      professional_summary: data.ai_profile?.professional_summary || '',
-      key_achievements: data.ai_profile?.key_achievements || [],
-      hard_skills: data.ai_profile?.hard_skills || [],
-      soft_skills: data.ai_profile?.soft_skills || [],
-      certifications: data.ai_profile?.certifications || [],
-      languages: data.ai_profile?.languages || [],
-      ideal_roles: data.ai_profile?.ideal_roles || [],
-      career_trajectory: data.ai_profile?.career_trajectory || '',
-      unique_value_proposition: data.ai_profile?.unique_value_proposition || ''
-    },
+    // AI profile (aligned with frontend)
+    ai_profile: aiProfile,
     
-    // Scoring with defaults
+    // Scoring (aligned with frontend)
     cv_score: typeof data.cv_score === 'number' ? Math.min(100, Math.max(0, data.cv_score)) : 50,
-    cv_score_breakdown: {
-      completeness: data.cv_score_breakdown?.completeness || { score: 10, notes: 'Not evaluated' },
-      skills_depth: data.cv_score_breakdown?.skills_depth || { score: 10, notes: 'Not evaluated' },
-      experience_quality: data.cv_score_breakdown?.experience_quality || { score: 12, notes: 'Not evaluated' },
-      achievements: data.cv_score_breakdown?.achievements || { score: 8, notes: 'Not evaluated' },
-      education: data.cv_score_breakdown?.education || { score: 5, notes: 'Not evaluated' },
-      presentation: data.cv_score_breakdown?.presentation || { score: 5, notes: 'Not evaluated' }
-    }
+    cv_score_breakdown: scoreBreakdown
   };
 }
 
