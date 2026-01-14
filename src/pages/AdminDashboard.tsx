@@ -20,6 +20,9 @@ const PermissionsManagement = lazy(() => import('@/components/admin/PermissionsM
 const NotificationSettings = lazy(() => import('@/components/admin/NotificationSettings'));
 const UserNotificationManagement = lazy(() => import('@/components/admin/UserNotificationManagement'));
 const CandidatePipeline = lazy(() => import('@/components/admin/CandidatePipeline'));
+const MyWorkDashboard = lazy(() => import('@/components/admin/MyWorkDashboard'));
+const MyActivityLog = lazy(() => import('@/components/admin/MyActivityLog'));
+const TeamActivityLog = lazy(() => import('@/components/admin/TeamActivityLog'));
 
 // Loading fallback component
 function TabSkeleton() {
@@ -48,6 +51,9 @@ interface TabConfig {
 
 const TAB_CONFIG: Record<string, TabConfig> = {
   '': { component: DashboardOverview, title: 'Dashboard', description: 'Overview of your recruitment pipeline' },
+  'my-work': { component: MyWorkDashboard, title: 'My Work', description: 'Your assigned work and contributions' },
+  'my-activity': { component: MyActivityLog, title: 'My Activity', description: 'Track your recent actions' },
+  'team-activity': { component: TeamActivityLog, title: 'Team Activity', description: 'Monitor all staff actions', fullAdminOnly: true },
   'stats': { component: StatsDashboard, title: 'Analytics', description: 'View detailed statistics and insights', fullAdminOnly: true },
   'cv-match': { component: CVMatchingTool, title: 'AI CV Matching', description: 'Find best candidates for a job description', fullAdminOnly: true },
   'jobs': { component: JobsManagement, title: 'Jobs Management', description: 'Manage job postings and listings', fullAdminOnly: true },

@@ -489,6 +489,8 @@ export type Database = {
           message: string | null
           name: string
           phone: string
+          processed_at: string | null
+          processed_by: string | null
           scored_at: string | null
           sector: string | null
           seniority_level: string | null
@@ -514,6 +516,8 @@ export type Database = {
           message?: string | null
           name: string
           phone: string
+          processed_at?: string | null
+          processed_by?: string | null
           scored_at?: string | null
           sector?: string | null
           seniority_level?: string | null
@@ -539,6 +543,8 @@ export type Database = {
           message?: string | null
           name?: string
           phone?: string
+          processed_at?: string | null
+          processed_by?: string | null
           scored_at?: string | null
           sector?: string | null
           seniority_level?: string | null
@@ -800,8 +806,10 @@ export type Database = {
       }
       jobs: {
         Row: {
+          assigned_to: string | null
           benefits: string | null
           created_at: string
+          created_by: string | null
           description: string
           id: string
           location: string
@@ -814,8 +822,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_to?: string | null
           benefits?: string | null
           created_at?: string
+          created_by?: string | null
           description: string
           id?: string
           location: string
@@ -828,8 +838,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_to?: string | null
           benefits?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string
           id?: string
           location?: string
@@ -983,6 +995,7 @@ export type Database = {
           details: string | null
           id: string
           is_visible: boolean
+          managed_by: string | null
           preferred_location: string
           reference_id: string
           role: string
@@ -995,6 +1008,7 @@ export type Database = {
           details?: string | null
           id?: string
           is_visible?: boolean
+          managed_by?: string | null
           preferred_location: string
           reference_id: string
           role: string
@@ -1007,6 +1021,7 @@ export type Database = {
           details?: string | null
           id?: string
           is_visible?: boolean
+          managed_by?: string | null
           preferred_location?: string
           reference_id?: string
           role?: string
