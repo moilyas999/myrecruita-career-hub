@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { toast } from 'sonner';
 import { Save, Loader2, Check, AlertCircle, Upload, Plus, X } from 'lucide-react';
+import { logActivity } from '@/services/activityLogger';
 
 interface CVFormData {
   name: string;
@@ -136,7 +137,7 @@ export default function CVManualEntry({ onSuccess }: { onSuccess?: () => void })
         }
       }
 
-      const { error } = await supabase.from('cv_submissions').insert({
+      const { data: newCV, error } = await supabase.from('cv_submissions').insert({
         name: formData.name,
         email: formData.email,
         phone: formData.phone || null,
@@ -148,9 +149,17 @@ export default function CVManualEntry({ onSuccess }: { onSuccess?: () => void })
         location: formData.location || null,
         admin_notes: formData.admin_notes || null,
         added_by: user?.id || null,
-      });
+      }).select().single();
 
       if (error) throw error;
+
+      // Log activity
+      logActivity({
+        action: 'cv_created',
+        resourceType: 'cv',
+        resourceId: newCV.id,
+        details: { name: formData.name, email: formData.email, source: 'admin_manual' },
+      });
 
       toast.success('CV entry added successfully');
       
