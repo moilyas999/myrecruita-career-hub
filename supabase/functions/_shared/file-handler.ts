@@ -1,10 +1,25 @@
 /**
  * File handling utilities for CV processing
  * Handles download, extraction, and format detection
+ * Enhanced with magic byte detection and file size limits
  */
 
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 import JSZip from 'https://esm.sh/jszip@3.10.1';
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB limit
+const MIN_FILE_SIZE_BYTES = 100; // Minimum 100 bytes
+
+// Magic bytes for file type detection
+const MAGIC_BYTES: Record<string, number[]> = {
+  pdf: [0x25, 0x50, 0x44, 0x46], // %PDF
+  zip: [0x50, 0x4B, 0x03, 0x04], // PK.. (DOCX is a ZIP)
+  doc: [0xD0, 0xCF, 0x11, 0xE0], // OLE compound document
+};
 
 // ============================================================================
 // Types
@@ -15,16 +30,19 @@ export interface FileDownloadResult {
   data: ArrayBuffer;
   mimeType: string;
   fileName: string;
+  detectedType: FileType;
+  fileSizeBytes: number;
 }
 
 export interface FileDownloadError {
   success: false;
   error: string;
+  errorCode?: 'FILE_TOO_LARGE' | 'FILE_TOO_SMALL' | 'DOWNLOAD_FAILED' | 'INVALID_FORMAT';
 }
 
 export type DownloadResult = FileDownloadResult | FileDownloadError;
 
-export type FileType = 'pdf' | 'docx' | 'doc' | 'unknown';
+export type FileType = 'pdf' | 'docx' | 'doc' | 'rtf' | 'txt' | 'unknown';
 
 // ============================================================================
 // Supabase Client Factory
@@ -42,10 +60,13 @@ export function createSupabaseClient(): SupabaseClient {
 }
 
 // ============================================================================
-// File Type Detection
+// File Type Detection (Enhanced with Magic Bytes)
 // ============================================================================
 
-export function getFileType(fileName: string): FileType {
+/**
+ * Detect file type from extension
+ */
+export function getFileTypeFromExtension(fileName: string): FileType {
   const extension = fileName.toLowerCase().split('.').pop();
   
   switch (extension) {
@@ -55,9 +76,84 @@ export function getFileType(fileName: string): FileType {
       return 'docx';
     case 'doc':
       return 'doc';
+    case 'rtf':
+      return 'rtf';
+    case 'txt':
+      return 'txt';
     default:
       return 'unknown';
   }
+}
+
+/**
+ * Detect file type from magic bytes (more reliable than extension)
+ */
+export function getFileTypeFromMagicBytes(data: ArrayBuffer): FileType {
+  const bytes = new Uint8Array(data.slice(0, 8));
+  
+  // Check for PDF
+  if (matchesMagicBytes(bytes, MAGIC_BYTES.pdf)) {
+    return 'pdf';
+  }
+  
+  // Check for ZIP-based formats (DOCX)
+  if (matchesMagicBytes(bytes, MAGIC_BYTES.zip)) {
+    return 'docx'; // DOCX files are ZIP archives
+  }
+  
+  // Check for legacy DOC (OLE compound document)
+  if (matchesMagicBytes(bytes, MAGIC_BYTES.doc)) {
+    return 'doc';
+  }
+  
+  // Check for RTF
+  if (bytes[0] === 0x7B && bytes[1] === 0x5C && bytes[2] === 0x72 && bytes[3] === 0x74 && bytes[4] === 0x66) {
+    return 'rtf'; // {\rtf
+  }
+  
+  return 'unknown';
+}
+
+function matchesMagicBytes(data: Uint8Array, magic: number[]): boolean {
+  if (data.length < magic.length) return false;
+  return magic.every((byte, index) => data[index] === byte);
+}
+
+/**
+ * Combined file type detection (magic bytes + extension fallback)
+ */
+export function getFileType(fileName: string, data?: ArrayBuffer): FileType {
+  // First try magic bytes if data is available
+  if (data) {
+    const magicType = getFileTypeFromMagicBytes(data);
+    if (magicType !== 'unknown') {
+      return magicType;
+    }
+  }
+  
+  // Fall back to extension
+  return getFileTypeFromExtension(fileName);
+}
+
+/**
+ * Validate file size
+ */
+export function validateFileSize(sizeBytes: number): { valid: boolean; error?: string } {
+  if (sizeBytes > MAX_FILE_SIZE_BYTES) {
+    return { 
+      valid: false, 
+      error: `File too large: ${(sizeBytes / 1024 / 1024).toFixed(2)}MB (max ${MAX_FILE_SIZE_BYTES / 1024 / 1024}MB)` 
+    };
+  }
+  
+  if (sizeBytes < MIN_FILE_SIZE_BYTES) {
+    return { 
+      valid: false, 
+      error: `File too small: ${sizeBytes} bytes (min ${MIN_FILE_SIZE_BYTES} bytes)` 
+    };
+  }
+  
+  return { valid: true };
 }
 
 export function getMimeType(fileType: FileType): string {
@@ -91,31 +187,46 @@ export async function downloadFromStorage(
 
     if (error) {
       console.error('Storage download error:', error);
-      return { success: false, error: `Failed to download file: ${error.message}` };
+      return { success: false, error: `Failed to download file: ${error.message}`, errorCode: 'DOWNLOAD_FAILED' };
     }
 
     if (!data) {
-      return { success: false, error: 'No data received from storage' };
+      return { success: false, error: 'No data received from storage', errorCode: 'DOWNLOAD_FAILED' };
     }
 
     const arrayBuffer = await data.arrayBuffer();
+    const fileSizeBytes = arrayBuffer.byteLength;
+    
+    // Validate file size
+    const sizeValidation = validateFileSize(fileSizeBytes);
+    if (!sizeValidation.valid) {
+      return { 
+        success: false, 
+        error: sizeValidation.error!, 
+        errorCode: fileSizeBytes > MAX_FILE_SIZE_BYTES ? 'FILE_TOO_LARGE' : 'FILE_TOO_SMALL' 
+      };
+    }
+    
     const fileName = filePath.split('/').pop() || 'document';
-    const fileType = getFileType(fileName);
-    const mimeType = getMimeType(fileType);
+    const detectedType = getFileType(fileName, arrayBuffer);
+    const mimeType = getMimeType(detectedType);
 
-    console.log(`Downloaded ${fileName} (${fileType}, ${arrayBuffer.byteLength} bytes)`);
+    console.log(`Downloaded ${fileName} (detected: ${detectedType}, extension: ${getFileTypeFromExtension(fileName)}, ${fileSizeBytes} bytes)`);
 
     return {
       success: true,
       data: arrayBuffer,
       mimeType,
-      fileName
+      fileName,
+      detectedType,
+      fileSizeBytes
     };
   } catch (error) {
     console.error('Download exception:', error);
     return { 
       success: false, 
-      error: `Download failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      error: `Download failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      errorCode: 'DOWNLOAD_FAILED'
     };
   }
 }
@@ -127,27 +238,42 @@ export async function downloadFromUrl(url: string): Promise<DownloadResult> {
     const response = await fetch(url);
     
     if (!response.ok) {
-      return { success: false, error: `HTTP ${response.status}: ${response.statusText}` };
+      return { success: false, error: `HTTP ${response.status}: ${response.statusText}`, errorCode: 'DOWNLOAD_FAILED' };
     }
 
     const arrayBuffer = await response.arrayBuffer();
+    const fileSizeBytes = arrayBuffer.byteLength;
+    
+    // Validate file size
+    const sizeValidation = validateFileSize(fileSizeBytes);
+    if (!sizeValidation.valid) {
+      return { 
+        success: false, 
+        error: sizeValidation.error!, 
+        errorCode: fileSizeBytes > MAX_FILE_SIZE_BYTES ? 'FILE_TOO_LARGE' : 'FILE_TOO_SMALL' 
+      };
+    }
+    
     const fileName = url.split('/').pop()?.split('?')[0] || 'document';
-    const fileType = getFileType(fileName);
-    const mimeType = getMimeType(fileType);
+    const detectedType = getFileType(fileName, arrayBuffer);
+    const mimeType = getMimeType(detectedType);
 
-    console.log(`Downloaded ${fileName} (${fileType}, ${arrayBuffer.byteLength} bytes)`);
+    console.log(`Downloaded ${fileName} (detected: ${detectedType}, ${fileSizeBytes} bytes)`);
 
     return {
       success: true,
       data: arrayBuffer,
       mimeType,
-      fileName
+      fileName,
+      detectedType,
+      fileSizeBytes
     };
   } catch (error) {
     console.error('URL download exception:', error);
     return { 
       success: false, 
-      error: `URL download failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      error: `URL download failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      errorCode: 'DOWNLOAD_FAILED'
     };
   }
 }
