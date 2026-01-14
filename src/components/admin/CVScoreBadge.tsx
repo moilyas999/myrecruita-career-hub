@@ -7,26 +7,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import type { CVScoreBreakdown, ScoreCategory, LegacyCVScoreBreakdown } from '@/types/cv';
 
-interface CategoryScore {
-  score: number;
-  max: number;
-  notes?: string;
-}
-
-export interface CVScoreBreakdown {
-  completeness: CategoryScore | number;
-  skills_relevance: CategoryScore | number;
-  experience_depth: CategoryScore | number;
-  achievements: CategoryScore | number;
-  education: CategoryScore | number;
-  presentation: CategoryScore | number;
-  summary: string;
-}
+// Re-export types for backward compatibility
+export type { CVScoreBreakdown } from '@/types/cv';
 
 interface CVScoreBadgeProps {
   score: number | null;
-  breakdown?: CVScoreBreakdown | null;
+  breakdown?: CVScoreBreakdown | LegacyCVScoreBreakdown | null;
   showBreakdown?: boolean;
   size?: 'sm' | 'md' | 'lg';
 }
@@ -54,20 +42,56 @@ function getBarColor(percentage: number): string {
   return 'bg-red-500';
 }
 
-// Helper to extract score data from either number or CategoryScore object
-function getCategoryData(value: CategoryScore | number | undefined): { score: number; max: number; notes?: string } {
-  if (value === undefined) return { score: 0, max: 0 };
-  if (typeof value === 'number') return { score: value, max: value }; // Legacy: assume max equals score
-  return { score: value.score ?? 0, max: value.max ?? 0, notes: value.notes };
+/**
+ * Normalize a category value from either number or ScoreCategory format
+ * Handles both legacy (number) and current (ScoreCategory) formats
+ */
+function getCategoryData(value: ScoreCategory | number | undefined, defaultMax: number): { score: number; max: number; notes?: string } {
+  if (value === undefined || value === null) return { score: 0, max: defaultMax };
+  if (typeof value === 'number') return { score: value, max: defaultMax };
+  return { 
+    score: value.score ?? 0, 
+    max: value.max ?? defaultMax, 
+    notes: value.notes 
+  };
+}
+
+/**
+ * Normalize a breakdown object to handle both legacy and current field names
+ */
+function normalizeBreakdown(breakdown: CVScoreBreakdown | LegacyCVScoreBreakdown): {
+  completeness: ScoreCategory | number | undefined;
+  skills_relevance: ScoreCategory | number | undefined;
+  experience_depth: ScoreCategory | number | undefined;
+  achievements: ScoreCategory | number | undefined;
+  education: ScoreCategory | number | undefined;
+  presentation: ScoreCategory | number | undefined;
+  summary?: string;
+} {
+  // Handle legacy field names
+  const legacy = breakdown as LegacyCVScoreBreakdown;
+  const current = breakdown as CVScoreBreakdown;
+  
+  return {
+    completeness: current.completeness ?? legacy.completeness,
+    // skills_relevance was previously skills_depth
+    skills_relevance: current.skills_relevance ?? legacy.skills_depth,
+    // experience_depth was previously experience_quality
+    experience_depth: current.experience_depth ?? legacy.experience_quality,
+    achievements: current.achievements ?? legacy.achievements,
+    education: current.education ?? legacy.education,
+    presentation: current.presentation ?? legacy.presentation,
+    summary: (current as CVScoreBreakdown).summary
+  };
 }
 
 const categories = [
-  { key: 'completeness', label: 'Completeness', description: 'All required sections present' },
-  { key: 'skills_relevance', label: 'Skills Relevance', description: 'Quality & relevance of listed skills' },
-  { key: 'experience_depth', label: 'Experience Depth', description: 'Detail level and career progression' },
-  { key: 'achievements', label: 'Achievements', description: 'Quantifiable accomplishments listed' },
-  { key: 'education', label: 'Education', description: 'Qualifications & certifications' },
-  { key: 'presentation', label: 'Presentation', description: 'Structure, formatting & clarity' },
+  { key: 'completeness', label: 'Completeness', description: 'All required sections present', defaultMax: 20 },
+  { key: 'skills_relevance', label: 'Skills Relevance', description: 'Quality & relevance of listed skills', defaultMax: 20 },
+  { key: 'experience_depth', label: 'Experience Depth', description: 'Detail level and career progression', defaultMax: 25 },
+  { key: 'achievements', label: 'Achievements', description: 'Quantifiable accomplishments listed', defaultMax: 15 },
+  { key: 'education', label: 'Education', description: 'Qualifications & certifications', defaultMax: 10 },
+  { key: 'presentation', label: 'Presentation', description: 'Structure, formatting & clarity', defaultMax: 10 },
 ] as const;
 
 export default function CVScoreBadge({ score, breakdown, showBreakdown = true, size = 'md' }: CVScoreBadgeProps) {
@@ -100,9 +124,13 @@ export default function CVScoreBadge({ score, breakdown, showBreakdown = true, s
     return badge;
   }
 
+  // Normalize the breakdown to handle both legacy and current formats
+  const normalizedBreakdown = normalizeBreakdown(breakdown);
+
   // Calculate category scores for the sum display
   const categoryScores = categories.map(cat => {
-    const data = getCategoryData(breakdown[cat.key as keyof Omit<CVScoreBreakdown, 'summary'>]);
+    const value = normalizedBreakdown[cat.key as keyof Omit<typeof normalizedBreakdown, 'summary'>];
+    const data = getCategoryData(value as ScoreCategory | number | undefined, cat.defaultMax);
     return { ...cat, ...data };
   });
 
@@ -180,10 +208,10 @@ export default function CVScoreBadge({ score, breakdown, showBreakdown = true, s
             </div>
 
             {/* AI Summary */}
-            {breakdown.summary && (
+            {normalizedBreakdown.summary && (
               <div className="pt-3 border-t border-border">
                 <h4 className="font-medium text-sm mb-2">AI Assessment</h4>
-                <p className="text-sm text-muted-foreground">{breakdown.summary}</p>
+                <p className="text-sm text-muted-foreground">{normalizedBreakdown.summary}</p>
               </div>
             )}
           </div>
@@ -193,9 +221,13 @@ export default function CVScoreBadge({ score, breakdown, showBreakdown = true, s
   );
 }
 
-export function CVScoreBreakdownCard({ score, breakdown }: { score: number; breakdown: CVScoreBreakdown }) {
+export function CVScoreBreakdownCard({ score, breakdown }: { score: number; breakdown: CVScoreBreakdown | LegacyCVScoreBreakdown }) {
+  // Normalize the breakdown to handle both legacy and current formats
+  const normalizedBreakdown = normalizeBreakdown(breakdown);
+  
   const categoryScores = categories.map(cat => {
-    const data = getCategoryData(breakdown[cat.key as keyof Omit<CVScoreBreakdown, 'summary'>]);
+    const value = normalizedBreakdown[cat.key as keyof typeof normalizedBreakdown];
+    const data = getCategoryData(value as ScoreCategory | number | undefined, cat.defaultMax);
     return { ...cat, ...data };
   });
 
@@ -226,8 +258,8 @@ export function CVScoreBreakdownCard({ score, breakdown }: { score: number; brea
         })}
       </div>
       
-      {breakdown.summary && (
-        <p className="text-xs text-muted-foreground border-t border-border pt-3">{breakdown.summary}</p>
+      {normalizedBreakdown.summary && (
+        <p className="text-xs text-muted-foreground border-t border-border pt-3">{normalizedBreakdown.summary}</p>
       )}
     </div>
   );

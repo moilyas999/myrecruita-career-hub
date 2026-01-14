@@ -1,40 +1,64 @@
 /**
  * Shared types for CV processing across all edge functions
  * Single source of truth for AI profiles, scoring, and parsed CV data
+ * 
+ * IMPORTANT: These types are aligned with frontend expectations in:
+ * - src/components/admin/CVBulkImport.tsx
+ * - src/components/admin/CVScoreBadge.tsx
  */
 
 // ============================================================================
-// AI Profile Types
+// AI Profile Types (aligned with frontend CVBulkImport.tsx)
 // ============================================================================
 
 export interface AIProfile {
-  professional_summary: string;
-  key_achievements: string[];
+  /** Comma-separated list of technical/hard skills */
   hard_skills: string[];
+  /** Comma-separated list of interpersonal/soft skills */
   soft_skills: string[];
+  /** Professional certifications and licenses */
   certifications: string[];
-  languages: string[];
+  /** Industries the candidate has worked in */
+  industries: string[];
+  /** Total years of professional experience */
+  experience_years: number;
+  /** Career seniority level */
+  seniority: string;
+  /** Education details */
+  education: {
+    level: string;
+    field: string;
+    institution: string;
+  };
+  /** Top career achievements */
+  key_achievements: string[];
+  /** Description of career progression */
+  career_progression: string;
+  /** Suitable job titles for the candidate */
   ideal_roles: string[];
-  career_trajectory: string;
-  unique_value_proposition: string;
+  /** Professional summary for job matching */
+  summary_for_matching: string;
 }
 
 // ============================================================================
-// CV Scoring Types
+// CV Scoring Types (aligned with frontend CVScoreBadge.tsx)
 // ============================================================================
 
 export interface ScoreCategory {
   score: number;
-  notes: string;
+  max: number;
+  notes?: string;
 }
 
 export interface CVScoreBreakdown {
   completeness: ScoreCategory;
-  skills_depth: ScoreCategory;
-  experience_quality: ScoreCategory;
+  skills_relevance: ScoreCategory;
+  experience_depth: ScoreCategory;
   achievements: ScoreCategory;
   education: ScoreCategory;
   presentation: ScoreCategory;
+  /** AI-generated summary of CV quality */
+  summary: string;
 }
 
 // ============================================================================
