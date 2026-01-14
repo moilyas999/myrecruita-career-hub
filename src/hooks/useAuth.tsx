@@ -124,7 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const redirectUrl = `${window.location.origin}/admin`;
       
-      const { error } = await supabase.auth.signUp({
+      const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -132,8 +132,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       });
       
-      if (error) {
-        return { error: error.message };
+      if (signUpError) {
+        return { error: signUpError.message };
+      }
+      
+      // Send branded confirmation email via Resend
+      const { data, error: emailError } = await supabase.functions.invoke('send-auth-email', {
+        body: {
+          email,
+          type: 'signup_confirmation',
+          redirectUrl,
+        }
+      });
+
+      if (emailError || data?.error) {
+        // User was created but email failed - log but don't fail
+        console.error('Failed to send confirmation email:', emailError || data?.error);
       }
       
       return {};
