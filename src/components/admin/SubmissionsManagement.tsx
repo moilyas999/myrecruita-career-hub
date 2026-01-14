@@ -61,7 +61,11 @@ export default function SubmissionsManagement() {
     if (!confirm(`Are you sure you want to delete the CV submission for "${name}"? This action cannot be undone.`)) {
       return;
     }
-    deleteCVMutation.mutate(id);
+    // Find the full submission object for activity logging
+    const submission = cvSubmissions.find(cv => cv.id === id);
+    if (submission) {
+      deleteCVMutation.mutate(submission);
+    }
   };
 
   const handleRescoreAllCVs = async () => {
