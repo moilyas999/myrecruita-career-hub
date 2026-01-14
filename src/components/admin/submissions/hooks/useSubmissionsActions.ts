@@ -3,34 +3,42 @@ import { supabase } from '@/integrations/supabase/client';
 import { queryKeys, submissionQueryKeys } from '@/lib/queryKeys';
 import { toast } from 'sonner';
 import type { CVSubmission } from '../types';
+import { logActivity } from '@/services/activityLogger';
 
 export function useSubmissionsActions() {
   const queryClient = useQueryClient();
 
   // Delete CV mutation with optimistic update
   const deleteCVMutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (cv: CVSubmission) => {
       const { error } = await supabase
         .from('cv_submissions')
         .delete()
-        .eq('id', id);
+        .eq('id', cv.id);
       if (error) throw error;
+      return cv;
     },
-    onMutate: async (id) => {
+    onMutate: async (cv) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.cvSubmissions });
       const previousCVs = queryClient.getQueryData<CVSubmission[]>(queryKeys.cvSubmissions);
       queryClient.setQueryData<CVSubmission[]>(queryKeys.cvSubmissions, (old) =>
-        old?.filter((cv) => cv.id !== id) || []
+        old?.filter((c) => c.id !== cv.id) || []
       );
       return { previousCVs };
     },
-    onError: (err, _id, context) => {
+    onError: (err, _cv, context) => {
       queryClient.setQueryData(queryKeys.cvSubmissions, context?.previousCVs);
       toast.error('Failed to delete CV submission');
       console.error('Delete error:', err);
     },
-    onSuccess: () => {
+    onSuccess: (cv) => {
       toast.success('CV submission deleted successfully');
+      logActivity({
+        action: 'cv_deleted',
+        resourceType: 'cv',
+        resourceId: cv.id,
+        details: { name: cv.name, email: cv.email },
+      });
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.cvSubmissions });
@@ -42,6 +50,13 @@ export function useSubmissionsActions() {
   const rescoreCVs = async () => {
     const { data, error } = await supabase.functions.invoke('rescore-cvs');
     if (error) throw error;
+    
+    logActivity({
+      action: 'cv_scored',
+      resourceType: 'cv',
+      details: { message: 'Bulk CV rescoring initiated' },
+    });
+    
     return data;
   };
 
@@ -121,6 +136,12 @@ export function useSubmissionsActions() {
     a.download = `myrecruita-emails-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+
+    logActivity({
+      action: 'cv_exported',
+      resourceType: 'cv',
+      details: { count: uniqueEmails.length },
+    });
 
     toast.success(`Exported ${uniqueEmails.length} unique emails`);
   };

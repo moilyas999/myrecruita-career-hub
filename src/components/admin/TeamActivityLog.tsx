@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { queryKeys } from '@/lib/queryKeys';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -157,7 +158,7 @@ export default function TeamActivityLog() {
   const startDate = subDays(new Date(), parseInt(dateRange)).toISOString();
   
   const { data: activities = [], isLoading, refetch, isFetching } = useQuery({
-    queryKey: ['team-activity', selectedUser, selectedResource, dateRange],
+    queryKey: [...queryKeys.teamActivity, selectedUser, selectedResource, dateRange],
     queryFn: () => getTeamActivity({
       limit: 200,
       userId: selectedUser === 'all' ? undefined : selectedUser,

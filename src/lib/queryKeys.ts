@@ -37,6 +37,12 @@ export const queryKeys = {
   // Pipeline
   candidatePipeline: ['candidate-pipeline'] as const,
   pipelineActivity: ['pipeline-activity'] as const,
+  
+  // Staff Activity & Work
+  userActivity: ['user-activity'] as const,
+  teamActivity: ['team-activity'] as const,
+  myWork: ['my-work'] as const,
+  userActivityStats: ['user-activity-stats'] as const,
 } as const;
 
 // Helper to get all submission-related keys for bulk invalidation

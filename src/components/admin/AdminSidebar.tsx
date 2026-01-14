@@ -31,6 +31,8 @@ import {
   Target,
   RefreshCw,
   Kanban,
+  ClipboardList,
+  Activity,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -81,6 +83,9 @@ export default function AdminSidebar({ isFullAdmin, isCvUploader }: AdminSidebar
         label: 'Overview',
         items: [
           { title: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+          { title: 'My Work', href: '/admin?tab=my-work', icon: ClipboardList },
+          { title: 'My Activity', href: '/admin?tab=my-activity', icon: Activity },
+          { title: 'Team Activity', href: '/admin?tab=team-activity', icon: Users, permission: 'staff.view' },
           { title: 'Analytics', href: '/admin?tab=stats', icon: BarChart3, permission: 'analytics.view' },
         ],
       },

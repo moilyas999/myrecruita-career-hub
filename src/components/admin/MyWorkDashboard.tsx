@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { queryKeys } from '@/lib/queryKeys';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
   Briefcase, 
@@ -149,7 +150,7 @@ export default function MyWorkDashboard() {
   const { user } = useAuth();
 
   const { data, isLoading, refetch, isFetching } = useQuery({
-    queryKey: ['my-work', user?.id],
+    queryKey: [...queryKeys.myWork, user?.id],
     queryFn: () => fetchMyWork(user?.id || ''),
     enabled: !!user?.id,
     staleTime: 30000,
