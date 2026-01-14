@@ -21,12 +21,20 @@ interface ImportSession {
   error_message: string | null;
 }
 
+interface ParsedData {
+  name?: string;
+  job_title?: string;
+  sector?: string;
+  cv_score?: number;
+}
+
 interface ImportFile {
   id: string;
   file_name: string;
   status: string;
   error_message: string | null;
   processed_at: string | null;
+  parsed_data?: ParsedData | null;
 }
 
 interface ImportSessionProgressProps {
@@ -169,7 +177,7 @@ export default function ImportSessionProgress({ sessionId, onClose, onComplete }
         .single(),
       supabase
         .from('bulk_import_files')
-        .select('id, file_name, status, error_message, processed_at')
+        .select('id, file_name, status, error_message, processed_at, parsed_data')
         .eq('session_id', sessionId)
         .order('created_at', { ascending: true })
     ]);
@@ -178,7 +186,11 @@ export default function ImportSessionProgress({ sessionId, onClose, onComplete }
       setSession(sessionResult.data);
     }
     if (filesResult.data) {
-      setFiles(filesResult.data);
+      // Cast parsed_data from Json to ParsedData
+      setFiles(filesResult.data.map(f => ({
+        ...f,
+        parsed_data: f.parsed_data as ParsedData | null,
+      })));
     }
     
     setLoading(false);
@@ -329,39 +341,74 @@ export default function ImportSessionProgress({ sessionId, onClose, onComplete }
         {/* File list */}
         <div className="space-y-2 max-h-60 overflow-y-auto">
           <div className="text-sm font-medium">Files</div>
-          {files.map(file => (
-            <div 
-              key={file.id} 
-              className="flex items-center justify-between p-2 bg-muted/30 rounded text-sm"
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                {getFileStatusIcon(file.status)}
-                <span className="truncate">{file.file_name}</span>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {file.error_message && (
-                  <span className="text-xs text-destructive truncate max-w-32" title={file.error_message}>
-                    {file.error_message}
-                  </span>
+          {files.map(file => {
+            const parsedData = file.parsed_data as ParsedData | null;
+            return (
+              <div 
+                key={file.id} 
+                className="flex flex-col p-2 bg-muted/30 rounded text-sm gap-1"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {getFileStatusIcon(file.status)}
+                    <span className="truncate font-medium">{file.file_name}</span>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {file.error_message && (
+                      <span className="text-xs text-destructive truncate max-w-32" title={file.error_message}>
+                        {file.error_message}
+                      </span>
+                    )}
+                    {file.status === 'error' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => retrySingleFile(file.id)}
+                        disabled={isRetrying}
+                        className="h-6 w-6 p-0"
+                        title="Retry this file"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                      </Button>
+                    )}
+                    <Badge variant="outline" className="text-xs capitalize">
+                      {file.status}
+                    </Badge>
+                  </div>
+                </div>
+                {/* Show parsed data preview for imported files */}
+                {file.status === 'imported' && parsedData && (
+                  <div className="flex items-center gap-2 ml-6 text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground">{parsedData.name}</span>
+                    {parsedData.job_title && (
+                      <>
+                        <span>•</span>
+                        <span>{parsedData.job_title}</span>
+                      </>
+                    )}
+                    {parsedData.sector && (
+                      <>
+                        <span>•</span>
+                        <span>{parsedData.sector}</span>
+                      </>
+                    )}
+                    {parsedData.cv_score !== undefined && parsedData.cv_score !== null && (
+                      <Badge 
+                        variant="secondary" 
+                        className={`text-xs ${
+                          parsedData.cv_score >= 70 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                          parsedData.cv_score >= 40 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                          'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                        }`}
+                      >
+                        Score: {parsedData.cv_score}
+                      </Badge>
+                    )}
+                  </div>
                 )}
-                {file.status === 'error' && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => retrySingleFile(file.id)}
-                    disabled={isRetrying}
-                    className="h-6 w-6 p-0"
-                    title="Retry this file"
-                  >
-                    <RotateCcw className="w-3 h-3" />
-                  </Button>
-                )}
-                <Badge variant="outline" className="text-xs capitalize">
-                  {file.status}
-                </Badge>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </CardContent>
     </Card>

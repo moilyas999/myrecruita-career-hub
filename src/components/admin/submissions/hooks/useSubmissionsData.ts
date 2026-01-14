@@ -27,7 +27,11 @@ const fetchCVSubmissions = async (): Promise<CVSubmission[]> => {
     .select('*')
     .order('created_at', { ascending: false });
   if (error) throw error;
-  return data || [];
+  // Cast ai_profile from Json to AIProfile
+  return (data || []).map(cv => ({
+    ...cv,
+    ai_profile: cv.ai_profile as CVSubmission['ai_profile'],
+  }));
 };
 
 const fetchCareerPartnerRequests = async (): Promise<CareerPartnerRequest[]> => {

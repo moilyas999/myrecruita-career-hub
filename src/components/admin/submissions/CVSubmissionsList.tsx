@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { SubmissionCard } from '../shared/SubmissionCard';
 import { SubmissionsSkeleton } from '../shared/SubmissionsSkeleton';
 import { EmptyState } from '../shared/EmptyState';
+import { AIProfilePreview } from './AIProfilePreview';
 import CVScoreBadge from '../CVScoreBadge';
 import CVManualEntry from '../CVManualEntry';
 import CVBulkImport from '../CVBulkImport';
@@ -141,6 +142,13 @@ export function CVSubmissionsList({
             cvDownloadName={submission.name}
             actions={renderCVActions(submission)}
           >
+            {/* AI Profile Preview */}
+            {submission.ai_profile && (
+              <AIProfilePreview 
+                aiProfile={submission.ai_profile} 
+                cvScore={submission.cv_score}
+              />
+            )}
             {submission.admin_notes && (
               <div className="pt-2 border-t border-dashed">
                 <p className="text-sm text-muted-foreground mb-2">Admin Notes:</p>

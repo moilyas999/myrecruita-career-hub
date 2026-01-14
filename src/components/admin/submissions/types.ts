@@ -13,6 +13,18 @@ export interface JobApplication {
   };
 }
 
+export interface AIProfile {
+  summary_for_matching?: string;
+  hard_skills?: string[];
+  soft_skills?: string[];
+  ideal_roles?: string[];
+  industries?: string[];
+  key_achievements?: string[];
+  career_progression?: string;
+  education_level?: string;
+  years_experience?: number;
+}
+
 export interface CVSubmission {
   id: string;
   name: string;
@@ -29,6 +41,7 @@ export interface CVSubmission {
   seniority_level?: string;
   cv_score?: number | null;
   cv_score_breakdown?: unknown;
+  ai_profile?: AIProfile | null;
 }
 
 export interface CareerPartnerRequest {
