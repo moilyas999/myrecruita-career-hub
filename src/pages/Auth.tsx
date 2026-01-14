@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,13 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Mail, Lock, User, Loader2, Linkedin, Wand2, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Loader2, Linkedin, Wand2, ArrowLeft, KeyRound, CheckCircle } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useSEO } from '@/hooks/useSEO';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
@@ -37,14 +38,31 @@ const Auth = () => {
   const [otpCode, setOtpCode] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
 
+  // Password reset state
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [passwordResetSuccess, setPasswordResetSuccess] = useState(false);
+
   useSEO({
     title: 'Login or Sign Up | MyRecruita',
     description: 'Create an account or login to track your job applications and manage your profile on MyRecruita.',
   });
 
+  // Check for recovery mode from URL params
+  useEffect(() => {
+    const type = searchParams.get('type');
+    if (type === 'recovery') {
+      setIsRecoveryMode(true);
+    }
+  }, [searchParams]);
+
   // Check if user is already logged in
   useEffect(() => {
     const checkSession = async () => {
+      // Don't redirect if in recovery mode - user needs to set new password
+      if (isRecoveryMode) return;
+      
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         // Check if user is admin
@@ -62,7 +80,7 @@ const Auth = () => {
       }
     };
     checkSession();
-  }, [navigate]);
+  }, [navigate, isRecoveryMode]);
 
   // Resend cooldown timer
   useEffect(() => {
@@ -334,6 +352,140 @@ const Auth = () => {
       setIsLoading(false);
     }
   };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (newPassword !== confirmNewPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      setPasswordResetSuccess(true);
+      toast.success('Password updated successfully!');
+      
+      // Redirect after a short delay
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 2000);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to reset password');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Password Recovery Mode UI
+  if (isRecoveryMode) {
+    return (
+      <div className="min-h-[calc(100vh-200px)] pt-24 pb-16 px-4">
+        <div className="max-w-md mx-auto">
+          <Card className="border-border shadow-card">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl font-bold text-primary">
+                {passwordResetSuccess ? 'Password Updated!' : 'Set New Password'}
+              </CardTitle>
+              <CardDescription>
+                {passwordResetSuccess
+                  ? 'Your password has been successfully updated.'
+                  : 'Enter your new password below.'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {passwordResetSuccess ? (
+                <div className="text-center space-y-4">
+                  <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto">
+                    <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Redirecting you to your dashboard...
+                  </p>
+                  <Loader2 className="h-5 w-5 animate-spin mx-auto text-primary" />
+                </div>
+              ) : (
+                <form onSubmit={handlePasswordReset} className="space-y-4">
+                  <div className="text-center mb-4">
+                    <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <KeyRound className="h-6 w-6 text-accent" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password">New Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="new-password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="pl-10 pr-10"
+                        required
+                        minLength={6}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-new-password">Confirm New Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="confirm-new-password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        value={confirmNewPassword}
+                        onChange={(e) => setConfirmNewPassword(e.target.value)}
+                        className="pl-10"
+                        required
+                        minLength={6}
+                      />
+                    </div>
+                  </div>
+
+                  <Button type="submit" variant="accent" className="w-full" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      'Update Password'
+                    )}
+                  </Button>
+                </form>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100vh-200px)] pt-24 pb-16 px-4">
