@@ -56,12 +56,22 @@ export default function AdminLogin() {
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.toLowerCase(), {
-        redirectTo: `${window.location.origin}/auth?type=recovery`,
+      // Use custom edge function to send email via Resend
+      const { data, error } = await supabase.functions.invoke('send-auth-email', {
+        body: {
+          email: resetEmail.toLowerCase(),
+          type: 'password_reset',
+          redirectUrl: `${window.location.origin}/auth?type=recovery`,
+        }
       });
 
       if (error) {
         toast.error(error.message);
+        return;
+      }
+
+      if (data?.error) {
+        toast.error(data.error);
         return;
       }
 
