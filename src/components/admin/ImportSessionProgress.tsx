@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Check, X, FileText, RefreshCw, Clock, AlertCircle, RotateCcw } from 'lucide-react';
+import { Loader2, Check, X, FileText, RefreshCw, Clock, AlertCircle, RotateCcw, Play } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -49,8 +49,14 @@ export default function ImportSessionProgress({ sessionId, onClose, onComplete }
   const [loading, setLoading] = useState(true);
   const [isRetrying, setIsRetrying] = useState(false);
 
+  // Count files by status for accurate button visibility
+  const pendingFiles = files.filter(f => f.status === 'pending' || f.status === 'parsing' || f.status === 'importing' || f.status === 'parsed');
+  const errorFiles = files.filter(f => f.status === 'error');
+  const hasPendingWork = pendingFiles.length > 0;
+  const hasFailedFiles = errorFiles.length > 0;
+
   const retryAllFailed = async () => {
-    if (!session || session.failed_count === 0) return;
+    if (!session || errorFiles.length === 0) return;
     
     setIsRetrying(true);
     try {
@@ -63,9 +69,9 @@ export default function ImportSessionProgress({ sessionId, onClose, onComplete }
 
       if (resetError) throw resetError;
 
-      // Trigger reprocessing with retry flag
+      // Trigger reprocessing WITHOUT retry_failed flag - just process pending files
       const { error: invokeError } = await supabase.functions.invoke('process-bulk-import', {
-        body: { session_id: sessionId, retry_failed: true }
+        body: { session_id: sessionId }
       });
 
       if (invokeError) throw invokeError;
@@ -74,6 +80,33 @@ export default function ImportSessionProgress({ sessionId, onClose, onComplete }
     } catch (error: any) {
       console.error('Retry failed:', error);
       toast.error('Failed to retry: ' + error.message);
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
+  const resumePending = async () => {
+    if (!session || !hasPendingWork) return;
+    
+    setIsRetrying(true);
+    try {
+      // Update session to processing state
+      await supabase
+        .from('bulk_import_sessions')
+        .update({ status: 'processing', completed_at: null })
+        .eq('id', sessionId);
+
+      // Trigger processing for pending files
+      const { error: invokeError } = await supabase.functions.invoke('process-bulk-import', {
+        body: { session_id: sessionId }
+      });
+
+      if (invokeError) throw invokeError;
+
+      toast.success('Resuming pending files...');
+    } catch (error: any) {
+      console.error('Resume failed:', error);
+      toast.error('Failed to resume: ' + error.message);
     } finally {
       setIsRetrying(false);
     }
@@ -263,7 +296,25 @@ export default function ImportSessionProgress({ sessionId, onClose, onComplete }
           </CardTitle>
           <div className="flex items-center gap-2">
             {getStatusBadge(session.status)}
-            {session.failed_count > 0 && (session.status === 'completed' || session.status === 'failed') && (
+            {/* Resume Pending button - shows when there are stuck pending/parsing/importing files */}
+            {hasPendingWork && (session.status === 'completed' || session.status === 'failed') && (
+              <Button 
+                variant="default" 
+                size="sm" 
+                onClick={resumePending}
+                disabled={isRetrying}
+                className="gap-1 bg-blue-600 hover:bg-blue-700"
+              >
+                {isRetrying ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Play className="w-4 h-4" />
+                )}
+                Resume ({pendingFiles.length})
+              </Button>
+            )}
+            {/* Retry Failed button - shows when there are error files */}
+            {hasFailedFiles && (session.status === 'completed' || session.status === 'failed') && (
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -276,13 +327,13 @@ export default function ImportSessionProgress({ sessionId, onClose, onComplete }
                 ) : (
                   <RotateCcw className="w-4 h-4" />
                 )}
-                Retry Failed ({session.failed_count})
+                Retry Failed ({errorFiles.length})
               </Button>
             )}
             <Button variant="ghost" size="sm" onClick={fetchSessionData}>
               <RefreshCw className="w-4 h-4" />
             </Button>
-            {onClose && (session.status === 'completed' || session.status === 'failed') && (
+            {onClose && (
               <Button variant="outline" size="sm" onClick={onClose}>
                 Close
               </Button>

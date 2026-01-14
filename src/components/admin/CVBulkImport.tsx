@@ -214,7 +214,7 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
   };
 
   const handleSessionComplete = () => {
-    localStorage.removeItem(ACTIVE_SESSION_KEY);
+    // Don't auto-clear the session - keep it visible so user can review/retry
     fetchRecentSessions();
     onSuccess?.();
   };
@@ -223,6 +223,11 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
     localStorage.removeItem(ACTIVE_SESSION_KEY);
     setActiveSession(null);
     fetchRecentSessions();
+  };
+
+  const openSession = (sessionId: string) => {
+    setActiveSession(sessionId);
+    localStorage.setItem(ACTIVE_SESSION_KEY, sessionId);
   };
 
   // Log activity to the activity log table
@@ -614,34 +619,44 @@ export default function CVBulkImport({ onSuccess }: { onSuccess?: () => void }) 
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-2 space-y-2">
-              {recentSessions.map(session => (
-                <div 
-                  key={session.id}
-                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg text-sm"
-                >
-                  <div className="flex items-center gap-3">
-                    <Badge 
-                      variant={session.status === 'completed' ? 'default' : session.status === 'failed' ? 'destructive' : 'secondary'}
-                      className={session.status === 'completed' ? 'bg-green-500' : ''}
-                    >
-                      {session.status}
-                    </Badge>
-                    <span>{session.total_files} files</span>
-                    <span className="text-muted-foreground">
-                      {session.imported_count} imported, {session.failed_count} failed
-                    </span>
-                  </div>
-                  {(session.status === 'processing' || session.status === 'pending') && (
+              {recentSessions.map(session => {
+                const hasIssues = session.failed_count > 0 || 
+                  (session.status === 'completed' && session.imported_count + session.failed_count < session.total_files);
+                return (
+                  <div 
+                    key={session.id}
+                    className="flex items-center justify-between p-3 bg-muted/50 rounded-lg text-sm"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Badge 
+                        variant={session.status === 'completed' ? 'default' : session.status === 'failed' ? 'destructive' : 'secondary'}
+                        className={session.status === 'completed' ? 'bg-green-500' : ''}
+                      >
+                        {session.status}
+                      </Badge>
+                      <span>{session.total_files} files</span>
+                      <span className="text-muted-foreground">
+                        {session.imported_count} imported, {session.failed_count} failed
+                      </span>
+                      {hasIssues && session.status === 'completed' && (
+                        <Badge variant="outline" className="text-amber-600 border-amber-400">
+                          <AlertCircle className="w-3 h-3 mr-1" />
+                          Needs attention
+                        </Badge>
+                      )}
+                    </div>
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      onClick={() => setActiveSession(session.id)}
+                      onClick={() => openSession(session.id)}
                     >
-                      View Progress
+                      {session.status === 'processing' || session.status === 'pending' 
+                        ? 'View Progress' 
+                        : 'View Details'}
                     </Button>
-                  )}
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </CollapsibleContent>
           </Collapsible>
         )}
