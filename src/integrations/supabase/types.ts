@@ -1017,6 +1017,10 @@ export type Database = {
         | "settings.view"
         | "settings.update"
         | "notifications.manage"
+        | "pipeline.view"
+        | "pipeline.create"
+        | "pipeline.update"
+        | "pipeline.delete"
       staff_role:
         | "admin"
         | "recruiter"
@@ -1181,6 +1185,10 @@ export const Constants = {
         "settings.view",
         "settings.update",
         "notifications.manage",
+        "pipeline.view",
+        "pipeline.create",
+        "pipeline.update",
+        "pipeline.delete",
       ],
       staff_role: [
         "admin",
