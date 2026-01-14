@@ -19,7 +19,9 @@ export type PermissionType =
   // Settings
   | 'settings.view' | 'settings.update'
   // Notifications
-  | 'notifications.manage';
+  | 'notifications.manage'
+  // Pipeline Management
+  | 'pipeline.view' | 'pipeline.create' | 'pipeline.update' | 'pipeline.delete';
 
 // Staff role types
 export type StaffRole = 
@@ -56,6 +58,10 @@ export const PERMISSION_CATEGORIES = {
   talent: {
     label: 'Talent Profiles',
     permissions: ['talent.view', 'talent.create', 'talent.update', 'talent.delete'] as PermissionType[],
+  },
+  pipeline: {
+    label: 'Candidate Pipeline',
+    permissions: ['pipeline.view', 'pipeline.create', 'pipeline.update', 'pipeline.delete'] as PermissionType[],
   },
   submissions: {
     label: 'Submissions',
@@ -100,6 +106,10 @@ export const PERMISSION_LABELS: Record<PermissionType, string> = {
   'talent.create': 'Create Talent',
   'talent.update': 'Update Talent',
   'talent.delete': 'Delete Talent',
+  'pipeline.view': 'View Pipeline',
+  'pipeline.create': 'Add to Pipeline',
+  'pipeline.update': 'Update Pipeline',
+  'pipeline.delete': 'Remove from Pipeline',
   'submissions.view': 'View Submissions',
   'submissions.delete': 'Delete Submissions',
   'blog.view': 'View Blog',
