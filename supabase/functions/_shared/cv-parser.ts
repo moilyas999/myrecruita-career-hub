@@ -14,6 +14,25 @@ import { ParseLogger, storeParseAnalytics } from './logger.ts';
 import type { ExtractedCVData, ParseResult, AIProfile, CVScoreBreakdown } from './types.ts';
 
 // ============================================================================
+// Helper Functions
+// ============================================================================
+
+/**
+ * Safely convert any value to an integer
+ * Handles strings, numbers, decimals, and invalid values
+ */
+function toSafeInteger(value: unknown, fallback = 0): number {
+  if (typeof value === 'number') {
+    return Math.round(value);
+  }
+  if (typeof value === 'string') {
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? fallback : Math.round(parsed);
+  }
+  return fallback;
+}
+
+// ============================================================================
 // Types
 // ============================================================================
 
@@ -233,9 +252,10 @@ function validateAndCleanData(data: ExtractedCVData): ExtractedCVData {
     soft_skills: Array.isArray(data.ai_profile?.soft_skills) ? data.ai_profile.soft_skills : [],
     certifications: Array.isArray(data.ai_profile?.certifications) ? data.ai_profile.certifications : [],
     industries: Array.isArray(data.ai_profile?.industries) ? data.ai_profile.industries : [],
-    experience_years: typeof data.ai_profile?.experience_years === 'number' 
-      ? Math.round(data.ai_profile.experience_years) 
-      : Math.round(data.years_experience || 0),
+    experience_years: toSafeInteger(
+      data.ai_profile?.experience_years ?? data.years_experience,
+      0
+    ),
     seniority: data.ai_profile?.seniority || data.seniority_level || 'Mid-Level',
     education: {
       level: data.ai_profile?.education?.level || data.education_level || 'Other',
@@ -268,7 +288,7 @@ function validateAndCleanData(data: ExtractedCVData): ExtractedCVData {
     job_title: data.job_title?.trim() || 'Not specified',
     sector: data.sector || 'Other',
     seniority_level: data.seniority_level || 'Mid-Level',
-    years_experience: typeof data.years_experience === 'number' ? Math.round(data.years_experience) : 0,
+    years_experience: toSafeInteger(data.years_experience, 0),
     
     // Details
     skills: data.skills?.trim() || '',

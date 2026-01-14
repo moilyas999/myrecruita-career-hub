@@ -120,8 +120,8 @@ export function getExtractionToolSchema(): AITool {
             description: 'Career seniority level'
           },
           years_experience: {
-            type: 'number',
-            description: 'Total years of professional experience'
+            type: 'integer',
+            description: 'Total years of professional experience (whole number, round to nearest year)'
           },
           skills: {
             type: 'string',
@@ -170,8 +170,8 @@ export function getExtractionToolSchema(): AITool {
                 description: 'Industries the candidate has experience in'
               },
               experience_years: {
-                type: 'number',
-                description: 'Total years of professional experience'
+                type: 'integer',
+                description: 'Total years of professional experience (whole number, round to nearest year)'
               },
               seniority: {
                 type: 'string',
