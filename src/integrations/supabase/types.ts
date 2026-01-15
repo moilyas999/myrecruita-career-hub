@@ -1439,6 +1439,9 @@ export type Database = {
         | "pipeline.create"
         | "pipeline.update"
         | "pipeline.delete"
+        | "matching.view"
+        | "matching.create"
+        | "matching.history"
       staff_role:
         | "admin"
         | "recruiter"
@@ -1607,6 +1610,9 @@ export const Constants = {
         "pipeline.create",
         "pipeline.update",
         "pipeline.delete",
+        "matching.view",
+        "matching.create",
+        "matching.history",
       ],
       staff_role: [
         "admin",
