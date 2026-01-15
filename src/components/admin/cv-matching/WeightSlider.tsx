@@ -1,5 +1,6 @@
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
+import { useId } from "react";
 
 interface WeightSliderProps {
   label: string;
@@ -10,24 +11,29 @@ interface WeightSliderProps {
 }
 
 export function WeightSlider({ label, value, onChange, icon, description }: WeightSliderProps) {
+  const sliderId = useId();
+  const descriptionId = useId();
+  
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" role="group" aria-labelledby={sliderId}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">{icon}</span>
-          <span className="text-sm font-medium">{label}</span>
+          <span className="text-muted-foreground" aria-hidden="true">{icon}</span>
+          <span id={sliderId} className="text-sm font-medium">{label}</span>
         </div>
         <span 
           className={cn(
             "text-sm font-bold tabular-nums min-w-[3rem] text-right",
             value === 0 ? "text-muted-foreground" : "text-foreground"
           )}
+          aria-live="polite"
+          aria-atomic="true"
         >
           {value}%
         </span>
       </div>
       {description && (
-        <p className="text-xs text-muted-foreground">{description}</p>
+        <p id={descriptionId} className="text-xs text-muted-foreground">{description}</p>
       )}
       <Slider
         value={[value]}
@@ -36,7 +42,12 @@ export function WeightSlider({ label, value, onChange, icon, description }: Weig
         max={60}
         step={5}
         className="w-full"
-        aria-label={`${label} weight`}
+        aria-label={`${label} weight: ${value}%`}
+        aria-valuemin={0}
+        aria-valuemax={60}
+        aria-valuenow={value}
+        aria-valuetext={`${value} percent`}
+        aria-describedby={description ? descriptionId : undefined}
       />
     </div>
   );

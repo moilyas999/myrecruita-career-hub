@@ -5,3 +5,5 @@ export { AdvancedSignals } from "./AdvancedSignals";
 export { MatchInsights } from "./MatchInsights";
 export { MatchResultCard } from "./MatchResultCard";
 export { WeightsPanel } from "./WeightsPanel";
+export { MatchingErrorBoundary } from "./MatchingErrorBoundary";
+export { AccessDenied } from "./AccessDenied";
