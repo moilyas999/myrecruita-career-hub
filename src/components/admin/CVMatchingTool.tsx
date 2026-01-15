@@ -1,5 +1,4 @@
 import { useState, useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,75 +11,22 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { 
   Wand2, 
-  Download, 
-  Eye, 
-  MapPin, 
-  Briefcase, 
-  Clock, 
-  ChevronRight,
   FileText,
   Target,
   AlertCircle,
   Sparkles,
-  Filter
+  Filter,
+  Info
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-
-interface MatchCandidate {
-  id: string;
-  name: string;
-  email: string;
-  job_title: string | null;
-  sector: string | null;
-  location: string | null;
-  years_experience: number | null;
-  cv_score: number | null;
-  cv_file_url: string | null;
-}
-
-interface MatchResult {
-  cv_id: string;
-  match_score: number;
-  explanation: string;
-  skills_matched: string[];
-  skills_missing: string[];
-  candidate: MatchCandidate;
-}
-
-interface MatchResponse {
-  matches: MatchResult[];
-  total_evaluated: number;
-  filters_applied: Record<string, unknown>;
-  message?: string;
-}
-
-const SECTORS = [
-  "Accounting & Finance",
-  "Banking",
-  "Financial Services",
-  "Insurance",
-  "Technology",
-  "Healthcare",
-  "Legal",
-  "Human Resources",
-  "Marketing",
-  "Sales",
-  "Operations",
-  "Other",
-];
-
-const LOCATIONS = [
-  "London",
-  "Manchester",
-  "Birmingham",
-  "Leeds",
-  "Liverpool",
-  "Bristol",
-  "Edinburgh",
-  "Glasgow",
-  "Cardiff",
-  "Remote",
-];
+import { 
+  MatchResponse, 
+  MatchWeights, 
+  DEFAULT_WEIGHTS, 
+  SECTORS, 
+  LOCATIONS 
+} from "./cv-matching/types";
+import { MatchResultCard } from "./cv-matching/MatchResultCard";
+import { WeightsPanel } from "./cv-matching/WeightsPanel";
 
 export default function CVMatchingTool() {
   const [jobDescription, setJobDescription] = useState("");
@@ -91,10 +37,21 @@ export default function CVMatchingTool() {
   const [isMatching, setIsMatching] = useState(false);
   const [matchResults, setMatchResults] = useState<MatchResponse | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  
+  // Advanced weights state
+  const [showWeightsPanel, setShowWeightsPanel] = useState(false);
+  const [weights, setWeights] = useState<MatchWeights>(DEFAULT_WEIGHTS);
 
   const handleMatch = useCallback(async () => {
     if (jobDescription.trim().length < 50) {
       toast.error("Please enter a more detailed job description (at least 50 characters)");
+      return;
+    }
+
+    // Validate weights sum to 100
+    const totalWeight = weights.skills + weights.experience + weights.seniority + weights.location;
+    if (totalWeight !== 100) {
+      toast.error(`Weights must sum to 100% (currently ${totalWeight}%)`);
       return;
     }
 
@@ -110,7 +67,7 @@ export default function CVMatchingTool() {
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/match-cv-to-job`,
+        `https://yoegksjmdtubnkgdtttj.supabase.co/functions/v1/match-cv-to-job`,
         {
           method: "POST",
           headers: {
@@ -124,6 +81,12 @@ export default function CVMatchingTool() {
               sector: sector !== "all" ? sector : undefined,
               minExperience: minExperience[0] > 0 ? minExperience[0] : undefined,
               maxResults: parseInt(maxResults),
+            },
+            weights: {
+              skills: weights.skills / 100,
+              experience: weights.experience / 100,
+              seniority: weights.seniority / 100,
+              location: weights.location / 100,
             },
           }),
         }
@@ -155,7 +118,7 @@ export default function CVMatchingTool() {
     } finally {
       setIsMatching(false);
     }
-  }, [jobDescription, location, sector, minExperience, maxResults]);
+  }, [jobDescription, location, sector, minExperience, maxResults, weights]);
 
   const handleDownloadCV = useCallback((url: string | null, name: string) => {
     if (!url) {
@@ -164,18 +127,6 @@ export default function CVMatchingTool() {
     }
     window.open(url, "_blank");
   }, []);
-
-  const getScoreBadgeVariant = (score: number): "default" | "secondary" | "destructive" | "outline" => {
-    if (score >= 80) return "default";
-    if (score >= 60) return "secondary";
-    return "outline";
-  };
-
-  const getScoreColor = (score: number): string => {
-    if (score >= 80) return "text-green-600 dark:text-green-400";
-    if (score >= 60) return "text-yellow-600 dark:text-yellow-400";
-    return "text-orange-600 dark:text-orange-400";
-  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
@@ -195,7 +146,7 @@ export default function CVMatchingTool() {
             placeholder="Paste the full job description here...&#10;&#10;Include details about:&#10;• Required skills and qualifications&#10;• Years of experience needed&#10;• Location and work arrangement&#10;• Key responsibilities"
             value={jobDescription}
             onChange={(e) => setJobDescription(e.target.value)}
-            className="flex-1 min-h-[200px] resize-none"
+            className="flex-1 min-h-[180px] resize-none"
           />
 
           {/* Filters */}
@@ -265,6 +216,16 @@ export default function CVMatchingTool() {
             </div>
           </div>
 
+          {/* Weights Panel */}
+          <div className="pt-2">
+            <WeightsPanel
+              weights={weights}
+              onWeightsChange={setWeights}
+              isOpen={showWeightsPanel}
+              onOpenChange={setShowWeightsPanel}
+            />
+          </div>
+
           <Button 
             onClick={handleMatch} 
             disabled={isMatching || jobDescription.trim().length < 50}
@@ -312,6 +273,53 @@ export default function CVMatchingTool() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex-1 overflow-hidden">
+          {/* Parsed Requirements Info */}
+          {matchResults?.parsed_requirements && (
+            <div className="mb-4 p-3 bg-muted/50 rounded-lg text-sm">
+              <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                <Info className="h-4 w-4" />
+                <span className="font-medium">Parsed Job Requirements</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <span className="text-muted-foreground">Title: </span>
+                  <span>{matchResults.parsed_requirements.job_title || "N/A"}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Level: </span>
+                  <span className="capitalize">{matchResults.parsed_requirements.seniority_level || "N/A"}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Experience: </span>
+                  <span>
+                    {matchResults.parsed_requirements.min_experience}
+                    {matchResults.parsed_requirements.max_experience 
+                      ? `-${matchResults.parsed_requirements.max_experience}` 
+                      : "+"} years
+                  </span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Location: </span>
+                  <span>{matchResults.parsed_requirements.location || "Any"}</span>
+                </div>
+              </div>
+              {matchResults.parsed_requirements.required_skills.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {matchResults.parsed_requirements.required_skills.slice(0, 5).map((skill) => (
+                    <Badge key={skill} variant="outline" className="text-xs">
+                      {skill}
+                    </Badge>
+                  ))}
+                  {matchResults.parsed_requirements.required_skills.length > 5 && (
+                    <Badge variant="outline" className="text-xs">
+                      +{matchResults.parsed_requirements.required_skills.length - 5} more
+                    </Badge>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {isMatching ? (
             <div className="space-y-4">
               {[1, 2, 3, 4, 5].map((i) => (
@@ -323,6 +331,7 @@ export default function CVMatchingTool() {
                     </div>
                     <Skeleton className="h-8 w-16 rounded-full" />
                   </div>
+                  <Skeleton className="h-12 w-full" />
                   <Skeleton className="h-4 w-full" />
                   <div className="flex gap-2">
                     <Skeleton className="h-6 w-16" />
@@ -349,133 +358,15 @@ export default function CVMatchingTool() {
               </p>
             </div>
           ) : matchResults ? (
-            <ScrollArea className="h-[calc(100vh-380px)]">
+            <ScrollArea className="h-[calc(100vh-420px)]">
               <div className="space-y-4 pr-4">
                 {matchResults.matches.map((match, index) => (
-                  <div 
+                  <MatchResultCard
                     key={match.cv_id}
-                    className="p-4 border rounded-lg hover:bg-muted/50 transition-colors space-y-3"
-                  >
-                    {/* Header */}
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-muted-foreground">
-                            #{index + 1}
-                          </span>
-                          <h4 className="font-semibold truncate">
-                            {match.candidate.name}
-                          </h4>
-                        </div>
-                        <p className="text-sm text-muted-foreground truncate">
-                          {match.candidate.job_title || "No title specified"}
-                        </p>
-                      </div>
-                      <Badge 
-                        variant={getScoreBadgeVariant(match.match_score)}
-                        className={cn(
-                          "text-lg font-bold px-3 py-1",
-                          getScoreColor(match.match_score)
-                        )}
-                      >
-                        {match.match_score}%
-                      </Badge>
-                    </div>
-
-                    {/* Meta */}
-                    <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                      {match.candidate.location && (
-                        <span className="flex items-center gap-1">
-                          <MapPin className="h-3.5 w-3.5" />
-                          {match.candidate.location}
-                        </span>
-                      )}
-                      {match.candidate.sector && (
-                        <span className="flex items-center gap-1">
-                          <Briefcase className="h-3.5 w-3.5" />
-                          {match.candidate.sector}
-                        </span>
-                      )}
-                      {match.candidate.years_experience && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3.5 w-3.5" />
-                          {match.candidate.years_experience} years
-                        </span>
-                      )}
-                      {match.candidate.cv_score && (
-                        <Badge variant="outline" className="text-xs">
-                          CV Score: {match.candidate.cv_score}
-                        </Badge>
-                      )}
-                    </div>
-
-                    {/* Explanation */}
-                    <p className="text-sm text-foreground/90">
-                      {match.explanation}
-                    </p>
-
-                    {/* Skills */}
-                    <div className="space-y-2">
-                      {match.skills_matched.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {match.skills_matched.slice(0, 5).map((skill) => (
-                            <Badge 
-                              key={skill} 
-                              variant="default"
-                              className="text-xs bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                            >
-                              {skill}
-                            </Badge>
-                          ))}
-                          {match.skills_matched.length > 5 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{match.skills_matched.length - 5} more
-                            </Badge>
-                          )}
-                        </div>
-                      )}
-                      {match.skills_missing.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {match.skills_missing.slice(0, 3).map((skill) => (
-                            <Badge 
-                              key={skill} 
-                              variant="outline"
-                              className="text-xs text-muted-foreground"
-                            >
-                              Missing: {skill}
-                            </Badge>
-                          ))}
-                          {match.skills_missing.length > 3 && (
-                            <Badge variant="outline" className="text-xs text-muted-foreground">
-                              +{match.skills_missing.length - 3} more
-                            </Badge>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-2 pt-2 border-t">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleDownloadCV(match.candidate.cv_file_url, match.candidate.name)}
-                        disabled={!match.candidate.cv_file_url}
-                      >
-                        <Download className="h-3.5 w-3.5 mr-1.5" />
-                        Download CV
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => window.open(`/admin?tab=talent&search=${encodeURIComponent(match.candidate.email)}`, "_blank")}
-                      >
-                        <Eye className="h-3.5 w-3.5 mr-1.5" />
-                        View Profile
-                        <ChevronRight className="h-3.5 w-3.5 ml-1" />
-                      </Button>
-                    </div>
-                  </div>
+                    match={match}
+                    index={index}
+                    onDownloadCV={handleDownloadCV}
+                  />
                 ))}
               </div>
             </ScrollArea>
