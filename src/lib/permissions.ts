@@ -21,7 +21,9 @@ export type PermissionType =
   // Notifications
   | 'notifications.manage'
   // Pipeline Management
-  | 'pipeline.view' | 'pipeline.create' | 'pipeline.update' | 'pipeline.delete';
+  | 'pipeline.view' | 'pipeline.create' | 'pipeline.update' | 'pipeline.delete'
+  // CV Matching
+  | 'matching.view' | 'matching.create' | 'matching.history';
 
 // Staff role types
 export type StaffRole = 
@@ -62,6 +64,10 @@ export const PERMISSION_CATEGORIES = {
   pipeline: {
     label: 'Candidate Pipeline',
     permissions: ['pipeline.view', 'pipeline.create', 'pipeline.update', 'pipeline.delete'] as PermissionType[],
+  },
+  matching: {
+    label: 'CV Matching',
+    permissions: ['matching.view', 'matching.create', 'matching.history'] as PermissionType[],
   },
   submissions: {
     label: 'Submissions',
@@ -110,6 +116,9 @@ export const PERMISSION_LABELS: Record<PermissionType, string> = {
   'pipeline.create': 'Add to Pipeline',
   'pipeline.update': 'Update Pipeline',
   'pipeline.delete': 'Remove from Pipeline',
+  'matching.view': 'View CV Matching',
+  'matching.create': 'Run CV Matching',
+  'matching.history': 'View Match History',
   'submissions.view': 'View Submissions',
   'submissions.delete': 'Delete Submissions',
   'blog.view': 'View Blog',
@@ -145,6 +154,8 @@ export const ROLE_CONFIG: Record<StaffRole, RoleConfig> = {
       'jobs.view', 'jobs.create', 'jobs.update', 'jobs.delete',
       'applications.view', 'applications.manage',
       'talent.view', 'talent.create', 'talent.update', 'talent.delete',
+      'pipeline.view', 'pipeline.create', 'pipeline.update',
+      'matching.view', 'matching.create', 'matching.history',
       'analytics.view',
     ],
   },
@@ -158,6 +169,8 @@ export const ROLE_CONFIG: Record<StaffRole, RoleConfig> = {
       'applications.view',
       'talent.view',
       'submissions.view',
+      'pipeline.view',
+      'matching.history',
       'analytics.view',
     ],
   },

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +16,8 @@ import {
   AlertCircle,
   Sparkles,
   Filter,
-  Info
+  Info,
+  Loader2
 } from "lucide-react";
 import { 
   MatchResponse, 
@@ -27,8 +28,11 @@ import {
 } from "./cv-matching/types";
 import { MatchResultCard } from "./cv-matching/MatchResultCard";
 import { WeightsPanel } from "./cv-matching/WeightsPanel";
+import { MatchingErrorBoundary } from "./cv-matching/MatchingErrorBoundary";
+import { AccessDenied } from "./cv-matching/AccessDenied";
+import { usePermissions } from "@/hooks/usePermissions";
 
-export default function CVMatchingTool() {
+function CVMatchingToolContent() {
   const [jobDescription, setJobDescription] = useState("");
   const [location, setLocation] = useState("all");
   const [sector, setSector] = useState("all");
@@ -41,6 +45,12 @@ export default function CVMatchingTool() {
   // Advanced weights state
   const [showWeightsPanel, setShowWeightsPanel] = useState(false);
   const [weights, setWeights] = useState<MatchWeights>(DEFAULT_WEIGHTS);
+  
+  // Memoize total weight calculation
+  const totalWeight = useMemo(() => 
+    weights.skills + weights.experience + weights.seniority + weights.location,
+    [weights]
+  );
 
   const handleMatch = useCallback(async () => {
     if (jobDescription.trim().length < 50) {
@@ -49,7 +59,6 @@ export default function CVMatchingTool() {
     }
 
     // Validate weights sum to 100
-    const totalWeight = weights.skills + weights.experience + weights.seniority + weights.location;
     if (totalWeight !== 100) {
       toast.error(`Weights must sum to 100% (currently ${totalWeight}%)`);
       return;
@@ -118,7 +127,7 @@ export default function CVMatchingTool() {
     } finally {
       setIsMatching(false);
     }
-  }, [jobDescription, location, sector, minExperience, maxResults, weights]);
+  }, [jobDescription, location, sector, minExperience, maxResults, weights, totalWeight]);
 
   const handleDownloadCV = useCallback((url: string | null, name: string) => {
     if (!url) {
@@ -374,5 +383,33 @@ export default function CVMatchingTool() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+// Main export with permission check and error boundary
+export default function CVMatchingTool() {
+  const { hasPermission, isLoading } = usePermissions();
+  
+  // Show loading state while checking permissions
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+  
+  // Check for matching.view permission
+  if (!hasPermission('matching.view')) {
+    return <AccessDenied 
+      message="You don't have permission to access the CV Matching Tool." 
+      requiredPermission="matching.view" 
+    />;
+  }
+  
+  return (
+    <MatchingErrorBoundary>
+      <CVMatchingToolContent />
+    </MatchingErrorBoundary>
   );
 }

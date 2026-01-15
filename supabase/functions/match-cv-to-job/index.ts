@@ -43,10 +43,16 @@ serve(async (req) => {
       );
     }
 
+    // Check for matching.create permission (granular) or fallback to is_admin
+    const { data: hasMatchingPermission } = await supabase.rpc("has_permission", { 
+      _user_id: user.id, 
+      _permission: 'matching.create' 
+    });
     const { data: isAdmin } = await supabase.rpc("is_admin", { user_id: user.id });
-    if (!isAdmin) {
+    
+    if (!hasMatchingPermission && !isAdmin) {
       return new Response(
-        JSON.stringify({ error: "Unauthorized: Admin access required" }),
+        JSON.stringify({ error: "Unauthorized: matching.create permission required" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
