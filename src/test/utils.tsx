@@ -1,5 +1,13 @@
 import { ReactElement } from 'react';
-import { render, RenderOptions } from '@testing-library/react';
+import { 
+  render as rtlRender, 
+  RenderOptions,
+  screen,
+  fireEvent,
+  waitFor,
+  within,
+  act
+} from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
@@ -40,11 +48,7 @@ function AllTheProviders({ children }: AllTheProvidersProps) {
 const customRender = (
   ui: ReactElement,
   options?: Omit<RenderOptions, 'wrapper'>
-) => render(ui, { wrapper: AllTheProviders, ...options });
+) => rtlRender(ui, { wrapper: AllTheProviders, ...options });
 
-// Re-export everything from testing-library
-export * from '@testing-library/react';
-export { customRender as render };
-
-// Explicitly export commonly used items to ensure availability
-export { screen, fireEvent, waitFor } from '@testing-library/react';
+// Export everything needed for tests
+export { customRender as render, screen, fireEvent, waitFor, within, act };

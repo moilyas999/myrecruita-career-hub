@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@/test/utils';
 import { MatchingErrorBoundary } from '../MatchingErrorBoundary';
 
@@ -68,7 +68,7 @@ describe('MatchingErrorBoundary', () => {
 
   it('shows generic message when error has no message', () => {
     // Create a component that throws an error without a message
-    function ThrowsEmptyError() {
+    function ThrowsEmptyError(): React.ReactElement {
       throw new Error();
     }
     
