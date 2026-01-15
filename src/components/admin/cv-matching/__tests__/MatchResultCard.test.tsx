@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@/test/utils';
 import { MatchResultCard } from '../MatchResultCard';
 import { createMockMatchResult, highScoreCandidate, lowScoreCandidate } from '@/test/mocks/matchingData';

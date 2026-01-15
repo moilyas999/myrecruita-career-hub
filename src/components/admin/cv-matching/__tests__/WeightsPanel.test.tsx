@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@/test/utils';
 import { WeightsPanel } from '../WeightsPanel';
 import { DEFAULT_WEIGHTS, WEIGHT_PRESETS } from '../types';
