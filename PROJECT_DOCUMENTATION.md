@@ -1965,14 +1965,37 @@ interface PipelineEntry extends CandidatePipeline {
 | `PipelineColumn.tsx` | `src/components/admin/pipeline/` | Stage column with drag-drop zone |
 | `PipelineCard.tsx` | `src/components/admin/pipeline/` | Candidate card with actions |
 | `AddToPipelineDialog.tsx` | `src/components/admin/pipeline/` | Add candidate dialog |
+| `CandidateSearchDialog.tsx` | `src/components/admin/pipeline/` | CV database search dialog for direct candidate addition |
 | `PipelineDetailSheet.tsx` | `src/components/admin/pipeline/` | Candidate detail slide-out |
+
+### Adding Candidates to Pipeline
+
+There are **two ways** to add candidates to the pipeline:
+
+1. **Direct from Pipeline Page** (NEW):
+   - Click the "Add Candidate" button in the pipeline header
+   - Search the CV database by name, email, or job title
+   - Select a candidate and choose which job to add them to
+   - Requires `pipeline.create` permission
+
+2. **From CV Database (Submissions tab)**:
+   - Navigate to Admin → Submissions → CV Database
+   - Click the Kanban icon on any CV submission
+   - Select the job and initial stage
+
+### Empty State UX
+
+When the pipeline is empty, users see helpful guidance:
+- **Kanban view**: Shows an action card with "Add Candidate" and "Browse CVs" buttons
+- **List view**: Shows a full-page empty state with clear call-to-action buttons
+- All empty state actions respect user permissions (`pipeline.create` required)
 
 ### Pipeline Permissions
 
 | Permission | Capability |
 |------------|------------|
 | `pipeline.view` | View pipeline board, see all candidates |
-| `pipeline.create` | Add candidates to pipeline |
+| `pipeline.create` | Add candidates to pipeline (enables "Add Candidate" button) |
 | `pipeline.update` | Move stages, update notes, assign priority |
 | `pipeline.delete` | Remove candidates from pipeline |
 

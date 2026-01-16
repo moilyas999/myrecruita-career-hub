@@ -13,13 +13,15 @@ import {
 } from '@/components/ui/select';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, Filter, LayoutGrid, List, RefreshCw, Users } from 'lucide-react';
+import { Search, Filter, LayoutGrid, List, RefreshCw, Users, UserPlus, Database } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { queryKeys } from '@/lib/queryKeys';
 import { usePipeline, useUpdatePipelineStage, useDeletePipelineEntry } from '@/hooks/usePipeline';
 import { usePermissions } from '@/hooks/usePermissions';
 import PipelineColumn from './pipeline/PipelineColumn';
 import PipelineDetailSheet from './pipeline/PipelineDetailSheet';
+import CandidateSearchDialog from './pipeline/CandidateSearchDialog';
+import AddToPipelineDialog from './pipeline/AddToPipelineDialog';
 import {
   STAGE_CONFIG,
   ACTIVE_STAGES,
@@ -38,8 +40,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useNavigate } from 'react-router-dom';
 
 export default function CandidatePipeline() {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState<PipelineFilters>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedJob, setSelectedJob] = useState<string>('all');
@@ -49,8 +53,19 @@ export default function CandidatePipeline() {
   const [dragTargetStage, setDragTargetStage] = useState<PipelineStage | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState<string | null>(null);
+  
+  // New state for candidate search and add dialogs
+  const [candidateSearchOpen, setCandidateSearchOpen] = useState(false);
+  const [addToPipelineOpen, setAddToPipelineOpen] = useState(false);
+  const [selectedCVForPipeline, setSelectedCVForPipeline] = useState<{
+    id: string;
+    name: string;
+    email: string;
+    job_title?: string | null;
+  } | null>(null);
 
   const { hasPermission } = usePermissions();
+  const canCreate = hasPermission('pipeline.create');
   const canUpdate = hasPermission('pipeline.update');
   const canDelete = hasPermission('pipeline.delete');
 
@@ -158,6 +173,23 @@ export default function CandidatePipeline() {
     }
   }, [canUpdate, handleStageChange]);
 
+  // Handle candidate selection from search dialog
+  const handleCandidateSelected = useCallback((candidate: {
+    id: string;
+    name: string;
+    email: string;
+    job_title?: string | null;
+  }) => {
+    setSelectedCVForPipeline({
+      id: candidate.id,
+      name: candidate.name,
+      email: candidate.email,
+      job_title: candidate.job_title,
+    });
+    setCandidateSearchOpen(false);
+    setAddToPipelineOpen(true);
+  }, []);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -169,6 +201,12 @@ export default function CandidatePipeline() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {canCreate && (
+            <Button onClick={() => setCandidateSearchOpen(true)} className="gap-2">
+              <UserPlus className="w-4 h-4" />
+              <span className="hidden sm:inline">Add Candidate</span>
+            </Button>
+          )}
           <Button variant="outline" size="icon" onClick={() => refetch()}>
             <RefreshCw className="w-4 h-4" />
           </Button>
@@ -278,46 +316,85 @@ export default function CandidatePipeline() {
           ))}
         </div>
       ) : viewMode === 'kanban' ? (
-        <ScrollArea className="w-full">
-          <div className="flex gap-4 pb-4 min-h-[500px]">
-            {ACTIVE_STAGES.map((stage) => (
-              <PipelineColumn
-                key={stage}
-                stageConfig={STAGE_CONFIG[stage]}
-                entries={entriesByStage[stage] || []}
-                onStageChange={handleStageChange}
-                onViewDetails={handleViewDetails}
-                onViewCV={handleViewCV}
-                onRemove={handleRemove}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-                isDragTarget={dragTargetStage === stage}
-              />
-            ))}
-            
-            {/* Terminal stages in a collapsed view */}
-            <div className="min-w-[280px] space-y-4">
-              {TERMINAL_STAGES.map((stage) => (
-                <Card key={stage} className="border-dashed">
-                  <CardHeader className="p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${STAGE_CONFIG[stage].color.replace('border-', 'bg-')}`} />
-                        <CardTitle className="text-sm font-medium">
-                          {STAGE_CONFIG[stage].label}
-                        </CardTitle>
-                      </div>
-                      <Badge variant="secondary" className="text-xs">
-                        {entriesByStage[stage]?.length || 0}
-                      </Badge>
+        <>
+          {/* Empty state overlay for Kanban when no candidates */}
+          {pipelineData?.length === 0 && (
+            <Card className="mb-4 border-dashed bg-muted/30">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-primary/10 rounded-lg">
+                      <Users className="w-6 h-6 text-primary" />
                     </div>
-                  </CardHeader>
-                </Card>
+                    <div>
+                      <h3 className="font-semibold">Get Started with Your Pipeline</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Add candidates from your CV database to begin tracking their journey.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {canCreate && (
+                      <Button onClick={() => setCandidateSearchOpen(true)} className="gap-2">
+                        <UserPlus className="w-4 h-4" />
+                        Add Candidate
+                      </Button>
+                    )}
+                    <Button 
+                      variant="outline" 
+                      onClick={() => navigate('/admin?tab=submissions')}
+                      className="gap-2"
+                    >
+                      <Database className="w-4 h-4" />
+                      Browse CVs
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          <ScrollArea className="w-full">
+            <div className="flex gap-4 pb-4 min-h-[500px]">
+              {ACTIVE_STAGES.map((stage) => (
+                <PipelineColumn
+                  key={stage}
+                  stageConfig={STAGE_CONFIG[stage]}
+                  entries={entriesByStage[stage] || []}
+                  onStageChange={handleStageChange}
+                  onViewDetails={handleViewDetails}
+                  onViewCV={handleViewCV}
+                  onRemove={handleRemove}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  isDragTarget={dragTargetStage === stage}
+                />
               ))}
+              
+              {/* Terminal stages in a collapsed view */}
+              <div className="min-w-[280px] space-y-4">
+                {TERMINAL_STAGES.map((stage) => (
+                  <Card key={stage} className="border-dashed">
+                    <CardHeader className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${STAGE_CONFIG[stage].color.replace('border-', 'bg-')}`} />
+                          <CardTitle className="text-sm font-medium">
+                            {STAGE_CONFIG[stage].label}
+                          </CardTitle>
+                        </div>
+                        <Badge variant="secondary" className="text-xs">
+                          {entriesByStage[stage]?.length || 0}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                  </Card>
+                ))}
+              </div>
             </div>
-          </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
+        </>
       ) : (
         // List view - simplified table
         <Card>
@@ -347,8 +424,28 @@ export default function CandidatePipeline() {
                 </div>
               ))}
               {pipelineData?.length === 0 && (
-                <div className="p-8 text-center text-muted-foreground">
-                  No candidates in pipeline. Add candidates from the CV Database.
+                <div className="p-12 text-center">
+                  <Users className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+                  <h3 className="font-semibold text-lg mb-2">No candidates in pipeline</h3>
+                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                    Start building your recruitment pipeline by adding candidates from your CV database.
+                  </p>
+                  <div className="flex items-center justify-center gap-3">
+                    {canCreate && (
+                      <Button onClick={() => setCandidateSearchOpen(true)} className="gap-2">
+                        <UserPlus className="w-4 h-4" />
+                        Add Candidate
+                      </Button>
+                    )}
+                    <Button 
+                      variant="outline" 
+                      onClick={() => navigate('/admin?tab=submissions')}
+                      className="gap-2"
+                    >
+                      <Database className="w-4 h-4" />
+                      Browse CV Database
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
@@ -380,6 +477,20 @@ export default function CandidatePipeline() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Candidate Search Dialog */}
+      <CandidateSearchDialog
+        open={candidateSearchOpen}
+        onOpenChange={setCandidateSearchOpen}
+        onSelectCandidate={handleCandidateSelected}
+      />
+
+      {/* Add to Pipeline Dialog */}
+      <AddToPipelineDialog
+        open={addToPipelineOpen}
+        onOpenChange={setAddToPipelineOpen}
+        cvSubmission={selectedCVForPipeline}
+      />
     </div>
   );
 }
