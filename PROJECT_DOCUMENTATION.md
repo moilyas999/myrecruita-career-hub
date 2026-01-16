@@ -1107,6 +1107,20 @@ Deno.serve(async (req) => {
 - `*.spec.ts` for integration tests
 - Place tests next to source files or in `__tests__/` directory
 
+**Current Test Coverage**:
+| Feature | Test File | Coverage |
+|---------|-----------|----------|
+| CV Matching Components | `src/components/admin/cv-matching/__tests__/*.test.tsx` | ✅ Full |
+| Pipeline Components | `src/components/admin/pipeline/__tests__/*.test.tsx` | ✅ Full |
+| usePermissions Hook | `src/hooks/__tests__/usePermissions.test.tsx` | ✅ Full |
+| usePipeline Hook | `src/hooks/__tests__/usePipeline.test.tsx` | ✅ Full |
+
+**Mock Data**:
+- `src/test/mocks/supabase.ts` - Supabase client mock
+- `src/test/mocks/matchingData.ts` - CV matching test fixtures
+- `src/test/mocks/pipelineData.ts` - Pipeline test fixtures
+- `src/test/utils.tsx` - Custom render with providers
+
 ### 10.5 Code Organization Patterns
 
 **Query Keys (Centralized)**:
