@@ -2593,6 +2593,9 @@ export type Database = {
         | "automation.manage"
         | "calendar.view"
         | "calendar.sync"
+        | "calendar.create"
+        | "calendar.update"
+        | "calendar.delete"
       psl_status:
         | "target"
         | "applied"
@@ -2795,6 +2798,9 @@ export const Constants = {
         "automation.manage",
         "calendar.view",
         "calendar.sync",
+        "calendar.create",
+        "calendar.update",
+        "calendar.delete",
       ],
       psl_status: [
         "target",
