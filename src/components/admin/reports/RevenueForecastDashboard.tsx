@@ -13,6 +13,8 @@ import { InvoiceStatusTable } from './InvoiceStatusTable';
 import { ReportFilters } from './ReportFilters';
 import { AccessDenied } from '@/components/admin/shared/AccessDenied';
 import { DollarSign, TrendingUp, FileText, CreditCard, Clock, Target } from 'lucide-react';
+import { exportRevenueReport } from '@/lib/exportUtils';
+import { toast } from 'sonner';
 import type { ReportPeriod, ReportDateRange, RevenueReportFilters } from '@/types/report';
 
 export default function RevenueForecastDashboard() {
@@ -35,8 +37,18 @@ export default function RevenueForecastDashboard() {
   };
 
   const handleExport = () => {
-    // TODO: Implement CSV export
-    console.log('Exporting report...');
+    try {
+      exportRevenueReport(
+        metrics || null,
+        forecastData || [],
+        clientData || [],
+        invoices || []
+      );
+      toast.success('Revenue report exported successfully');
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Failed to export report');
+    }
   };
 
   // Permission check

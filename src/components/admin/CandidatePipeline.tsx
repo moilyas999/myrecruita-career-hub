@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,16 +40,39 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export default function CandidatePipeline() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Read jobId from URL params for deep linking from JobDetailPage
+  const urlJobId = searchParams.get('jobId');
+  
   const [filters, setFilters] = useState<PipelineFilters>({});
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedJob, setSelectedJob] = useState<string>('all');
+  const [selectedJob, setSelectedJob] = useState<string>(urlJobId || 'all');
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
   const [selectedEntry, setSelectedEntry] = useState<PipelineEntryWithDetails | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+  
+  // Sync URL param changes to state
+  useEffect(() => {
+    if (urlJobId && urlJobId !== selectedJob) {
+      setSelectedJob(urlJobId);
+    }
+  }, [urlJobId]);
+  
+  // Update URL when job filter changes (for shareable links)
+  const handleJobFilterChange = useCallback((value: string) => {
+    setSelectedJob(value);
+    if (value === 'all') {
+      searchParams.delete('jobId');
+    } else {
+      searchParams.set('jobId', value);
+    }
+    setSearchParams(searchParams, { replace: true });
+  }, [searchParams, setSearchParams]);
   const [dragTargetStage, setDragTargetStage] = useState<PipelineStage | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [entryToDelete, setEntryToDelete] = useState<string | null>(null);
@@ -287,7 +310,7 @@ export default function CandidatePipeline() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Select value={selectedJob} onValueChange={setSelectedJob}>
+            <Select value={selectedJob} onValueChange={handleJobFilterChange}>
               <SelectTrigger className="w-full sm:w-64">
                 <Filter className="w-4 h-4 mr-2" />
                 <SelectValue placeholder="Filter by job" />

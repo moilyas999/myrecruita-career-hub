@@ -519,37 +519,65 @@ export function useTimeToFillMetrics(filters?: PerformanceReportFilters) {
   return useQuery({
     queryKey: reportKeys.timeToFill(filters),
     queryFn: async (): Promise<TimeToFillData[]> => {
+      // Query placements with job and pipeline creation dates
       const { data, error } = await supabase
-        .from('candidate_pipeline')
+        .from('placements')
         .select(`
+          id,
           created_at,
-          job:jobs(sector)
+          start_date,
+          pipeline:candidate_pipeline(
+            created_at,
+            job:jobs(
+              id,
+              created_at,
+              sector
+            )
+          )
         `)
-        .eq('stage', 'placed');
+        .in('status', ['confirmed', 'started', 'completed']);
 
       if (error) throw error;
 
-      // Group by sector
+      // Group by sector and calculate actual time to fill
       const sectorMap = new Map<string, { times: number[]; count: number }>();
 
-      for (const entry of data || []) {
-        const sector = (entry as any).job?.sector || 'Other';
+      for (const placement of data || []) {
+        const pipeline = (placement as any).pipeline;
+        const job = pipeline?.job;
+        const sector = job?.sector || 'Other';
         const existing = sectorMap.get(sector) || { times: [], count: 0 };
         
-        // Estimate time to fill (would need actual placement date)
-        existing.times.push(30); // Placeholder
-        existing.count += 1;
+        // Calculate time to fill: from job creation to placement confirmation
+        // Primary: job.created_at to placement.created_at
+        // Fallback: pipeline.created_at to placement.created_at
+        let timeToFill: number | null = null;
+        
+        if (job?.created_at && placement.created_at) {
+          timeToFill = differenceInDays(parseISO(placement.created_at), parseISO(job.created_at));
+        } else if (pipeline?.created_at && placement.created_at) {
+          timeToFill = differenceInDays(parseISO(placement.created_at), parseISO(pipeline.created_at));
+        }
+        
+        // Only include valid positive values
+        if (timeToFill !== null && timeToFill >= 0) {
+          existing.times.push(timeToFill);
+          existing.count += 1;
+        }
 
         sectorMap.set(sector, existing);
       }
 
-      return Array.from(sectorMap.entries()).map(([sector, data]) => ({
-        sector,
-        avgDays: data.times.reduce((a, b) => a + b, 0) / data.times.length,
-        minDays: Math.min(...data.times),
-        maxDays: Math.max(...data.times),
-        count: data.count,
-      }));
+      return Array.from(sectorMap.entries())
+        .filter(([_, data]) => data.times.length > 0)
+        .map(([sector, data]) => ({
+          sector,
+          avgDays: data.times.reduce((a, b) => a + b, 0) / data.times.length,
+          minDays: Math.min(...data.times),
+          maxDays: Math.max(...data.times),
+          count: data.count,
+        }))
+        .sort((a, b) => b.count - a.count);
     },
   });
 }

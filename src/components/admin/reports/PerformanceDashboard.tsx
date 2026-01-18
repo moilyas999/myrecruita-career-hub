@@ -7,10 +7,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, FunnelChart, Funnel, Cell, LabelList } from 'recharts';
-import type { ReportPeriod, PerformanceReportFilters } from '@/types/report';
-
-const COLORS = ['hsl(var(--primary))', 'hsl(217, 91%, 65%)', 'hsl(217, 91%, 55%)', 'hsl(217, 91%, 50%)', 'hsl(217, 91%, 45%)', 'hsl(217, 91%, 40%)', 'hsl(217, 91%, 35%)'];
+import { Button } from '@/components/ui/button';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Download, RefreshCw } from 'lucide-react';
+import { exportRecruiterPerformance } from '@/lib/exportUtils';
+import { toast } from 'sonner';
+import type { PerformanceReportFilters } from '@/types/report';
 
 const formatCurrency = (value: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 0 }).format(value);
 
@@ -18,9 +20,31 @@ export default function PerformanceDashboard() {
   const { hasPermission, isLoading: permissionsLoading } = usePermissions();
   const [filters] = useState<PerformanceReportFilters>({});
 
-  const { data: recruiters, isLoading: recruitersLoading } = useRecruiterPerformance(filters);
-  const { data: pipelineMetrics, isLoading: pipelineLoading } = usePipelineMetrics();
-  const { data: funnel, isLoading: funnelLoading } = useConversionFunnel(filters);
+  const { data: recruiters, isLoading: recruitersLoading, refetch: refetchRecruiters } = useRecruiterPerformance(filters);
+  const { data: pipelineMetrics, isLoading: pipelineLoading, refetch: refetchPipeline } = usePipelineMetrics();
+  const { data: funnel, isLoading: funnelLoading, refetch: refetchFunnel } = useConversionFunnel(filters);
+
+  const canExport = hasPermission('reports.export');
+
+  const handleRefresh = () => {
+    refetchRecruiters();
+    refetchPipeline();
+    refetchFunnel();
+  };
+
+  const handleExport = () => {
+    if (recruiters && recruiters.length > 0) {
+      try {
+        exportRecruiterPerformance(recruiters);
+        toast.success('Performance report exported successfully');
+      } catch (error) {
+        console.error('Export error:', error);
+        toast.error('Failed to export report');
+      }
+    } else {
+      toast.error('No data to export');
+    }
+  };
 
   if (!permissionsLoading && !hasPermission('reports.view')) {
     return <AccessDenied message="You don't have permission to view performance reports." requiredPermission="reports.view" />;
@@ -28,9 +52,23 @@ export default function PerformanceDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Performance Reports</h2>
-        <p className="text-muted-foreground">Track team performance, pipeline health, and conversion metrics</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Performance Reports</h2>
+          <p className="text-muted-foreground">Track team performance, pipeline health, and conversion metrics</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleRefresh}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+          {canExport && (
+            <Button variant="outline" size="sm" onClick={handleExport}>
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Recruiter Leaderboard */}

@@ -496,9 +496,41 @@ export default function JobStatusTracker() {
                                 size="sm"
                                 className="text-xs h-7"
                                 onClick={async () => {
-                                  toast.info('Reprocess feature coming soon', {
-                                    description: 'Manual reprocessing of filtered emails will be available in a future update'
-                                  });
+                                  try {
+                                    // Fetch the full email content from ingestion log
+                                    const { data: emailData, error: fetchError } = await supabase
+                                      .from('email_ingestion_log')
+                                      .select('from_email, subject, message_id')
+                                      .eq('id', email.id)
+                                      .single();
+                                    
+                                    if (fetchError) throw fetchError;
+                                    
+                                    // Reprocess via the existing edge function
+                                    const response = await supabase.functions.invoke('process-job-email', {
+                                      body: {
+                                        from: emailData.from_email,
+                                        subject: emailData.subject || '',
+                                        body: `[Reprocessed from filtered email]\nSubject: ${emailData.subject || 'N/A'}\nFilter reason: ${email.filter_reason || 'Unknown'}`,
+                                        source: 'manual',
+                                      }
+                                    });
+                                    
+                                    if (response.error) throw response.error;
+                                    
+                                    toast.success('Email reprocessed', {
+                                      description: 'Check the review queue for results'
+                                    });
+                                    
+                                    // Refresh the data
+                                    refetch();
+                                    refetchFiltered();
+                                  } catch (error) {
+                                    console.error('Reprocess error:', error);
+                                    toast.error('Failed to reprocess email', {
+                                      description: error instanceof Error ? error.message : 'Unknown error'
+                                    });
+                                  }
                                 }}
                               >
                                 <RotateCcw className="w-3 h-3 mr-1" />

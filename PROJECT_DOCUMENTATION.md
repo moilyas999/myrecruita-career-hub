@@ -2,7 +2,7 @@
 
 > **Knowledge Base Reference Document**  
 > **Last Updated**: January 2025  
-> **Version**: 2.5  
+> **Version**: 2.5.1  
 > **Status**: Production
 
 ---
