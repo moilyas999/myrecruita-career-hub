@@ -23,7 +23,15 @@ export type PermissionType =
   // Pipeline Management
   | 'pipeline.view' | 'pipeline.create' | 'pipeline.update' | 'pipeline.delete'
   // CV Matching
-  | 'matching.view' | 'matching.create' | 'matching.history';
+  | 'matching.view' | 'matching.create' | 'matching.history'
+  // Client CRM
+  | 'clients.view' | 'clients.create' | 'clients.update' | 'clients.delete'
+  // Reports
+  | 'reports.view' | 'reports.export'
+  // Automation
+  | 'automation.view' | 'automation.manage'
+  // Calendar
+  | 'calendar.view' | 'calendar.sync';
 
 // Staff role types
 export type StaffRole = 
@@ -69,6 +77,10 @@ export const PERMISSION_CATEGORIES = {
     label: 'CV Matching',
     permissions: ['matching.view', 'matching.create', 'matching.history'] as PermissionType[],
   },
+  clients: {
+    label: 'Client CRM',
+    permissions: ['clients.view', 'clients.create', 'clients.update', 'clients.delete'] as PermissionType[],
+  },
   submissions: {
     label: 'Submissions',
     permissions: ['submissions.view', 'submissions.delete'] as PermissionType[],
@@ -80,6 +92,18 @@ export const PERMISSION_CATEGORIES = {
   analytics: {
     label: 'Analytics',
     permissions: ['analytics.view'] as PermissionType[],
+  },
+  reports: {
+    label: 'Reports',
+    permissions: ['reports.view', 'reports.export'] as PermissionType[],
+  },
+  automation: {
+    label: 'Automation',
+    permissions: ['automation.view', 'automation.manage'] as PermissionType[],
+  },
+  calendar: {
+    label: 'Calendar',
+    permissions: ['calendar.view', 'calendar.sync'] as PermissionType[],
   },
   staff: {
     label: 'Staff Management',
@@ -119,6 +143,10 @@ export const PERMISSION_LABELS: Record<PermissionType, string> = {
   'matching.view': 'View CV Matching',
   'matching.create': 'Run CV Matching',
   'matching.history': 'View Match History',
+  'clients.view': 'View Clients',
+  'clients.create': 'Create Clients',
+  'clients.update': 'Update Clients',
+  'clients.delete': 'Delete Clients',
   'submissions.view': 'View Submissions',
   'submissions.delete': 'Delete Submissions',
   'blog.view': 'View Blog',
@@ -126,6 +154,12 @@ export const PERMISSION_LABELS: Record<PermissionType, string> = {
   'blog.update': 'Update Blog Posts',
   'blog.delete': 'Delete Blog Posts',
   'analytics.view': 'View Analytics',
+  'reports.view': 'View Reports',
+  'reports.export': 'Export Reports',
+  'automation.view': 'View Automation',
+  'automation.manage': 'Manage Automation',
+  'calendar.view': 'View Calendar',
+  'calendar.sync': 'Sync Calendar',
   'staff.view': 'View Staff',
   'staff.create': 'Create Staff',
   'staff.update': 'Update Staff',
@@ -146,7 +180,7 @@ export const ROLE_CONFIG: Record<StaffRole, RoleConfig> = {
   },
   recruiter: {
     label: 'Recruiter',
-    description: 'Manage CVs, jobs, applications, and talent profiles',
+    description: 'Manage CVs, jobs, applications, clients, and talent profiles',
     icon: 'UserCheck',
     color: 'bg-blue-500 text-white',
     defaultPermissions: [
@@ -156,12 +190,16 @@ export const ROLE_CONFIG: Record<StaffRole, RoleConfig> = {
       'talent.view', 'talent.create', 'talent.update', 'talent.delete',
       'pipeline.view', 'pipeline.create', 'pipeline.update',
       'matching.view', 'matching.create', 'matching.history',
+      'clients.view', 'clients.create', 'clients.update',
+      'reports.view',
+      'automation.view',
+      'calendar.view', 'calendar.sync',
       'analytics.view',
     ],
   },
   account_manager: {
     label: 'Account Manager',
-    description: 'View employer submissions, talent requests, and contact forms',
+    description: 'Manage client relationships and view submissions',
     icon: 'Building',
     color: 'bg-emerald-500 text-white',
     defaultPermissions: [
@@ -171,6 +209,10 @@ export const ROLE_CONFIG: Record<StaffRole, RoleConfig> = {
       'submissions.view',
       'pipeline.view',
       'matching.history',
+      'clients.view', 'clients.create', 'clients.update',
+      'reports.view',
+      'automation.view',
+      'calendar.view', 'calendar.sync',
       'analytics.view',
     ],
   },
@@ -183,6 +225,7 @@ export const ROLE_CONFIG: Record<StaffRole, RoleConfig> = {
       'jobs.view',
       'talent.view',
       'blog.view', 'blog.create', 'blog.update', 'blog.delete',
+      'reports.view',
       'analytics.view',
     ],
   },
@@ -195,10 +238,10 @@ export const ROLE_CONFIG: Record<StaffRole, RoleConfig> = {
   },
   viewer: {
     label: 'Viewer',
-    description: 'Read-only access to CVs, jobs, and talent profiles',
+    description: 'Read-only access to CVs, jobs, clients, and talent profiles',
     icon: 'Eye',
     color: 'bg-slate-500 text-white',
-    defaultPermissions: ['cv.view', 'jobs.view', 'talent.view'],
+    defaultPermissions: ['cv.view', 'jobs.view', 'talent.view', 'clients.view'],
   },
 };
 
