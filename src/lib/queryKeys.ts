@@ -66,6 +66,11 @@ export const queryKeys = {
   // Automation (Phase 4)
   automationRules: ['automation-rules'] as const,
   automationTasks: ['automation-tasks'] as const,
+  automationRuleDetail: (id: string) => ['automation-rules', 'detail', id] as const,
+  automationTaskDetail: (id: string) => ['automation-tasks', 'detail', id] as const,
+  automationTaskStats: ['automation-tasks', 'stats'] as const,
+  automationRuleStats: ['automation-rules', 'stats'] as const,
+  myTasks: ['automation-tasks', 'mine'] as const,
   
   // Reports (Phase 6)
   revenueReport: ['revenue-report'] as const,
