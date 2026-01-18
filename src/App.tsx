@@ -25,6 +25,7 @@ import BlogPost from "./pages/BlogPost";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import CandidateProfilePage from "./pages/admin/CandidateProfilePage";
+import ClientProfilePage from "./pages/admin/ClientProfilePage";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import MyApplications from "./pages/MyApplications";
@@ -58,6 +59,7 @@ const App = () => (
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/candidate/:candidateId" element={<CandidateProfilePage />} />
+            <Route path="/admin/client/:clientId" element={<ClientProfilePage />} />
             
             {/* Auth page with main layout */}
             <Route path="/auth" element={
