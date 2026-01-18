@@ -8,18 +8,19 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
-  Plus, 
   Zap, 
   ListTodo,
   Activity,
   Clock,
   AlertTriangle,
+  History,
 } from 'lucide-react';
 import { useTaskStats, useRuleStats, useMyTasks } from '@/hooks/useAutomation';
 import { usePermissions } from '@/hooks/usePermissions';
 import TasksList from './TasksList';
 import RulesList from './RulesList';
 import TaskCard from './TaskCard';
+import ExecutionHistory from './ExecutionHistory';
 import { AccessDenied } from '@/components/admin/shared';
 
 export default function AutomationDashboard() {
@@ -175,6 +176,12 @@ export default function AutomationDashboard() {
               Rules
             </TabsTrigger>
           )}
+          {canManage && (
+            <TabsTrigger value="history" className="gap-2">
+              <History className="h-4 w-4" />
+              Execution History
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="tasks" className="mt-4">
@@ -184,6 +191,12 @@ export default function AutomationDashboard() {
         {canManage && (
           <TabsContent value="rules" className="mt-4">
             <RulesList />
+          </TabsContent>
+        )}
+
+        {canManage && (
+          <TabsContent value="history" className="mt-4">
+            <ExecutionHistory />
           </TabsContent>
         )}
       </Tabs>
