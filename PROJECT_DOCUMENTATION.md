@@ -2794,6 +2794,25 @@ All emails sent from: `MyRecruita <no-reply@myrecruita.com>`
 
 ## 26. Changelog
 
+### Version 2.3 (January 2025)
+
+**Automation System (Phase 4)**:
+- ✅ Database tables: `automation_rules`, `automation_tasks` with RLS
+- ✅ Type definitions: Rule/Task types, enums, filters, stats
+- ✅ Comprehensive hooks: CRUD for rules and tasks with optimistic updates
+- ✅ AutomationDashboard: Overview with stats and quick actions
+- ✅ TasksList: Filterable task list with status/priority filters
+- ✅ TaskCard: Task display with quick actions
+- ✅ TaskFormDialog: Create/edit tasks with validation
+- ✅ RulesList: Filterable automation rules list
+- ✅ RuleCard: Rule display with toggle and quick actions
+- ✅ RuleFormDialog: Create/edit rules with trigger/action config
+- ✅ TaskStats: Dashboard stats component
+- ✅ Query keys: `automationRules`, `automationTasks`, `myTasks`, stats
+- ✅ Activity logging for automation actions
+- ✅ Admin tabs: `tasks`, `automation-rules`, `automation`
+- ✅ Sidebar navigation: Tasks and Rules links in Automation group
+
 ### Version 2.2 (January 2025)
 
 **Enhanced Job Management (Phase 3)**:
