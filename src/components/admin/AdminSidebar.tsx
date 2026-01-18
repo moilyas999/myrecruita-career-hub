@@ -37,6 +37,7 @@ import {
   TrendingUp,
   Zap,
   CheckSquare,
+  Calendar,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -138,6 +139,12 @@ export default function AdminSidebar({ isFullAdmin, isCvUploader }: AdminSidebar
         items: [
           { title: 'Revenue Forecast', href: '/admin?tab=revenue', icon: TrendingUp, permission: 'reports.view' },
           { title: 'Performance', href: '/admin?tab=performance', icon: BarChart3, permission: 'reports.view' },
+        ],
+      },
+      {
+        label: 'Scheduling',
+        items: [
+          { title: 'Calendar', href: '/admin?tab=calendar', icon: Calendar, permission: 'calendar.view' },
         ],
       },
       {

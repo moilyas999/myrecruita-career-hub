@@ -30,6 +30,7 @@ const TasksList = lazy(() => import('@/components/admin/automation/TasksList'));
 const RulesList = lazy(() => import('@/components/admin/automation/RulesList'));
 const RevenueForecastDashboard = lazy(() => import('@/components/admin/reports/RevenueForecastDashboard'));
 const PerformanceDashboard = lazy(() => import('@/components/admin/reports/PerformanceDashboard'));
+const CalendarDashboard = lazy(() => import('@/components/admin/calendar/CalendarDashboard'));
 
 // Loading fallback component
 function TabSkeleton() {
@@ -88,6 +89,7 @@ const TAB_CONFIG: Record<string, TabConfig> = {
   'automation-rules': { component: RulesList, title: 'Automation Rules', description: 'Configure workflow automation rules', fullAdminOnly: true },
   'revenue': { component: RevenueForecastDashboard, title: 'Revenue Forecast', description: 'Track revenue, invoicing, and projections', fullAdminOnly: true },
   'performance': { component: PerformanceDashboard, title: 'Performance Reports', description: 'Team and pipeline performance analytics', fullAdminOnly: true },
+  'calendar': { component: CalendarDashboard, title: 'Calendar', description: 'Interview scheduling and calendar management' },
 };
 
 export default function AdminDashboard() {
