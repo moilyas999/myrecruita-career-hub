@@ -2,7 +2,7 @@
 
 > **Knowledge Base Reference Document**  
 > **Last Updated**: January 2025  
-> **Version**: 2.0  
+> **Version**: 2.3  
 > **Status**: Production
 
 ---
@@ -35,6 +35,7 @@
 19. [Blog & Content Management](#19-blog--content-management)
 20. [Notification System](#20-notification-system)
 20.5. [Staff Accountability System](#155-staff-accountability-system-new)
+20.6. [Automation System](#156-automation-system)
 21. [PWA & Progressive Features](#21-pwa--progressive-features)
 22. [SEO & Structured Data](#22-seo--structured-data)
 23. [Public-Facing Features](#23-public-facing-features)
@@ -2364,6 +2365,200 @@ Activity logging is integrated in:
 - `CVManualEntry.tsx` - Manual CV creation
 - `usePipeline.ts` - Pipeline stage changes, notes, additions
 - `useAuth.tsx` - Login/logout tracking
+
+---
+
+## 15.6 Automation System
+
+### Overview
+
+The Automation System provides workflow automation through rules and tasks. It enables:
+- **Automation Rules**: Define triggers and actions that execute automatically
+- **Task Management**: Create, assign, and track work items
+- **Dashboard Views**: Monitor automation activity and task progress
+- **Activity Logging**: All automation actions are logged for audit purposes
+
+### Database Schema
+
+#### automation_rules Table
+
+```sql
+CREATE TABLE public.automation_rules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  description TEXT,
+  trigger_type TEXT NOT NULL,          -- Event that activates the rule
+  trigger_config JSONB DEFAULT '{}',   -- Trigger-specific parameters
+  action_type TEXT NOT NULL,           -- What action to perform
+  action_config JSONB DEFAULT '{}',    -- Action-specific parameters
+  is_active BOOLEAN DEFAULT true,
+  priority INTEGER DEFAULT 0,          -- Higher = evaluated first
+  created_by UUID,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  last_triggered_at TIMESTAMPTZ,
+  trigger_count INTEGER DEFAULT 0
+);
+```
+
+#### automation_tasks Table
+
+```sql
+CREATE TABLE public.automation_tasks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  rule_id UUID REFERENCES automation_rules(id),  -- NULL if manually created
+  title TEXT NOT NULL,
+  description TEXT,
+  task_type TEXT DEFAULT 'custom',
+  priority TEXT DEFAULT 'medium',      -- low, medium, high, urgent
+  status TEXT DEFAULT 'pending',       -- pending, in_progress, completed, cancelled
+  due_date TIMESTAMPTZ,
+  assigned_to UUID,                    -- admin_profiles.id
+  related_cv_id UUID REFERENCES cv_submissions(id),
+  related_job_id UUID REFERENCES jobs(id),
+  related_pipeline_id UUID REFERENCES candidate_pipeline(id),
+  related_client_id UUID REFERENCES clients(id),
+  metadata JSONB DEFAULT '{}',
+  completed_at TIMESTAMPTZ,
+  completed_by UUID,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+### Trigger Types
+
+| Type | Description | Config Example |
+|------|-------------|----------------|
+| `cv_submitted` | New CV received | `{ sector: ['Finance'], min_score: 70 }` |
+| `cv_score_above` | CV score exceeds threshold | `{ threshold: 80 }` |
+| `stage_changed` | Pipeline stage transition | `{ to_stage: 'interview' }` |
+| `job_created` | New job posted | `{ priority: ['high'] }` |
+| `job_ageing` | Job open for X days | `{ days_threshold: 14 }` |
+| `interview_scheduled` | Interview booked | `{ interview_type: ['final'] }` |
+| `placement_made` | Candidate placed | `{ job_type: ['permanent'] }` |
+| `client_interaction` | Client interaction logged | `{ interaction_type: ['call'] }` |
+| `time_based` | Scheduled execution | `{ schedule: 'daily', hour: 9 }` |
+| `inactivity` | No activity for X days | `{ entity_type: 'cv', days_threshold: 30 }` |
+
+### Action Types
+
+| Type | Description | Config Example |
+|------|-------------|----------------|
+| `create_task` | Create a task | `{ title: 'Follow up', task_type: 'follow_up', priority: 'high' }` |
+| `send_notification` | Push/email/in-app notification | `{ title: 'Alert', recipients: ['all_recruiters'] }` |
+| `move_stage` | Auto-move pipeline stage | `{ target_stage: 'shortlisted' }` |
+| `assign_user` | Auto-assign to recruiter | `{ user_id: 'uuid' }` |
+| `update_status` | Change job/CV status | `{ entity_type: 'job', new_status: 'on_hold' }` |
+| `add_tag` | Add tag to entity | `{ tags: ['urgent', 'priority'] }` |
+
+### Task Types
+
+| Type | Use Case |
+|------|----------|
+| `follow_up` | Follow up with candidate or client |
+| `review_cv` | Review a CV submission |
+| `schedule_interview` | Schedule candidate interview |
+| `send_feedback` | Send feedback to candidate |
+| `client_check_in` | Check in with client |
+| `job_review` | Review job posting |
+| `custom` | General purpose task |
+
+### Priority Levels
+
+| Priority | Badge Color | Use Case |
+|----------|-------------|----------|
+| `low` | Secondary | Non-urgent items |
+| `medium` | Default | Standard priority |
+| `high` | Destructive | Needs attention soon |
+| `urgent` | Destructive | Immediate action required |
+
+### Task Status Values
+
+| Status | Description |
+|--------|-------------|
+| `pending` | Not started |
+| `in_progress` | Being worked on |
+| `completed` | Finished |
+| `cancelled` | No longer needed |
+
+### Permission Matrix
+
+| Permission | Roles | Description |
+|------------|-------|-------------|
+| `automation.view` | admin, recruiter, account_manager | View tasks and rules |
+| `automation.manage` | admin | Create/edit/delete rules and tasks |
+
+### Hooks Reference
+
+#### Query Hooks
+
+| Hook | Purpose | Query Key |
+|------|---------|-----------|
+| `useAutomationRules(filters)` | Fetch rules with filters | `automationKeys.rules.list(filters)` |
+| `useAutomationRule(id)` | Fetch single rule | `automationKeys.rules.detail(id)` |
+| `useRuleStats()` | Rule statistics | `automationKeys.rules.stats()` |
+| `useTasks(filters)` | Fetch tasks with filters | `automationKeys.tasks.list(filters)` |
+| `useMyTasks()` | Current user's tasks | `automationKeys.tasks.mine()` |
+| `useTask(id)` | Fetch single task | `automationKeys.tasks.detail(id)` |
+| `useTaskStats()` | Task statistics | `automationKeys.tasks.stats()` |
+
+#### Mutation Hooks
+
+| Hook | Purpose | Activity Log Action |
+|------|---------|-------------------|
+| `useCreateRule()` | Create automation rule | `automation_rule_created` |
+| `useUpdateRule()` | Update rule | `automation_rule_updated` |
+| `useToggleRule()` | Toggle active status | `automation_rule_activated/deactivated` |
+| `useDeleteRule()` | Delete rule | `automation_rule_deleted` |
+| `useCreateTask()` | Create task | `task_created` |
+| `useUpdateTask()` | Update task | `task_updated` |
+| `useCompleteTask()` | Complete task | `task_completed` |
+| `useUpdateTaskStatus()` | Change status (Kanban) | `task_status_changed` |
+| `useDeleteTask()` | Delete task | `task_deleted` |
+| `useBulkUpdateTasks()` | Bulk update tasks | `tasks_bulk_updated` |
+
+### Components Reference
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `AutomationDashboard` | `src/components/admin/automation/` | Overview with stats and quick actions |
+| `TasksList` | `src/components/admin/automation/` | Filterable task list |
+| `TaskCard` | `src/components/admin/automation/` | Task display with actions |
+| `TaskFormDialog` | `src/components/admin/automation/` | Create/edit task form |
+| `TaskStats` | `src/components/admin/automation/` | Dashboard statistics |
+| `RulesList` | `src/components/admin/automation/` | Filterable rules list |
+| `RuleCard` | `src/components/admin/automation/` | Rule display with toggle |
+| `RuleFormDialog` | `src/components/admin/automation/` | Create/edit rule form |
+
+### Admin Routes
+
+| Route | Component | Description |
+|-------|-----------|-------------|
+| `/admin?tab=automation` | `AutomationDashboard` | Overview dashboard |
+| `/admin?tab=tasks` | `TasksList` | Task management |
+| `/admin?tab=automation-rules` | `RulesList` | Rule configuration (admin only) |
+
+### Activity Logging
+
+All automation actions are logged via `activityLogger`:
+
+```typescript
+// Rule actions
+logActivity({ action: 'automation_rule_created', resourceType: 'automation_rule', ... });
+logActivity({ action: 'automation_rule_updated', resourceType: 'automation_rule', ... });
+logActivity({ action: 'automation_rule_activated', resourceType: 'automation_rule', ... });
+logActivity({ action: 'automation_rule_deactivated', resourceType: 'automation_rule', ... });
+logActivity({ action: 'automation_rule_deleted', resourceType: 'automation_rule', ... });
+
+// Task actions
+logActivity({ action: 'task_created', resourceType: 'automation_task', ... });
+logActivity({ action: 'task_updated', resourceType: 'automation_task', ... });
+logActivity({ action: 'task_completed', resourceType: 'automation_task', ... });
+logActivity({ action: 'task_status_changed', resourceType: 'automation_task', ... });
+logActivity({ action: 'task_deleted', resourceType: 'automation_task', ... });
+logActivity({ action: 'tasks_bulk_updated', resourceType: 'automation_task', ... });
+```
 
 ---
 
