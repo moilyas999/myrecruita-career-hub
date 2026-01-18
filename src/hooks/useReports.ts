@@ -364,26 +364,24 @@ export function useRecruiterPerformance(filters?: PerformanceReportFilters) {
       const performances: RecruiterPerformance[] = [];
 
       for (const admin of admins || []) {
-        // Get CVs added by this user
+        // Use RPC-style calls or simple count queries to avoid deep type instantiation
+        // @ts-expect-error - Supabase types too deeply nested causing TS2589
         const { count: cvsAdded } = await supabase
           .from('cv_submissions')
           .select('*', { count: 'exact', head: true })
           .eq('created_by', admin.user_id);
 
-        // Get placements
         const { data: placements } = await supabase
           .from('placements')
           .select('fee_value, start_date, created_at')
           .eq('placed_by', admin.user_id);
 
-        // Get pipeline entries with interviews
         const { count: interviewsScheduled } = await supabase
           .from('candidate_pipeline')
           .select('*', { count: 'exact', head: true })
           .eq('assigned_to', admin.user_id)
           .in('stage', ['interview_1', 'interview_2', 'final_interview']);
 
-        // Get activity count
         const { count: activityCount } = await supabase
           .from('admin_audit_log')
           .select('*', { count: 'exact', head: true })
