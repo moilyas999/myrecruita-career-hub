@@ -105,34 +105,42 @@ export interface GDPRStatus {
 
 export type GDPRAction = 'update_contact' | 'renew_consent' | 'anonymise' | 'delete';
 
-// Calculate GDPR status based on last contact date
-export function calculateGDPRStatus(lastContactDate: string | null): {
+// Calculated GDPR status type (returned from calculateGDPRStatus)
+export interface CalculatedGDPRStatus {
   status: 'active' | 'stale' | 'at_risk' | 'expired';
   label: string;
   color: string;
   daysSinceContact: number | null;
-} {
+  daysUntilExpiry: number | null;
+}
+
+// Calculate GDPR status based on last contact date
+export function calculateGDPRStatus(lastContactDate: string | null): CalculatedGDPRStatus {
+  const maxDays = 730; // 2 years
+  
   if (!lastContactDate) {
     return {
       status: 'expired',
       label: 'No Contact Date',
       color: 'text-gray-500',
       daysSinceContact: null,
+      daysUntilExpiry: null,
     };
   }
 
   const days = Math.floor(
     (Date.now() - new Date(lastContactDate).getTime()) / (1000 * 60 * 60 * 24)
   );
+  const daysRemaining = maxDays - days;
 
   if (days <= 180) {
-    return { status: 'active', label: 'Active', color: 'text-green-600', daysSinceContact: days };
+    return { status: 'active', label: 'Active', color: 'text-green-600', daysSinceContact: days, daysUntilExpiry: daysRemaining };
   } else if (days <= 365) {
-    return { status: 'stale', label: 'Stale', color: 'text-amber-600', daysSinceContact: days };
+    return { status: 'stale', label: 'Stale', color: 'text-amber-600', daysSinceContact: days, daysUntilExpiry: daysRemaining };
   } else if (days <= 730) {
-    return { status: 'at_risk', label: 'At Risk', color: 'text-orange-600', daysSinceContact: days };
+    return { status: 'at_risk', label: 'At Risk', color: 'text-orange-600', daysSinceContact: days, daysUntilExpiry: daysRemaining };
   } else {
-    return { status: 'expired', label: 'Expired', color: 'text-red-600', daysSinceContact: days };
+    return { status: 'expired', label: 'Expired', color: 'text-red-600', daysSinceContact: days, daysUntilExpiry: 0 };
   }
 }
 
