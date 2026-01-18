@@ -483,6 +483,332 @@ export type Database = {
         }
         Relationships: []
       }
+      client_contacts: {
+        Row: {
+          client_id: string
+          created_at: string
+          department: string | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          is_billing_contact: boolean | null
+          is_primary: boolean | null
+          job_title: string | null
+          last_contact_at: string | null
+          linkedin_url: string | null
+          mobile: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          preferred_contact_method:
+            | Database["public"]["Enums"]["contact_method"]
+            | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_billing_contact?: boolean | null
+          is_primary?: boolean | null
+          job_title?: string | null
+          last_contact_at?: string | null
+          linkedin_url?: string | null
+          mobile?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          preferred_contact_method?:
+            | Database["public"]["Enums"]["contact_method"]
+            | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          department?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_billing_contact?: boolean | null
+          is_primary?: boolean | null
+          job_title?: string | null
+          last_contact_at?: string | null
+          linkedin_url?: string | null
+          mobile?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          preferred_contact_method?:
+            | Database["public"]["Enums"]["contact_method"]
+            | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_contacts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_interactions: {
+        Row: {
+          client_id: string
+          contact_id: string | null
+          created_at: string
+          created_by: string | null
+          direction: Database["public"]["Enums"]["interaction_direction"] | null
+          duration_minutes: number | null
+          follow_up_date: string | null
+          follow_up_required: boolean | null
+          id: string
+          interaction_type: Database["public"]["Enums"]["interaction_type"]
+          outcome: string | null
+          subject: string | null
+          summary: string | null
+        }
+        Insert: {
+          client_id: string
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          direction?:
+            | Database["public"]["Enums"]["interaction_direction"]
+            | null
+          duration_minutes?: number | null
+          follow_up_date?: string | null
+          follow_up_required?: boolean | null
+          id?: string
+          interaction_type: Database["public"]["Enums"]["interaction_type"]
+          outcome?: string | null
+          subject?: string | null
+          summary?: string | null
+        }
+        Update: {
+          client_id?: string
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          direction?:
+            | Database["public"]["Enums"]["interaction_direction"]
+            | null
+          duration_minutes?: number | null
+          follow_up_date?: string | null
+          follow_up_required?: boolean | null
+          id?: string
+          interaction_type?: Database["public"]["Enums"]["interaction_type"]
+          outcome?: string | null
+          subject?: string | null
+          summary?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_interactions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_interactions_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "client_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_terms: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_until: string | null
+          fee_percentage_contract: number | null
+          fee_percentage_perm: number | null
+          flat_fee: number | null
+          id: string
+          is_active: boolean | null
+          is_exclusive: boolean | null
+          job_type: Database["public"]["Enums"]["job_type_enum"] | null
+          max_salary_cap: number | null
+          min_salary_threshold: number | null
+          name: string
+          notes: string | null
+          payment_terms_days: number | null
+          rebate_percentage: number | null
+          rebate_period_days: number | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_until?: string | null
+          fee_percentage_contract?: number | null
+          fee_percentage_perm?: number | null
+          flat_fee?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_exclusive?: boolean | null
+          job_type?: Database["public"]["Enums"]["job_type_enum"] | null
+          max_salary_cap?: number | null
+          min_salary_threshold?: number | null
+          name: string
+          notes?: string | null
+          payment_terms_days?: number | null
+          rebate_percentage?: number | null
+          rebate_period_days?: number | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_until?: string | null
+          fee_percentage_contract?: number | null
+          fee_percentage_perm?: number | null
+          flat_fee?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_exclusive?: boolean | null
+          job_type?: Database["public"]["Enums"]["job_type_enum"] | null
+          max_salary_cap?: number | null
+          min_salary_threshold?: number | null
+          name?: string
+          notes?: string | null
+          payment_terms_days?: number | null
+          rebate_percentage?: number | null
+          rebate_period_days?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_terms_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          account_manager_id: string | null
+          address: string | null
+          billing_contact_name: string | null
+          billing_email: string | null
+          city: string | null
+          company_name: string
+          company_size: Database["public"]["Enums"]["company_size"] | null
+          country: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          industry: string | null
+          last_contact_at: string | null
+          last_placement_at: string | null
+          lifetime_revenue: number | null
+          logo_url: string | null
+          notes: string | null
+          postcode: string | null
+          psl_achieved_at: string | null
+          psl_expires_at: string | null
+          psl_notes: string | null
+          psl_status: Database["public"]["Enums"]["psl_status"] | null
+          secondary_contact_id: string | null
+          source: string | null
+          status: Database["public"]["Enums"]["client_status"] | null
+          total_placements: number | null
+          updated_at: string
+          vat_number: string | null
+          website: string | null
+        }
+        Insert: {
+          account_manager_id?: string | null
+          address?: string | null
+          billing_contact_name?: string | null
+          billing_email?: string | null
+          city?: string | null
+          company_name: string
+          company_size?: Database["public"]["Enums"]["company_size"] | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          industry?: string | null
+          last_contact_at?: string | null
+          last_placement_at?: string | null
+          lifetime_revenue?: number | null
+          logo_url?: string | null
+          notes?: string | null
+          postcode?: string | null
+          psl_achieved_at?: string | null
+          psl_expires_at?: string | null
+          psl_notes?: string | null
+          psl_status?: Database["public"]["Enums"]["psl_status"] | null
+          secondary_contact_id?: string | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["client_status"] | null
+          total_placements?: number | null
+          updated_at?: string
+          vat_number?: string | null
+          website?: string | null
+        }
+        Update: {
+          account_manager_id?: string | null
+          address?: string | null
+          billing_contact_name?: string | null
+          billing_email?: string | null
+          city?: string | null
+          company_name?: string
+          company_size?: Database["public"]["Enums"]["company_size"] | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          industry?: string | null
+          last_contact_at?: string | null
+          last_placement_at?: string | null
+          lifetime_revenue?: number | null
+          logo_url?: string | null
+          notes?: string | null
+          postcode?: string | null
+          psl_achieved_at?: string | null
+          psl_expires_at?: string | null
+          psl_notes?: string | null
+          psl_status?: Database["public"]["Enums"]["psl_status"] | null
+          secondary_contact_id?: string | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["client_status"] | null
+          total_placements?: number | null
+          updated_at?: string
+          vat_number?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_account_manager_id_fkey"
+            columns: ["account_manager_id"]
+            isOneToOne: false
+            referencedRelation: "admin_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_secondary_contact_id_fkey"
+            columns: ["secondary_contact_id"]
+            isOneToOne: false
+            referencedRelation: "admin_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_submissions: {
         Row: {
           company: string | null
@@ -1164,56 +1490,183 @@ export type Database = {
           },
         ]
       }
+      job_submissions: {
+        Row: {
+          client_responded_at: string | null
+          client_response: string | null
+          cv_submission_id: string
+          id: string
+          job_id: string
+          notes: string | null
+          rejection_category: string | null
+          rejection_reason: string | null
+          submitted_at: string
+          submitted_by: string | null
+        }
+        Insert: {
+          client_responded_at?: string | null
+          client_response?: string | null
+          cv_submission_id: string
+          id?: string
+          job_id: string
+          notes?: string | null
+          rejection_category?: string | null
+          rejection_reason?: string | null
+          submitted_at?: string
+          submitted_by?: string | null
+        }
+        Update: {
+          client_responded_at?: string | null
+          client_response?: string | null
+          cv_submission_id?: string
+          id?: string
+          job_id?: string
+          notes?: string | null
+          rejection_category?: string | null
+          rejection_reason?: string | null
+          submitted_at?: string
+          submitted_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_submissions_cv_submission_id_fkey"
+            columns: ["cv_submission_id"]
+            isOneToOne: false
+            referencedRelation: "cv_submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_submissions_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           assigned_to: string | null
           benefits: string | null
+          client_id: string | null
+          closed_at: string | null
+          closed_reason: string | null
           created_at: string
           created_by: string | null
+          cvs_submitted_count: number | null
           description: string
+          exclusivity_expires_at: string | null
+          fee_percentage: number | null
+          hiring_manager_id: string | null
           id: string
+          interviews_scheduled_count: number | null
+          job_source: string | null
+          job_type_category: Database["public"]["Enums"]["job_type_enum"] | null
           location: string
+          offers_made_count: number | null
+          placed_at: string | null
+          priority: Database["public"]["Enums"]["job_priority"] | null
           reference_id: string
           requirements: string
+          revenue_forecast: number | null
           salary: string | null
           sector: string
           status: string
+          target_fill_date: string | null
+          target_start_date: string | null
+          time_to_fill_actual_days: number | null
+          time_to_fill_target_days: number | null
           title: string
           updated_at: string
         }
         Insert: {
           assigned_to?: string | null
           benefits?: string | null
+          client_id?: string | null
+          closed_at?: string | null
+          closed_reason?: string | null
           created_at?: string
           created_by?: string | null
+          cvs_submitted_count?: number | null
           description: string
+          exclusivity_expires_at?: string | null
+          fee_percentage?: number | null
+          hiring_manager_id?: string | null
           id?: string
+          interviews_scheduled_count?: number | null
+          job_source?: string | null
+          job_type_category?:
+            | Database["public"]["Enums"]["job_type_enum"]
+            | null
           location: string
+          offers_made_count?: number | null
+          placed_at?: string | null
+          priority?: Database["public"]["Enums"]["job_priority"] | null
           reference_id: string
           requirements: string
+          revenue_forecast?: number | null
           salary?: string | null
           sector: string
           status?: string
+          target_fill_date?: string | null
+          target_start_date?: string | null
+          time_to_fill_actual_days?: number | null
+          time_to_fill_target_days?: number | null
           title: string
           updated_at?: string
         }
         Update: {
           assigned_to?: string | null
           benefits?: string | null
+          client_id?: string | null
+          closed_at?: string | null
+          closed_reason?: string | null
           created_at?: string
           created_by?: string | null
+          cvs_submitted_count?: number | null
           description?: string
+          exclusivity_expires_at?: string | null
+          fee_percentage?: number | null
+          hiring_manager_id?: string | null
           id?: string
+          interviews_scheduled_count?: number | null
+          job_source?: string | null
+          job_type_category?:
+            | Database["public"]["Enums"]["job_type_enum"]
+            | null
           location?: string
+          offers_made_count?: number | null
+          placed_at?: string | null
+          priority?: Database["public"]["Enums"]["job_priority"] | null
           reference_id?: string
           requirements?: string
+          revenue_forecast?: number | null
           salary?: string | null
           sector?: string
           status?: string
+          target_fill_date?: string | null
+          target_start_date?: string | null
+          time_to_fill_actual_days?: number | null
+          time_to_fill_target_days?: number | null
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "jobs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_hiring_manager_id_fkey"
+            columns: ["hiring_manager_id"]
+            isOneToOne: false
+            referencedRelation: "client_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notification_preferences: {
         Row: {
@@ -1513,6 +1966,36 @@ export type Database = {
           },
         ]
       }
+      rejection_reasons: {
+        Row: {
+          category: string
+          created_at: string
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          is_candidate_rejection: boolean | null
+          reason: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_candidate_rejection?: boolean | null
+          reason: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_candidate_rejection?: boolean | null
+          reason?: string
+        }
+        Relationships: []
+      }
       staff_permissions: {
         Row: {
           created_at: string
@@ -1697,6 +2180,19 @@ export type Database = {
       sync_notification_event_types: { Args: never; Returns: undefined }
     }
     Enums: {
+      client_status: "active" | "prospect" | "inactive" | "do_not_contact"
+      company_size: "startup" | "sme" | "enterprise" | "multinational"
+      contact_method: "email" | "phone" | "mobile"
+      interaction_direction: "inbound" | "outbound"
+      interaction_type:
+        | "call"
+        | "email"
+        | "meeting"
+        | "linkedin"
+        | "note"
+        | "proposal"
+      job_priority: "low" | "medium" | "high" | "urgent"
+      job_type_enum: "permanent" | "contract" | "temp" | "ftc"
       permission_type:
         | "cv.view"
         | "cv.create"
@@ -1744,6 +2240,13 @@ export type Database = {
         | "automation.manage"
         | "calendar.view"
         | "calendar.sync"
+      psl_status:
+        | "target"
+        | "applied"
+        | "approved"
+        | "active"
+        | "lapsed"
+        | "declined"
       staff_role:
         | "admin"
         | "recruiter"
@@ -1878,6 +2381,20 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      client_status: ["active", "prospect", "inactive", "do_not_contact"],
+      company_size: ["startup", "sme", "enterprise", "multinational"],
+      contact_method: ["email", "phone", "mobile"],
+      interaction_direction: ["inbound", "outbound"],
+      interaction_type: [
+        "call",
+        "email",
+        "meeting",
+        "linkedin",
+        "note",
+        "proposal",
+      ],
+      job_priority: ["low", "medium", "high", "urgent"],
+      job_type_enum: ["permanent", "contract", "temp", "ftc"],
       permission_type: [
         "cv.view",
         "cv.create",
@@ -1925,6 +2442,14 @@ export const Constants = {
         "automation.manage",
         "calendar.view",
         "calendar.sync",
+      ],
+      psl_status: [
+        "target",
+        "applied",
+        "approved",
+        "active",
+        "lapsed",
+        "declined",
       ],
       staff_role: [
         "admin",
