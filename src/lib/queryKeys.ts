@@ -20,6 +20,25 @@ export const queryKeys = {
   blogPosts: ['blog-posts'] as const,
   blogCategories: ['blog-categories'] as const,
   
+  // Job-specific keys
+  jobDetail: (id: string) => ['job', id] as const,
+  jobMetrics: ['job-metrics'] as const,
+  jobDashboard: ['job-dashboard'] as const,
+  jobSubmissions: (jobId: string) => ['job-submissions', jobId] as const,
+  jobPipeline: (jobId: string) => ['job-pipeline', jobId] as const,
+  roleAgeing: ['role-ageing'] as const,
+  rejectionStats: ['rejection-stats'] as const,
+  revenueForeCast: ['revenue-forecast'] as const,
+  timeToFillTrends: ['time-to-fill-trends'] as const,
+  
+  // Clients
+  clients: ['clients'] as const,
+  clientDetail: (id: string) => ['client', id] as const,
+  clientContacts: (clientId: string) => ['client-contacts', clientId] as const,
+  clientTerms: (clientId: string) => ['client-terms', clientId] as const,
+  clientInteractions: (clientId: string) => ['client-interactions', clientId] as const,
+  clientJobs: (clientId: string) => ['client-jobs', clientId] as const,
+  
   // Admin
   adminProfiles: ['admin-profiles'] as const,
   activityLog: ['activity-log'] as const,
@@ -43,6 +62,15 @@ export const queryKeys = {
   teamActivity: ['team-activity'] as const,
   myWork: ['my-work'] as const,
   userActivityStats: ['user-activity-stats'] as const,
+  
+  // Automation (Phase 4)
+  automationRules: ['automation-rules'] as const,
+  automationTasks: ['automation-tasks'] as const,
+  
+  // Reports (Phase 6)
+  revenueReport: ['revenue-report'] as const,
+  recruiterPerformance: ['recruiter-performance'] as const,
+  conversionFunnel: ['conversion-funnel'] as const,
 } as const;
 
 // Helper to get all submission-related keys for bulk invalidation
@@ -61,4 +89,19 @@ export const dashboardTables = [
   'job_applications',
   'jobs',
   'talent_profiles',
+] as const;
+
+// Job-related tables for real-time subscriptions
+export const jobTables = [
+  'jobs',
+  'candidate_pipeline',
+  'job_submissions',
+] as const;
+
+// Client-related tables for real-time subscriptions
+export const clientTables = [
+  'clients',
+  'client_contacts',
+  'client_terms',
+  'client_interactions',
 ] as const;
