@@ -65,6 +65,18 @@ export type ActivityAction =
   // Submission Actions
   | 'submission_deleted'
   | 'submission_exported'
+  // Automation Actions (Phase 4)
+  | 'automation_rule_created'
+  | 'automation_rule_updated'
+  | 'automation_rule_deleted'
+  | 'automation_rule_activated'
+  | 'automation_rule_deactivated'
+  | 'task_created'
+  | 'task_updated'
+  | 'task_completed'
+  | 'task_deleted'
+  | 'task_status_changed'
+  | 'tasks_bulk_updated'
   // Auth Actions
   | 'login'
   | 'logout';
@@ -81,7 +93,9 @@ export type ResourceType =
   | 'interview_scorecard'
   | 'submission'
   | 'settings'
-  | 'auth';
+  | 'auth'
+  | 'automation_rule'
+  | 'automation_task';
 
 export interface LogActivityParams {
   action: ActivityAction;
@@ -290,6 +304,18 @@ export const ACTION_LABELS: Record<ActivityAction, string> = {
   scorecard_deleted: 'Deleted interview scorecard',
   submission_deleted: 'Deleted submission',
   submission_exported: 'Exported submissions',
+  // Automation Actions (Phase 4)
+  automation_rule_created: 'Created automation rule',
+  automation_rule_updated: 'Updated automation rule',
+  automation_rule_deleted: 'Deleted automation rule',
+  automation_rule_activated: 'Activated automation rule',
+  automation_rule_deactivated: 'Deactivated automation rule',
+  task_created: 'Created task',
+  task_updated: 'Updated task',
+  task_completed: 'Completed task',
+  task_deleted: 'Deleted task',
+  task_status_changed: 'Changed task status',
+  tasks_bulk_updated: 'Bulk updated tasks',
   login: 'Logged in',
   logout: 'Logged out',
 };
