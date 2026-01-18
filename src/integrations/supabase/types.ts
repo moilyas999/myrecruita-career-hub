@@ -387,11 +387,17 @@ export type Database = {
           created_at: string
           cv_submission_id: string
           id: string
+          interview_feedback: string | null
+          interview_scheduled_at: string | null
           job_id: string
           notes: string | null
+          offer_details: Json | null
           priority: number | null
           rejection_reason: string | null
+          salary_confirmed: number | null
           stage: string
+          stage_entered_at: string | null
+          stage_requirements_met: Json | null
           updated_at: string
         }
         Insert: {
@@ -399,11 +405,17 @@ export type Database = {
           created_at?: string
           cv_submission_id: string
           id?: string
+          interview_feedback?: string | null
+          interview_scheduled_at?: string | null
           job_id: string
           notes?: string | null
+          offer_details?: Json | null
           priority?: number | null
           rejection_reason?: string | null
+          salary_confirmed?: number | null
           stage?: string
+          stage_entered_at?: string | null
+          stage_requirements_met?: Json | null
           updated_at?: string
         }
         Update: {
@@ -411,11 +423,17 @@ export type Database = {
           created_at?: string
           cv_submission_id?: string
           id?: string
+          interview_feedback?: string | null
+          interview_scheduled_at?: string | null
           job_id?: string
           notes?: string | null
+          offer_details?: Json | null
           priority?: number | null
           rejection_reason?: string | null
+          salary_confirmed?: number | null
           stage?: string
+          stage_entered_at?: string | null
+          stage_requirements_met?: Json | null
           updated_at?: string
         }
         Relationships: [
@@ -655,93 +673,147 @@ export type Database = {
           added_by: string | null
           admin_notes: string | null
           ai_profile: Json | null
+          anonymised_at: string | null
+          available_from: string | null
+          consent_expires_at: string | null
+          consent_given_at: string | null
           created_at: string
+          current_salary: string | null
           cv_file_url: string | null
           cv_score: number | null
           cv_score_breakdown: Json | null
           education_level: string | null
           email: string
+          employment_history: Json | null
           experience_summary: string | null
           extraction_confidence: number | null
           extraction_method: string | null
+          gdpr_notes: string | null
           id: string
           job_title: string | null
+          last_contact_date: string | null
           location: string | null
           message: string | null
           name: string
+          notice_period: string | null
           parse_correlation_id: string | null
           phone: string
           potential_duplicate_of: string | null
           processed_at: string | null
           processed_by: string | null
+          professional_memberships: string[] | null
+          qualifications: Json | null
+          requires_sponsorship: boolean | null
+          right_to_work: string | null
+          role_changes_5yr: number | null
+          salary_expectation: string | null
           scored_at: string | null
           sector: string | null
+          sector_exposure: string[] | null
           seniority_level: string | null
           skills: string | null
           source: string | null
           user_id: string | null
+          visa_expiry_date: string | null
+          visa_type: string | null
           years_experience: number | null
         }
         Insert: {
           added_by?: string | null
           admin_notes?: string | null
           ai_profile?: Json | null
+          anonymised_at?: string | null
+          available_from?: string | null
+          consent_expires_at?: string | null
+          consent_given_at?: string | null
           created_at?: string
+          current_salary?: string | null
           cv_file_url?: string | null
           cv_score?: number | null
           cv_score_breakdown?: Json | null
           education_level?: string | null
           email: string
+          employment_history?: Json | null
           experience_summary?: string | null
           extraction_confidence?: number | null
           extraction_method?: string | null
+          gdpr_notes?: string | null
           id?: string
           job_title?: string | null
+          last_contact_date?: string | null
           location?: string | null
           message?: string | null
           name: string
+          notice_period?: string | null
           parse_correlation_id?: string | null
           phone: string
           potential_duplicate_of?: string | null
           processed_at?: string | null
           processed_by?: string | null
+          professional_memberships?: string[] | null
+          qualifications?: Json | null
+          requires_sponsorship?: boolean | null
+          right_to_work?: string | null
+          role_changes_5yr?: number | null
+          salary_expectation?: string | null
           scored_at?: string | null
           sector?: string | null
+          sector_exposure?: string[] | null
           seniority_level?: string | null
           skills?: string | null
           source?: string | null
           user_id?: string | null
+          visa_expiry_date?: string | null
+          visa_type?: string | null
           years_experience?: number | null
         }
         Update: {
           added_by?: string | null
           admin_notes?: string | null
           ai_profile?: Json | null
+          anonymised_at?: string | null
+          available_from?: string | null
+          consent_expires_at?: string | null
+          consent_given_at?: string | null
           created_at?: string
+          current_salary?: string | null
           cv_file_url?: string | null
           cv_score?: number | null
           cv_score_breakdown?: Json | null
           education_level?: string | null
           email?: string
+          employment_history?: Json | null
           experience_summary?: string | null
           extraction_confidence?: number | null
           extraction_method?: string | null
+          gdpr_notes?: string | null
           id?: string
           job_title?: string | null
+          last_contact_date?: string | null
           location?: string | null
           message?: string | null
           name?: string
+          notice_period?: string | null
           parse_correlation_id?: string | null
           phone?: string
           potential_duplicate_of?: string | null
           processed_at?: string | null
           processed_by?: string | null
+          professional_memberships?: string[] | null
+          qualifications?: Json | null
+          requires_sponsorship?: boolean | null
+          right_to_work?: string | null
+          role_changes_5yr?: number | null
+          salary_expectation?: string | null
           scored_at?: string | null
           sector?: string | null
+          sector_exposure?: string[] | null
           seniority_level?: string | null
           skills?: string | null
           source?: string | null
           user_id?: string | null
+          visa_expiry_date?: string | null
+          visa_type?: string | null
           years_experience?: number | null
         }
         Relationships: [
@@ -884,6 +956,95 @@ export type Database = {
           sector?: string
         }
         Relationships: []
+      }
+      interview_scorecards: {
+        Row: {
+          candidate_questions: string | null
+          communication: number | null
+          concerns: string | null
+          created_at: string | null
+          created_by: string | null
+          cultural_fit: number | null
+          experience_relevance: number | null
+          id: string
+          interview_date: string | null
+          interview_type: string | null
+          interviewer_name: string | null
+          interviewer_role: string | null
+          is_client_feedback: boolean | null
+          motivation: number | null
+          next_steps: string | null
+          notes: string | null
+          overall_impression: number | null
+          pipeline_id: string
+          questions_asked: string | null
+          recommendation: string | null
+          stage: string
+          strengths: string | null
+          technical_skills: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          candidate_questions?: string | null
+          communication?: number | null
+          concerns?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          cultural_fit?: number | null
+          experience_relevance?: number | null
+          id?: string
+          interview_date?: string | null
+          interview_type?: string | null
+          interviewer_name?: string | null
+          interviewer_role?: string | null
+          is_client_feedback?: boolean | null
+          motivation?: number | null
+          next_steps?: string | null
+          notes?: string | null
+          overall_impression?: number | null
+          pipeline_id: string
+          questions_asked?: string | null
+          recommendation?: string | null
+          stage: string
+          strengths?: string | null
+          technical_skills?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          candidate_questions?: string | null
+          communication?: number | null
+          concerns?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          cultural_fit?: number | null
+          experience_relevance?: number | null
+          id?: string
+          interview_date?: string | null
+          interview_type?: string | null
+          interviewer_name?: string | null
+          interviewer_role?: string | null
+          is_client_feedback?: boolean | null
+          motivation?: number | null
+          next_steps?: string | null
+          notes?: string | null
+          overall_impression?: number | null
+          pipeline_id?: string
+          questions_asked?: string | null
+          recommendation?: string | null
+          stage?: string
+          strengths?: string | null
+          technical_skills?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_scorecards_pipeline_id_fkey"
+            columns: ["pipeline_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_pipeline"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       job_applications: {
         Row: {
@@ -1216,6 +1377,137 @@ export type Database = {
             foreignKeyName: "pipeline_activity_pipeline_id_fkey"
             columns: ["pipeline_id"]
             isOneToOne: false
+            referencedRelation: "candidate_pipeline"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      placements: {
+        Row: {
+          actual_start_date: string | null
+          candidate_name: string | null
+          company_name: string | null
+          created_at: string | null
+          created_by: string | null
+          day_rate: number | null
+          fee_currency: string | null
+          fee_percentage: number | null
+          fee_value: number | null
+          guarantee_expires_at: string | null
+          guarantee_period_days: number | null
+          id: string
+          internal_notes: string | null
+          invoice_date: string | null
+          invoice_number: string | null
+          invoice_paid: boolean | null
+          invoice_paid_at: string | null
+          invoice_raised: boolean | null
+          invoice_raised_at: string | null
+          job_title: string | null
+          job_type: string
+          notes: string | null
+          payment_terms_days: number | null
+          pipeline_id: string
+          placed_by: string | null
+          rebate_amount: number | null
+          rebate_percentage: number | null
+          rebate_reason: string | null
+          rebate_trigger_date: string | null
+          rebate_triggered: boolean | null
+          salary: number | null
+          sourced_by: string | null
+          split_percentage: number | null
+          split_with: string | null
+          start_date: string
+          status: string | null
+          status_changed_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          actual_start_date?: string | null
+          candidate_name?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          day_rate?: number | null
+          fee_currency?: string | null
+          fee_percentage?: number | null
+          fee_value?: number | null
+          guarantee_expires_at?: string | null
+          guarantee_period_days?: number | null
+          id?: string
+          internal_notes?: string | null
+          invoice_date?: string | null
+          invoice_number?: string | null
+          invoice_paid?: boolean | null
+          invoice_paid_at?: string | null
+          invoice_raised?: boolean | null
+          invoice_raised_at?: string | null
+          job_title?: string | null
+          job_type?: string
+          notes?: string | null
+          payment_terms_days?: number | null
+          pipeline_id: string
+          placed_by?: string | null
+          rebate_amount?: number | null
+          rebate_percentage?: number | null
+          rebate_reason?: string | null
+          rebate_trigger_date?: string | null
+          rebate_triggered?: boolean | null
+          salary?: number | null
+          sourced_by?: string | null
+          split_percentage?: number | null
+          split_with?: string | null
+          start_date: string
+          status?: string | null
+          status_changed_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          actual_start_date?: string | null
+          candidate_name?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          day_rate?: number | null
+          fee_currency?: string | null
+          fee_percentage?: number | null
+          fee_value?: number | null
+          guarantee_expires_at?: string | null
+          guarantee_period_days?: number | null
+          id?: string
+          internal_notes?: string | null
+          invoice_date?: string | null
+          invoice_number?: string | null
+          invoice_paid?: boolean | null
+          invoice_paid_at?: string | null
+          invoice_raised?: boolean | null
+          invoice_raised_at?: string | null
+          job_title?: string | null
+          job_type?: string
+          notes?: string | null
+          payment_terms_days?: number | null
+          pipeline_id?: string
+          placed_by?: string | null
+          rebate_amount?: number | null
+          rebate_percentage?: number | null
+          rebate_reason?: string | null
+          rebate_trigger_date?: string | null
+          rebate_triggered?: boolean | null
+          salary?: number | null
+          sourced_by?: string | null
+          split_percentage?: number | null
+          split_with?: string | null
+          start_date?: string
+          status?: string | null
+          status_changed_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "placements_pipeline_id_fkey"
+            columns: ["pipeline_id"]
+            isOneToOne: true
             referencedRelation: "candidate_pipeline"
             referencedColumns: ["id"]
           },
