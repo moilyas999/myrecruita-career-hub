@@ -25,6 +25,7 @@ import {
   FolderOpen,
   Mail,
   Building,
+  Building2,
   MessageSquare,
   Bell,
   Lock,
@@ -33,6 +34,9 @@ import {
   Kanban,
   ClipboardList,
   Activity,
+  TrendingUp,
+  Zap,
+  CheckSquare,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -90,6 +94,12 @@ export default function AdminSidebar({ isFullAdmin, isCvUploader }: AdminSidebar
         ],
       },
       {
+        label: 'CRM',
+        items: [
+          { title: 'Clients', href: '/admin?tab=clients', icon: Building2, permission: 'clients.view' },
+        ],
+      },
+      {
         label: 'Talent Pool',
         items: [
           { title: 'CV Database', href: '/admin?tab=submissions', icon: FileText, permission: 'cv.view' },
@@ -113,6 +123,20 @@ export default function AdminSidebar({ isFullAdmin, isCvUploader }: AdminSidebar
           { title: 'Talent Requests', href: '/admin?tab=talent-requests', icon: Star, permission: 'submissions.view' },
           { title: 'Employer Jobs', href: '/admin?tab=employer-jobs', icon: Building, permission: 'submissions.view' },
           { title: 'Contact Forms', href: '/admin?tab=contact', icon: Mail, permission: 'submissions.view' },
+        ],
+      },
+      {
+        label: 'Automation',
+        items: [
+          { title: 'Tasks', href: '/admin?tab=tasks', icon: CheckSquare, permission: 'automation.view' },
+          { title: 'Rules', href: '/admin?tab=automation-rules', icon: Zap, permission: 'automation.manage' },
+        ],
+      },
+      {
+        label: 'Reports',
+        items: [
+          { title: 'Revenue Forecast', href: '/admin?tab=revenue', icon: TrendingUp, permission: 'reports.view' },
+          { title: 'Performance', href: '/admin?tab=performance', icon: BarChart3, permission: 'reports.view' },
         ],
       },
       {
