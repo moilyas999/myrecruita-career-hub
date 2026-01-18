@@ -202,8 +202,8 @@ export function useUpdatePipelineStage() {
 
       if (fetchError) throw fetchError;
 
-      // Update stage
-      const updateData: Partial<CandidatePipeline> = { stage: data.stage };
+      // Update stage - serialize offer_details for DB
+      const updateData: Record<string, unknown> = { stage: data.stage };
       if (data.rejection_reason && data.stage === 'rejected') {
         updateData.rejection_reason = data.rejection_reason;
       }

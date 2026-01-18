@@ -243,6 +243,11 @@ export interface UpdateCandidateProfileData {
   qualifications?: Qualification[];
   professional_memberships?: string[];
   
+  // Employment History
+  employment_history?: EmploymentEntry[];
+  role_changes_5yr?: number | null;
+  sector_exposure?: string[];
+  
   // GDPR
   last_contact_date?: string | null;
   consent_given_at?: string | null;
@@ -254,6 +259,9 @@ export interface UpdateCandidateProfileData {
   sector?: string | null;
   location?: string | null;
   seniority_level?: string | null;
+  years_experience?: number | null;
+  skills?: string | null;
+  experience_summary?: string | null;
 }
 
 // ============================================================================
