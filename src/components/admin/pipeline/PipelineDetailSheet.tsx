@@ -55,11 +55,11 @@ import {
   type PipelineEntryWithDetails,
   type PipelineStage,
 } from '@/types/pipeline';
-import StageTransitionDialog from './StageTransitionDialog';
+import { StageTransitionDialog } from './StageTransitionDialog';
 import InterviewScorecardForm from './InterviewScorecardForm';
 import ScorecardSummary from './ScorecardSummary';
 import PlacementSummary from './PlacementSummary';
-import PlacementForm from './PlacementForm';
+import { PlacementForm } from './PlacementForm';
 
 interface PipelineDetailSheetProps {
   open: boolean;
@@ -465,9 +465,7 @@ export default function PipelineDetailSheet({
                     />
                   ) : showPlacementForm ? (
                     <PlacementForm
-                      pipelineId={entry.id}
-                      candidateName={candidate?.name || ''}
-                      jobTitle={job?.title || ''}
+                      pipelineEntry={entry}
                       onSuccess={() => setShowPlacementForm(false)}
                       onCancel={() => setShowPlacementForm(false)}
                     />
@@ -544,12 +542,9 @@ export default function PipelineDetailSheet({
         <StageTransitionDialog
           open={showTransitionDialog}
           onOpenChange={setShowTransitionDialog}
-          pipelineId={entry.id}
-          currentStage={entry.stage as PipelineStage}
+          entry={entry}
           targetStage={targetStage}
-          candidateName={candidate?.name || 'Unknown'}
-          jobTitle={job?.title || 'Unknown'}
-          onComplete={handleTransitionComplete}
+          onSuccess={handleTransitionComplete}
         />
       )}
     </>
