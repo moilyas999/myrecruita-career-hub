@@ -38,6 +38,7 @@ import {
   Zap,
   CheckSquare,
   Calendar,
+  BookOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -161,6 +162,12 @@ export default function AdminSidebar({ isFullAdmin, isCvUploader }: AdminSidebar
           { title: 'Notifications', href: '/admin?tab=notification-settings', icon: Bell },
           { title: 'User Notifications', href: '/admin?tab=user-notifications', icon: Users, permission: 'notifications.manage' },
           { title: 'Settings', href: '/admin?tab=settings', icon: Settings, permission: 'settings.view' },
+        ],
+      },
+      {
+        label: 'Help',
+        items: [
+          { title: 'Documents', href: '/admin?tab=documents', icon: BookOpen },
         ],
       },
     ];

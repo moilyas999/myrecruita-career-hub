@@ -31,6 +31,7 @@ const RulesList = lazy(() => import('@/components/admin/automation/RulesList'));
 const RevenueForecastDashboard = lazy(() => import('@/components/admin/reports/RevenueForecastDashboard'));
 const PerformanceDashboard = lazy(() => import('@/components/admin/reports/PerformanceDashboard'));
 const CalendarDashboard = lazy(() => import('@/components/admin/calendar/CalendarDashboard'));
+const DocumentsPage = lazy(() => import('@/pages/admin/DocumentsPage'));
 
 // Loading fallback component
 function TabSkeleton() {
@@ -90,6 +91,7 @@ const TAB_CONFIG: Record<string, TabConfig> = {
   'revenue': { component: RevenueForecastDashboard, title: 'Revenue Forecast', description: 'Track revenue, invoicing, and projections', fullAdminOnly: true },
   'performance': { component: PerformanceDashboard, title: 'Performance Reports', description: 'Team and pipeline performance analytics', fullAdminOnly: true },
   'calendar': { component: CalendarDashboard, title: 'Calendar', description: 'Interview scheduling and calendar management' },
+  'documents': { component: DocumentsPage, title: 'Documents', description: 'User guides and documentation' },
 };
 
 export default function AdminDashboard() {
