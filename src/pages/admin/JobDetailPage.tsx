@@ -451,25 +451,45 @@ export default function JobDetailPage() {
           <TabsContent value="pipeline">
             <Card>
               <CardHeader>
-                <CardTitle>Pipeline View</CardTitle>
-                <CardDescription>
-                  Track candidate progress through stages
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>Pipeline kanban view coming soon</p>
-                  <p className="text-sm">
-                    For now, view candidates in the Candidates tab or use the main Pipeline view
-                  </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Pipeline View</CardTitle>
+                    <CardDescription>
+                      Track candidate progress through stages for this job
+                    </CardDescription>
+                  </div>
                   <Button
-                    variant="outline"
-                    className="mt-4"
-                    onClick={() => navigate('/admin?tab=pipeline')}
+                    onClick={() => navigate(`/admin?tab=pipeline&jobId=${job.id}`)}
                   >
-                    Go to Pipeline
+                    Open Full Pipeline
                   </Button>
                 </div>
+              </CardHeader>
+              <CardContent>
+                {pipeline.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    {Object.entries(pipelineByStage)
+                      .sort(([a], [b]) => a.localeCompare(b))
+                      .map(([stage, count]) => (
+                        <Card key={stage} className="text-center">
+                          <CardContent className="p-4">
+                            <p className="text-2xl font-bold">{count}</p>
+                            <p className="text-sm text-muted-foreground capitalize">
+                              {stage.replace('_', ' ')}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No candidates in the pipeline yet</p>
+                    <p className="text-sm mt-2">
+                      Add candidates from the CV database to start tracking them
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
