@@ -34,8 +34,10 @@ import { usePermissions } from '@/hooks/usePermissions';
 interface ProfileHeaderProps {
   candidate: CandidateProfile;
   gdprStatus: CalculatedGDPRStatus | null;
-  onAnonymise: () => void;
-  onDelete: () => void;
+  /** Called when user clicks anonymise - if undefined, button is hidden */
+  onAnonymise?: () => void;
+  /** Called when user clicks delete - if undefined, button is hidden */
+  onDelete?: () => void;
 }
 
 function getGDPRStatusConfig(status: CalculatedGDPRStatus['status']) {
@@ -61,6 +63,10 @@ export default function ProfileHeader({
   const canUpdate = hasPermission('cv.update');
   const canDelete = hasPermission('cv.delete');
   const canExport = hasPermission('cv.export');
+
+  // Only show actions if handler is provided AND user has permission
+  const showAnonymise = onAnonymise && canUpdate;
+  const showDelete = onDelete && canDelete;
 
   const gdprConfig = gdprStatus ? getGDPRStatusConfig(gdprStatus.status) : null;
   const GDPRIcon = gdprConfig?.icon || Clock;
@@ -203,21 +209,21 @@ export default function ProfileHeader({
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
-              {canUpdate && (
+              {showAnonymise && (
                 <DropdownMenuItem
                   onClick={onAnonymise}
                   className="text-amber-600"
                 >
-                  <UserX className="w-4 h-4 mr-2" />
+                  <UserX className="w-4 h-4 mr-2" aria-hidden="true" />
                   Anonymise (GDPR)
                 </DropdownMenuItem>
               )}
-              {canDelete && (
+              {showDelete && (
                 <DropdownMenuItem
                   onClick={onDelete}
                   className="text-destructive"
                 >
-                  <Trash2 className="w-4 h-4 mr-2" />
+                  <Trash2 className="w-4 h-4 mr-2" aria-hidden="true" />
                   Delete Candidate
                 </DropdownMenuItem>
               )}

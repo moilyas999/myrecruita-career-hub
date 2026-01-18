@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { FileText, MapPin, Trash2, Kanban, Plus, Upload, List, Activity, Zap, Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { FileText, Trash2, Kanban, Plus, Upload, List, Activity, Zap, Loader2, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from 'sonner';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { SubmissionCard } from '../shared/SubmissionCard';
 import { SubmissionsSkeleton } from '../shared/SubmissionsSkeleton';
 import { EmptyState } from '../shared/EmptyState';
@@ -76,28 +77,56 @@ export function CVSubmissionsList({
       {submission.sector && (
         <Badge variant="outline">{submission.sector}</Badge>
       )}
+      {hasPermission('cv.view') && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              className="h-8 w-8 text-muted-foreground hover:text-primary"
+              aria-label={`View full profile for ${submission.name}`}
+            >
+              <Link to={`/admin/candidate/${submission.id}`}>
+                <User className="w-4 h-4" aria-hidden="true" />
+              </Link>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>View Full Profile</TooltipContent>
+        </Tooltip>
+      )}
       {isFullAdmin && (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onDeleteCV(submission.id, submission.name)}
-          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-          disabled={isDeleting}
-          aria-label={`Delete CV for ${submission.name}`}
-        >
-          <Trash2 className="w-4 h-4" aria-hidden="true" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onDeleteCV(submission.id, submission.name)}
+              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+              disabled={isDeleting}
+              aria-label={`Delete CV for ${submission.name}`}
+            >
+              <Trash2 className="w-4 h-4" aria-hidden="true" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Delete CV</TooltipContent>
+        </Tooltip>
       )}
       {hasPermission('pipeline.create') && (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => handleAddToPipeline(submission)}
-          className="h-8 w-8 text-muted-foreground hover:text-primary"
-          aria-label={`Add ${submission.name} to pipeline`}
-        >
-          <Kanban className="w-4 h-4" aria-hidden="true" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleAddToPipeline(submission)}
+              className="h-8 w-8 text-muted-foreground hover:text-primary"
+              aria-label={`Add ${submission.name} to pipeline`}
+            >
+              <Kanban className="w-4 h-4" aria-hidden="true" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Add to Pipeline</TooltipContent>
+        </Tooltip>
       )}
     </>
   );

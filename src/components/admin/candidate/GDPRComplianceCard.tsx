@@ -36,7 +36,8 @@ import { toast } from 'sonner';
 interface GDPRComplianceCardProps {
   candidate: CandidateProfile;
   gdprStatus: CalculatedGDPRStatus | null;
-  onDelete: () => void;
+  /** Called when user clicks delete - if undefined, button is hidden */
+  onDelete?: () => void;
 }
 
 function getGDPRStatusConfig(status: CalculatedGDPRStatus['status']) {
@@ -286,12 +287,12 @@ export default function GDPRComplianceCard({
                 </AlertDialog>
               )}
 
-              {/* Delete */}
-              {canDelete && (
+              {/* Delete - only show if handler provided AND user has permission */}
+              {onDelete && canDelete && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="outline" size="sm" className="text-destructive">
-                      <Trash2 className="w-4 h-4 mr-2" />
+                      <Trash2 className="w-4 h-4 mr-2" aria-hidden="true" />
                       Delete
                     </Button>
                   </AlertDialogTrigger>
