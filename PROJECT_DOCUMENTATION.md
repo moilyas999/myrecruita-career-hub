@@ -2705,6 +2705,23 @@ All emails sent from: `MyRecruita <no-reply@myrecruita.com>`
 - ✅ Pipeline activity logging (add, stage change, notes, remove)
 - ✅ New query keys: `userActivity`, `teamActivity`, `myWork`, `userActivityStats`
 
+### Version 2.1 (January 2025)
+
+**Pipeline Enhancement - Phase 3**:
+- ✅ **Stage Transition Dialog** - Dynamic field collection per stage
+- ✅ **Interview Scorecard Form** - 5-star ratings, structured feedback
+- ✅ **Placement Form** - Comprehensive placement tracking with fee calculation
+- ✅ **Scorecard Summary** - Read-only display of interview feedback
+- ✅ **Placement Summary** - Status tracking with invoice management
+- ✅ **Candidate Profile Page** - Full-page candidate view with tabs
+- ✅ **GDPR Compliance Cards** - Status tracking with action buttons
+- ✅ **Work Authorization Cards** - Visa status and expiry tracking
+- ✅ **Compensation Cards** - Salary expectations and availability
+- ✅ **Employment History Cards** - Timeline view with job-hopping detection
+- ✅ **Qualifications Cards** - Professional qualification tracking
+- ✅ **New Route**: `/admin/candidate/:candidateId` for full profile view
+- ✅ **New Type**: `CalculatedGDPRStatus` for computed GDPR status
+
 ### Version 2.0 (January 2025)
 
 **Major Features**:

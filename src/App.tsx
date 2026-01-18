@@ -24,6 +24,7 @@ import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import CandidateProfilePage from "./pages/admin/CandidateProfilePage";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import MyApplications from "./pages/MyApplications";
@@ -53,9 +54,10 @@ const App = () => (
         <BrowserRouter>
           <ScrollToTop />
           <Routes>
-            {/* Admin routes without main layout */}
+          {/* Admin routes without main layout */}
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/candidate/:candidateId" element={<CandidateProfilePage />} />
             
             {/* Auth page with main layout */}
             <Route path="/auth" element={

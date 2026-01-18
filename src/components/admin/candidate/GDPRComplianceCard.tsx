@@ -28,18 +28,18 @@ import {
 } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
-import type { CandidateProfile, GDPRStatus } from '@/types/candidate';
+import type { CandidateProfile, CalculatedGDPRStatus } from '@/types/candidate';
 import { useUpdateLastContact, useAnonymiseCandidate } from '@/hooks/useCandidateProfile';
 import { usePermissions } from '@/hooks/usePermissions';
 import { toast } from 'sonner';
 
 interface GDPRComplianceCardProps {
   candidate: CandidateProfile;
-  gdprStatus: GDPRStatus | null;
+  gdprStatus: CalculatedGDPRStatus | null;
   onDelete: () => void;
 }
 
-function getGDPRStatusConfig(status: GDPRStatus['status']) {
+function getGDPRStatusConfig(status: CalculatedGDPRStatus['status']) {
   switch (status) {
     case 'active':
       return { 

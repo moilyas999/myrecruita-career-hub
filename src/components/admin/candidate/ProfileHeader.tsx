@@ -28,17 +28,17 @@ import {
   Clock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { CandidateProfile, GDPRStatus } from '@/types/candidate';
+import type { CandidateProfile, CalculatedGDPRStatus } from '@/types/candidate';
 import { usePermissions } from '@/hooks/usePermissions';
 
 interface ProfileHeaderProps {
   candidate: CandidateProfile;
-  gdprStatus: GDPRStatus | null;
+  gdprStatus: CalculatedGDPRStatus | null;
   onAnonymise: () => void;
   onDelete: () => void;
 }
 
-function getGDPRStatusConfig(status: GDPRStatus['status']) {
+function getGDPRStatusConfig(status: CalculatedGDPRStatus['status']) {
   switch (status) {
     case 'active':
       return { icon: CheckCircle2, color: 'text-green-600', bgColor: 'bg-green-50', label: 'Active' };
