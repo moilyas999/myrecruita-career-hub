@@ -3351,6 +3351,27 @@ All emails sent from: `MyRecruita <no-reply@myrecruita.com>`
 
 ## 26. Changelog
 
+### Version 2.6 (January 2025)
+
+**Automation Execution Engine (Phase 7)**:
+- ✅ `evaluate-automation-rules` Edge Function - evaluates triggers and executes actions
+- ✅ `run-scheduled-automations` Edge Function - handles time-based, inactivity, and job_ageing triggers
+- ✅ `automation_executions` table with RLS policies for execution logging
+- ✅ `useAutomationExecutions` hook with query key factory
+- ✅ `ExecutionHistory` component with filtering and stats
+- ✅ AutomationDashboard updated with Execution History tab
+- ✅ Action handlers: create_task, send_notification, move_stage, assign_user, update_status, add_tag
+- ✅ Trigger condition evaluation for all trigger types
+
+### Version 2.5.1 (January 2025)
+
+**Technical Debt Cleanup (Phase 6.5)**:
+- ✅ Reports Export functionality (`src/lib/exportUtils.ts`)
+- ✅ Time to Fill Metrics - actual calculation from job creation to placement date
+- ✅ Job Detail Pipeline View - real pipeline stats with navigation
+- ✅ Email Reprocess functionality - working reprocess button
+- ✅ Unit tests for export utilities
+
 ### Version 2.5 (January 2025)
 
 **Calendar & Scheduling Module (Phase 6)**:

@@ -7,3 +7,4 @@ export { default as RulesList } from './RulesList';
 export { default as RuleCard } from './RuleCard';
 export { default as RuleFormDialog } from './RuleFormDialog';
 export { default as TaskStats } from './TaskStats';
+export { default as ExecutionHistory } from './ExecutionHistory';
