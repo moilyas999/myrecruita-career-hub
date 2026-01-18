@@ -10,6 +10,7 @@ const DashboardOverview = lazy(() => import('@/components/admin/DashboardOvervie
 const CVMatchingTool = lazy(() => import('@/components/admin/CVMatchingTool'));
 const JobsManagement = lazy(() => import('@/components/admin/JobsManagement'));
 const JobStatusTracker = lazy(() => import('@/components/admin/JobStatusTracker'));
+const JobMetricsDashboard = lazy(() => import('@/components/admin/jobs/JobMetricsDashboard'));
 const SubmissionsManagement = lazy(() => import('@/components/admin/SubmissionsManagement'));
 const TalentManagement = lazy(() => import('@/components/admin/TalentManagement'));
 const StatsDashboard = lazy(() => import('@/components/admin/StatsDashboard'));
@@ -59,6 +60,7 @@ const TAB_CONFIG: Record<string, TabConfig> = {
   'cv-match': { component: CVMatchingTool, title: 'AI CV Matching', description: 'Find best candidates for a job description', fullAdminOnly: true },
   'clients': { component: ClientsManagement, title: 'Client CRM', description: 'Manage client relationships and terms' },
   'jobs': { component: JobsManagement, title: 'Jobs Management', description: 'Manage job postings and listings', fullAdminOnly: true },
+  'job-dashboard': { component: JobMetricsDashboard, title: 'Job Dashboard', description: 'Job analytics and metrics overview', fullAdminOnly: true },
   'job-status': { component: JobStatusTracker, title: 'Job Status Updates', description: 'Process emails and update job statuses with AI', fullAdminOnly: true },
   'submissions': { component: SubmissionsManagement, title: 'CV Database', description: 'Manage CV submissions and candidates' },
   'add-cv': { component: SubmissionsManagement, title: 'Add CV', description: 'Add a new CV to the database' },

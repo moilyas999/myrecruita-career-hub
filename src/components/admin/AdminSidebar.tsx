@@ -112,6 +112,7 @@ export default function AdminSidebar({ isFullAdmin, isCvUploader }: AdminSidebar
         label: 'Jobs',
         items: [
           { title: 'All Jobs', href: '/admin?tab=jobs', icon: Briefcase, permission: 'jobs.view' },
+          { title: 'Job Dashboard', href: '/admin?tab=job-dashboard', icon: BarChart3, permission: 'jobs.view' },
           { title: 'Status Updates', href: '/admin?tab=job-status', icon: RefreshCw, permission: 'jobs.update', badge: 'AI', badgeVariant: 'default' },
         ],
       },
