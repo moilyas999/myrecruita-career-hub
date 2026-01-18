@@ -1734,6 +1734,16 @@ export type Database = {
         | "matching.view"
         | "matching.create"
         | "matching.history"
+        | "clients.view"
+        | "clients.create"
+        | "clients.update"
+        | "clients.delete"
+        | "reports.view"
+        | "reports.export"
+        | "automation.view"
+        | "automation.manage"
+        | "calendar.view"
+        | "calendar.sync"
       staff_role:
         | "admin"
         | "recruiter"
@@ -1905,6 +1915,16 @@ export const Constants = {
         "matching.view",
         "matching.create",
         "matching.history",
+        "clients.view",
+        "clients.create",
+        "clients.update",
+        "clients.delete",
+        "reports.view",
+        "reports.export",
+        "automation.view",
+        "automation.manage",
+        "calendar.view",
+        "calendar.sync",
       ],
       staff_role: [
         "admin",
