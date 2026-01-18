@@ -28,6 +28,8 @@ const ClientsManagement = lazy(() => import('@/components/admin/clients/ClientsM
 const AutomationDashboard = lazy(() => import('@/components/admin/automation/AutomationDashboard'));
 const TasksList = lazy(() => import('@/components/admin/automation/TasksList'));
 const RulesList = lazy(() => import('@/components/admin/automation/RulesList'));
+const RevenueForecastDashboard = lazy(() => import('@/components/admin/reports/RevenueForecastDashboard'));
+const PerformanceDashboard = lazy(() => import('@/components/admin/reports/PerformanceDashboard'));
 
 // Loading fallback component
 function TabSkeleton() {
@@ -84,6 +86,8 @@ const TAB_CONFIG: Record<string, TabConfig> = {
   'automation': { component: AutomationDashboard, title: 'Automation', description: 'Manage automation rules and tasks' },
   'tasks': { component: TasksList, title: 'Tasks', description: 'View and manage automated tasks' },
   'automation-rules': { component: RulesList, title: 'Automation Rules', description: 'Configure workflow automation rules', fullAdminOnly: true },
+  'revenue': { component: RevenueForecastDashboard, title: 'Revenue Forecast', description: 'Track revenue, invoicing, and projections', fullAdminOnly: true },
+  'performance': { component: PerformanceDashboard, title: 'Performance Reports', description: 'Team and pipeline performance analytics', fullAdminOnly: true },
 };
 
 export default function AdminDashboard() {
