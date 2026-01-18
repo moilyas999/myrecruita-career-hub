@@ -23,6 +23,7 @@ const CandidatePipeline = lazy(() => import('@/components/admin/CandidatePipelin
 const MyWorkDashboard = lazy(() => import('@/components/admin/MyWorkDashboard'));
 const MyActivityLog = lazy(() => import('@/components/admin/MyActivityLog'));
 const TeamActivityLog = lazy(() => import('@/components/admin/TeamActivityLog'));
+const ClientsManagement = lazy(() => import('@/components/admin/clients/ClientsManagement'));
 
 // Loading fallback component
 function TabSkeleton() {
@@ -56,6 +57,7 @@ const TAB_CONFIG: Record<string, TabConfig> = {
   'team-activity': { component: TeamActivityLog, title: 'Team Activity', description: 'Monitor all staff actions', fullAdminOnly: true },
   'stats': { component: StatsDashboard, title: 'Analytics', description: 'View detailed statistics and insights', fullAdminOnly: true },
   'cv-match': { component: CVMatchingTool, title: 'AI CV Matching', description: 'Find best candidates for a job description', fullAdminOnly: true },
+  'clients': { component: ClientsManagement, title: 'Client CRM', description: 'Manage client relationships and terms' },
   'jobs': { component: JobsManagement, title: 'Jobs Management', description: 'Manage job postings and listings', fullAdminOnly: true },
   'job-status': { component: JobStatusTracker, title: 'Job Status Updates', description: 'Process emails and update job statuses with AI', fullAdminOnly: true },
   'submissions': { component: SubmissionsManagement, title: 'CV Database', description: 'Manage CV submissions and candidates' },
