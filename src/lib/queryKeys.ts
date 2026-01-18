@@ -84,6 +84,21 @@ export const queryKeys = {
   pipelineMetrics: ['pipeline-metrics'] as const,
   timeToFill: ['time-to-fill'] as const,
   activityMetrics: ['activity-metrics'] as const,
+  
+  // Calendar (Phase 6)
+  calendarEvents: ['calendar-events'] as const,
+  calendarEventDetail: (id: string) => ['calendar-events', id] as const,
+  myCalendarEvents: ['calendar-events', 'mine'] as const,
+  upcomingInterviews: ['calendar-events', 'upcoming-interviews'] as const,
+  upcomingEvents: (days: number) => ['calendar-events', 'upcoming', days] as const,
+  eventsByDate: (date: string) => ['calendar-events', 'date', date] as const,
+  eventsByJob: (jobId: string) => ['calendar-events', 'job', jobId] as const,
+  eventsByCandidate: (candidateId: string) => ['calendar-events', 'candidate', candidateId] as const,
+  availability: ['availability'] as const,
+  myAvailability: ['availability', 'mine'] as const,
+  userAvailability: (userId: string) => ['availability', userId] as const,
+  calendarConnections: ['calendar-connections'] as const,
+  myCalendarConnection: ['calendar-connections', 'mine'] as const,
 } as const;
 
 // Helper to get all submission-related keys for bulk invalidation
@@ -117,4 +132,11 @@ export const clientTables = [
   'client_contacts',
   'client_terms',
   'client_interactions',
+] as const;
+
+// Calendar-related tables for real-time subscriptions
+export const calendarTables = [
+  'calendar_events',
+  'availability_slots',
+  'calendar_connections',
 ] as const;

@@ -260,6 +260,48 @@ export type Database = {
           },
         ]
       }
+      availability_slots: {
+        Row: {
+          created_at: string | null
+          day_of_week: number | null
+          end_time: string
+          id: string
+          is_available: boolean | null
+          is_recurring: boolean | null
+          specific_date: string | null
+          start_time: string
+          timezone: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          day_of_week?: number | null
+          end_time: string
+          id?: string
+          is_available?: boolean | null
+          is_recurring?: boolean | null
+          specific_date?: string | null
+          start_time: string
+          timezone?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          day_of_week?: number | null
+          end_time?: string
+          id?: string
+          is_available?: boolean | null
+          is_recurring?: boolean | null
+          specific_date?: string | null
+          start_time?: string
+          timezone?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       blog_categories: {
         Row: {
           created_at: string
@@ -530,6 +572,167 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      calendar_connections: {
+        Row: {
+          access_token_encrypted: string | null
+          calendar_id: string | null
+          calendar_name: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          last_sync_at: string | null
+          provider: string
+          refresh_token_encrypted: string | null
+          sync_error: string | null
+          token_expires_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          access_token_encrypted?: string | null
+          calendar_id?: string | null
+          calendar_name?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          provider?: string
+          refresh_token_encrypted?: string | null
+          sync_error?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          access_token_encrypted?: string | null
+          calendar_id?: string | null
+          calendar_name?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          provider?: string
+          refresh_token_encrypted?: string | null
+          sync_error?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      calendar_events: {
+        Row: {
+          assigned_to: string | null
+          cancellation_reason: string | null
+          candidate_id: string | null
+          client_id: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          end_time: string
+          event_type: string
+          google_calendar_id: string | null
+          google_event_id: string | null
+          id: string
+          is_cancelled: boolean | null
+          job_id: string | null
+          location: string | null
+          meeting_link: string | null
+          metadata: Json | null
+          pipeline_id: string | null
+          reminder_1h_sent: boolean | null
+          reminder_24h_sent: boolean | null
+          reminder_sent: boolean | null
+          start_time: string
+          sync_status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          cancellation_reason?: string | null
+          candidate_id?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          end_time: string
+          event_type: string
+          google_calendar_id?: string | null
+          google_event_id?: string | null
+          id?: string
+          is_cancelled?: boolean | null
+          job_id?: string | null
+          location?: string | null
+          meeting_link?: string | null
+          metadata?: Json | null
+          pipeline_id?: string | null
+          reminder_1h_sent?: boolean | null
+          reminder_24h_sent?: boolean | null
+          reminder_sent?: boolean | null
+          start_time: string
+          sync_status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          cancellation_reason?: string | null
+          candidate_id?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          end_time?: string
+          event_type?: string
+          google_calendar_id?: string | null
+          google_event_id?: string | null
+          id?: string
+          is_cancelled?: boolean | null
+          job_id?: string | null
+          location?: string | null
+          meeting_link?: string | null
+          metadata?: Json | null
+          pipeline_id?: string | null
+          reminder_1h_sent?: boolean | null
+          reminder_24h_sent?: boolean | null
+          reminder_sent?: boolean | null
+          start_time?: string
+          sync_status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "cv_submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_pipeline_id_fkey"
+            columns: ["pipeline_id"]
+            isOneToOne: false
+            referencedRelation: "candidate_pipeline"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       candidate_pipeline: {
         Row: {
