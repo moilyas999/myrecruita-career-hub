@@ -1,11 +1,19 @@
 import { useRef, useState } from 'react';
-import { FileText, Download, Eye, Printer, BookOpen, Zap } from 'lucide-react';
+import { FileText, Download, Eye, Printer, BookOpen, Zap, User, GitBranch, Building2, Briefcase, BarChart3, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { AutomationUserGuide } from '@/components/admin/documents';
+import { 
+  AutomationUserGuide, 
+  CandidateProfileGuide, 
+  PipelineGuide, 
+  ClientCRMGuide, 
+  JobManagementGuide, 
+  ReportsGuide, 
+  CalendarGuide 
+} from '@/components/admin/documents';
 
 interface DocumentCard {
   id: string;
@@ -19,6 +27,66 @@ interface DocumentCard {
 }
 
 const DOCUMENTS: DocumentCard[] = [
+  {
+    id: 'candidate-profile-guide',
+    title: 'CV Database & Candidate Profile Guide',
+    description: 'Complete guide for candidate profiles, work authorisation, qualifications, GDPR compliance, and duplicate detection.',
+    category: 'Phase 1',
+    version: '2.1',
+    lastUpdated: new Date().toLocaleDateString('en-GB'),
+    icon: User,
+    component: CandidateProfileGuide,
+  },
+  {
+    id: 'pipeline-guide',
+    title: 'Candidate Pipeline Guide',
+    description: 'Full pipeline lifecycle, stage transitions, mandatory actions, scorecards, and placement recording.',
+    category: 'Phase 1',
+    version: '2.1',
+    lastUpdated: new Date().toLocaleDateString('en-GB'),
+    icon: GitBranch,
+    component: PipelineGuide,
+  },
+  {
+    id: 'client-crm-guide',
+    title: 'Client CRM Guide',
+    description: 'Client profiles, contacts, PSL status, terms and fees, interaction logging, and job history.',
+    category: 'Phase 2',
+    version: '2.0',
+    lastUpdated: new Date().toLocaleDateString('en-GB'),
+    icon: Building2,
+    component: ClientCRMGuide,
+  },
+  {
+    id: 'job-management-guide',
+    title: 'Job Management Guide',
+    description: 'Job lifecycle, CV submissions, interview progress, rejection analytics, role ageing, and revenue forecasting.',
+    category: 'Phase 3',
+    version: '2.2',
+    lastUpdated: new Date().toLocaleDateString('en-GB'),
+    icon: Briefcase,
+    component: JobManagementGuide,
+  },
+  {
+    id: 'reports-guide',
+    title: 'Reports & Analytics Guide',
+    description: 'Revenue forecasting, performance dashboards, recruiter leaderboards, pipeline metrics, and data export.',
+    category: 'Phase 5',
+    version: '2.4',
+    lastUpdated: new Date().toLocaleDateString('en-GB'),
+    icon: BarChart3,
+    component: ReportsGuide,
+  },
+  {
+    id: 'calendar-guide',
+    title: 'Calendar & Scheduling Guide',
+    description: 'Event management, interview scheduling, calendar views, reminders, and Google Calendar sync.',
+    category: 'Phase 6',
+    version: '2.5',
+    lastUpdated: new Date().toLocaleDateString('en-GB'),
+    icon: Calendar,
+    component: CalendarGuide,
+  },
   {
     id: 'automation-guide',
     title: 'Automation User Guide',
