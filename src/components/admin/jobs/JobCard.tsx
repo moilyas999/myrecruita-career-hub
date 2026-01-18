@@ -38,8 +38,10 @@ interface JobCardProps {
   job: Job;
   onEdit?: (job: Job) => void;
   onDelete?: (job: Job) => void;
+  onClick?: (job: Job) => void;
   canEdit?: boolean;
   canDelete?: boolean;
+  compact?: boolean;
 }
 
 // Priority configuration for visual styling
@@ -73,8 +75,10 @@ export default function JobCard({
   job,
   onEdit,
   onDelete,
+  onClick,
   canEdit = false,
   canDelete = false,
+  compact = false,
 }: JobCardProps) {
   const priorityConfig = PRIORITY_CONFIG[job.priority || 'medium'];
   const statusConfig = STATUS_CONFIG[(job.status as JobStatus) || 'active'];
