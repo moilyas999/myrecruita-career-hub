@@ -65,36 +65,36 @@ const createWrapper = () => {
   );
 };
 
-describe('queryKeys.calendar', () => {
-  const calendarKeys = queryKeys.calendar;
-  
+describe('Calendar queryKeys', () => {
   it('should generate correct base keys', () => {
-    expect(calendarKeys.all).toEqual(['calendar-events']);
-    expect(calendarKeys.lists()).toEqual(['calendar-events', 'list']);
-    expect(calendarKeys.detail('123')).toEqual(['calendar-events', 'detail', '123']);
-  });
-
-  it('should generate keys with filters', () => {
-    const filters = { eventType: 'interview', startDate: '2026-01-01' };
-    expect(calendarKeys.list(filters)).toEqual(['calendar-events', 'list', filters]);
+    expect(queryKeys.calendarEvents).toEqual(['calendar-events']);
+    expect(queryKeys.calendarEventDetail('123')).toEqual(['calendar-events', '123']);
   });
 
   it('should generate my events key', () => {
-    expect(calendarKeys.myEvents()).toEqual(['calendar-events', 'my']);
+    expect(queryKeys.myCalendarEvents).toEqual(['calendar-events', 'mine']);
   });
 
   it('should generate upcoming interviews key', () => {
-    expect(calendarKeys.upcomingInterviews()).toEqual(['calendar-events', 'upcoming-interviews']);
+    expect(queryKeys.upcomingInterviews).toEqual(['calendar-events', 'upcoming-interviews']);
+  });
+
+  it('should generate keys with parameters', () => {
+    expect(queryKeys.upcomingEvents(7)).toEqual(['calendar-events', 'upcoming', 7]);
+    expect(queryKeys.eventsByDate('2026-01-18')).toEqual(['calendar-events', 'date', '2026-01-18']);
+    expect(queryKeys.eventsByJob('job-123')).toEqual(['calendar-events', 'job', 'job-123']);
+    expect(queryKeys.eventsByCandidate('candidate-456')).toEqual(['calendar-events', 'candidate', 'candidate-456']);
   });
 
   it('should generate availability keys', () => {
-    expect(calendarKeys.availability()).toEqual(['availability']);
-    expect(calendarKeys.userAvailability('user-123')).toEqual(['availability', 'user-123']);
+    expect(queryKeys.availability).toEqual(['availability']);
+    expect(queryKeys.myAvailability).toEqual(['availability', 'mine']);
+    expect(queryKeys.userAvailability('user-123')).toEqual(['availability', 'user-123']);
   });
 
   it('should generate connections keys', () => {
-    expect(calendarKeys.connections()).toEqual(['calendar-connections']);
-    expect(calendarKeys.myConnection()).toEqual(['calendar-connections', 'mine']);
+    expect(queryKeys.calendarConnections).toEqual(['calendar-connections']);
+    expect(queryKeys.myCalendarConnection).toEqual(['calendar-connections', 'mine']);
   });
 });
 
