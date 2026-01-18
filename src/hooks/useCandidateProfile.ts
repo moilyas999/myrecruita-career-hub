@@ -41,10 +41,10 @@ export function useCandidateProfile(candidateId: string | null) {
         skills: data.skills,
         experience_summary: data.experience_summary,
         education_level: data.education_level,
-        ai_profile: data.ai_profile as AIProfile | null,
+        ai_profile: data.ai_profile as unknown as AIProfile | null,
         cv_score: data.cv_score,
-        cv_score_breakdown: data.cv_score_breakdown as CVScoreBreakdown | null,
-        qualifications: (data.qualifications as Qualification[]) || [],
+        cv_score_breakdown: data.cv_score_breakdown as unknown as CVScoreBreakdown | null,
+        qualifications: (data.qualifications as unknown as Qualification[]) || [],
         professional_memberships: data.professional_memberships || [],
         current_salary: data.current_salary,
         salary_expectation: data.salary_expectation,
@@ -54,7 +54,7 @@ export function useCandidateProfile(candidateId: string | null) {
         visa_type: data.visa_type as CandidateProfile['visa_type'],
         visa_expiry_date: data.visa_expiry_date,
         requires_sponsorship: data.requires_sponsorship ?? false,
-        employment_history: (data.employment_history as EmploymentEntry[]) || [],
+        employment_history: (data.employment_history as unknown as EmploymentEntry[]) || [],
         role_changes_5yr: data.role_changes_5yr,
         sector_exposure: data.sector_exposure || [],
         last_contact_date: data.last_contact_date,
@@ -79,9 +79,16 @@ export function useUpdateCandidateProfile() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateCandidateProfileData }) => {
+      // Serialize custom types to JSON-compatible format
+      const dbData = {
+        ...data,
+        qualifications: data.qualifications ? JSON.parse(JSON.stringify(data.qualifications)) : undefined,
+        employment_history: data.employment_history ? JSON.parse(JSON.stringify(data.employment_history)) : undefined,
+      };
+      
       const { data: updated, error } = await supabase
         .from('cv_submissions')
-        .update(data)
+        .update(dbData)
         .eq('id', id)
         .select()
         .single();

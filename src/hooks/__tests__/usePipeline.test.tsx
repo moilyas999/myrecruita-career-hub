@@ -120,12 +120,12 @@ describe('usePipeline', () => {
     const chain = setupMockChain({ data: [mockPipelineEntry], error: null });
     mockSupabase.from.mockReturnValue(chain);
 
-    renderHook(() => usePipeline({ stage: 'screening' }), {
+    renderHook(() => usePipeline({ stage: 'qualified' }), {
       wrapper: createWrapper(),
     });
 
     await waitFor(() => {
-      expect(chain.eq).toHaveBeenCalledWith('stage', 'screening');
+      expect(chain.eq).toHaveBeenCalledWith('stage', 'qualified');
     });
   });
 
@@ -329,7 +329,7 @@ describe('useUpdatePipelineStage', () => {
     await act(async () => {
       await result.current.mutateAsync({
         id: 'pipeline-123',
-        stage: 'screening',
+        stage: 'qualified',
       });
     });
 

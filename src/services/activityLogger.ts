@@ -16,6 +16,10 @@ export type ActivityAction =
   | 'cv_bulk_imported'
   | 'cv_matched'
   | 'cv_scored'
+  // Candidate Profile Actions
+  | 'candidate_profile_updated'
+  | 'candidate_anonymised'
+  | 'candidates_merged'
   // Job Actions
   | 'job_created' 
   | 'job_updated' 
@@ -43,6 +47,18 @@ export type ActivityAction =
   | 'pipeline_stage_changed'
   | 'pipeline_note_added'
   | 'pipeline_candidate_removed'
+  | 'pipeline_assigned'
+  | 'pipeline_priority_changed'
+  // Placement Actions
+  | 'placement_created'
+  | 'placement_updated'
+  | 'placement_invoice_raised'
+  | 'placement_invoice_paid'
+  | 'placement_rebate_triggered'
+  // Interview Scorecard Actions
+  | 'scorecard_created'
+  | 'scorecard_updated'
+  | 'scorecard_deleted'
   // Submission Actions
   | 'submission_deleted'
   | 'submission_exported'
@@ -52,11 +68,14 @@ export type ActivityAction =
 
 export type ResourceType = 
   | 'cv' 
+  | 'cv_submission'
   | 'job' 
   | 'talent' 
   | 'blog' 
   | 'staff' 
   | 'pipeline' 
+  | 'placement'
+  | 'interview_scorecard'
   | 'submission'
   | 'settings'
   | 'auth';
@@ -229,6 +248,9 @@ export const ACTION_LABELS: Record<ActivityAction, string> = {
   cv_bulk_imported: 'Bulk imported CVs',
   cv_matched: 'Matched CV to job',
   cv_scored: 'Scored CV',
+  candidate_profile_updated: 'Updated candidate profile',
+  candidate_anonymised: 'Anonymised candidate',
+  candidates_merged: 'Merged duplicate candidates',
   job_created: 'Created job',
   job_updated: 'Updated job',
   job_deleted: 'Deleted job',
@@ -251,6 +273,16 @@ export const ACTION_LABELS: Record<ActivityAction, string> = {
   pipeline_stage_changed: 'Moved candidate stage',
   pipeline_note_added: 'Added pipeline note',
   pipeline_candidate_removed: 'Removed from pipeline',
+  pipeline_assigned: 'Assigned pipeline candidate',
+  pipeline_priority_changed: 'Changed candidate priority',
+  placement_created: 'Created placement',
+  placement_updated: 'Updated placement',
+  placement_invoice_raised: 'Raised placement invoice',
+  placement_invoice_paid: 'Marked invoice as paid',
+  placement_rebate_triggered: 'Triggered placement rebate',
+  scorecard_created: 'Created interview scorecard',
+  scorecard_updated: 'Updated interview scorecard',
+  scorecard_deleted: 'Deleted interview scorecard',
   submission_deleted: 'Deleted submission',
   submission_exported: 'Exported submissions',
   login: 'Logged in',

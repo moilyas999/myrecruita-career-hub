@@ -12,6 +12,10 @@ export const mockCVSubmission = {
   cv_file_url: 'https://example.com/cv/jane-smith.pdf',
   location: 'Manchester',
   years_experience: 5,
+  right_to_work: 'British Citizen',
+  requires_sponsorship: false,
+  current_salary: '£55,000',
+  notice_period: '1 month',
 };
 
 export const mockCVSubmissionNoCV = {
@@ -44,13 +48,19 @@ export const mockPipelineEntry: PipelineEntryWithDetails = {
   id: 'pipeline-123',
   cv_submission_id: 'cv-123',
   job_id: 'job-123',
-  stage: 'screening',
+  stage: 'qualified',
   notes: 'Great candidate',
   priority: 1,
   assigned_to: null,
   rejection_reason: null,
   created_at: '2024-01-15T10:00:00Z',
   updated_at: '2024-01-16T14:30:00Z',
+  stage_entered_at: '2024-01-16T14:30:00Z',
+  interview_feedback: null,
+  salary_confirmed: null,
+  interview_scheduled_at: null,
+  offer_details: null,
+  stage_requirements_met: null,
   cv_submission: mockCVSubmission,
   job: mockJob,
 };
