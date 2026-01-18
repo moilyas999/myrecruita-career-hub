@@ -135,73 +135,29 @@ export interface JobFilters {
   };
 }
 
-// Job submission to client
-export interface JobSubmission {
-  id: string;
-  job_id: string;
-  candidate_id: string;
-  submitted_at: string;
-  submitted_by: string;
-  client_response: ClientResponseStatus;
-  client_feedback: string | null;
-  rejection_category: string | null;
-  rejection_reason: string | null;
-  response_at: string | null;
-  candidate?: {
-    id: string;
-    full_name: string;
-    email: string;
-    current_role: string | null;
-    current_company: string | null;
-  };
-  submitted_by_user?: {
-    id: string;
-    display_name: string | null;
-  };
-}
-
-// Interview data for job
-export interface JobInterview {
-  id: string;
-  job_id: string;
-  candidate_id: string;
-  pipeline_id: string;
-  interview_date: string;
-  interview_type: string;
-  interviewer_names: string[];
-  status: 'scheduled' | 'completed' | 'cancelled' | 'no_show';
-  outcome: 'passed' | 'failed' | 'pending' | null;
-  feedback: string | null;
-  scorecard_id: string | null;
-  candidate?: {
-    id: string;
-    full_name: string;
-  };
-}
-
-// Pipeline candidate for job view
+// Pipeline candidate for job view (matches actual database schema)
+// cv_submissions uses 'name' and 'job_title' columns
 export interface JobPipelineCandidate {
   id: string;
   job_id: string;
-  candidate_id: string;
+  cv_submission_id: string;
   stage: string;
-  status: string;
-  added_at: string;
-  moved_at: string;
+  priority: number | null;
   assigned_to: string | null;
   notes: string | null;
+  created_at: string;
+  updated_at: string;
   candidate?: {
     id: string;
-    full_name: string;
+    name: string;
     email: string;
-    current_role: string | null;
-    current_company: string | null;
+    job_title: string | null;
     location: string | null;
-    ai_match_score: number | null;
-  };
+    cv_score: number | null;
+  } | null;
   assigned_to_user?: {
     display_name: string | null;
-  };
+  } | null;
 }
 
 // Job activity log entry

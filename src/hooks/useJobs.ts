@@ -86,7 +86,7 @@ export function useJobs(filters: JobFilters = {}) {
       const { data, error } = await query;
 
       if (error) throw error;
-      return (data as unknown as Job[]) || [];
+      return (data || []) as unknown as Job[];
     },
     enabled: canView,
   });
@@ -110,12 +110,10 @@ export function useJob(jobId: string) {
           hiring_manager:client_contacts(id, name, email, phone, job_title)
         `)
         .eq('id', jobId)
-        .single();
+        .maybeSingle();
 
-      if (error) {
-        if (error.code === 'PGRST116') return null;
-        throw error;
-      }
+      if (error) throw error;
+      if (!data) return null;
 
       // Get pipeline counts
       const { count: pipelineCount } = await supabase
@@ -123,17 +121,19 @@ export function useJob(jobId: string) {
         .select('*', { count: 'exact', head: true })
         .eq('job_id', jobId);
 
+      // Active pipeline = stages before placed/rejected/withdrawn
+      const activeStages = ['sourced', 'contacted', 'qualified', 'submitted', 'interview_1', 'interview_2', 'final_interview', 'offer', 'accepted'];
       const { count: activePipelineCount } = await supabase
         .from('candidate_pipeline')
         .select('*', { count: 'exact', head: true })
         .eq('job_id', jobId)
-        .in('status', ['active', 'in_progress']);
+        .in('stage', activeStages);
 
       return {
         ...(data as unknown as Job),
         pipeline_count: pipelineCount || 0,
         active_pipeline_count: activePipelineCount || 0,
-      } as JobWithDetails;
+      };
     },
     enabled: canView && !!jobId,
   });
@@ -241,8 +241,8 @@ export function useRoleAgeing() {
 
       if (error) throw error;
 
-      return (data || []).map((job: Record<string, unknown>) => {
-        const createdAt = job.created_at as string;
+      return (data || []).map((job) => {
+        const createdAt = job.created_at;
         const daysOpen = Math.floor(
           (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24)
         );
@@ -256,15 +256,15 @@ export function useRoleAgeing() {
         const client = job.client as { company_name: string } | null;
 
         return {
-          id: job.id as string,
-          title: job.title as string,
-          reference_id: job.reference_id as string,
-          client_id: job.client_id as string | null,
+          id: job.id,
+          title: job.title,
+          reference_id: job.reference_id,
+          client_id: job.client_id,
           client_name: client?.company_name,
           days_open: daysOpen,
           ageing_status: ageingStatus,
           priority: job.priority as RoleAgeingData['priority'],
-          cvs_submitted_count: (job.cvs_submitted_count as number) || 0,
+          cvs_submitted_count: job.cvs_submitted_count || 0,
         };
       });
     },
@@ -274,6 +274,7 @@ export function useRoleAgeing() {
 
 /**
  * Fetch pipeline candidates for a job
+ * Uses correct cv_submissions columns: name, job_title, cv_score
  */
 export function useJobPipeline(jobId: string) {
   const { hasPermission } = usePermissions();
@@ -289,36 +290,35 @@ export function useJobPipeline(jobId: string) {
           job_id,
           cv_submission_id,
           stage,
-          status,
-          added_at,
-          moved_at,
+          priority,
           assigned_to,
           notes,
+          created_at,
+          updated_at,
           candidate:cv_submissions(
             id,
-            full_name,
+            name,
             email,
-            current_role,
-            current_company,
+            job_title,
             location,
-            ai_match_score
+            cv_score
           )
         `)
         .eq('job_id', jobId)
-        .order('moved_at', { ascending: false });
+        .order('updated_at', { ascending: false });
 
       if (error) throw error;
       
-      return (data || []).map((item: Record<string, unknown>) => ({
-        id: item.id as string,
-        job_id: item.job_id as string,
-        candidate_id: item.cv_submission_id as string,
-        stage: item.stage as string,
-        status: item.status as string,
-        added_at: item.added_at as string,
-        moved_at: item.moved_at as string,
-        assigned_to: item.assigned_to as string | null,
-        notes: item.notes as string | null,
+      return (data || []).map((item) => ({
+        id: item.id,
+        job_id: item.job_id,
+        cv_submission_id: item.cv_submission_id,
+        stage: item.stage,
+        priority: item.priority,
+        assigned_to: item.assigned_to,
+        notes: item.notes,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
         candidate: item.candidate as JobPipelineCandidate['candidate'],
       }));
     },
@@ -346,7 +346,7 @@ export function useClientJobs(clientId: string) {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return (data as unknown as Job[]) || [];
+      return (data || []) as unknown as Job[];
     },
     enabled: canView && !!clientId,
   });
