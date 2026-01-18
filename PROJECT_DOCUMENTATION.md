@@ -36,6 +36,7 @@
 20. [Notification System](#20-notification-system)
 20.5. [Staff Accountability System](#155-staff-accountability-system-new)
 20.6. [Automation System](#156-automation-system)
+20.7. [Reports Module](#157-reports-module)
 21. [PWA & Progressive Features](#21-pwa--progressive-features)
 22. [SEO & Structured Data](#22-seo--structured-data)
 23. [Public-Facing Features](#23-public-facing-features)
@@ -2562,6 +2563,128 @@ logActivity({ action: 'tasks_bulk_updated', resourceType: 'automation_task', ...
 
 ---
 
+### 15.7. Reports Module
+
+#### Overview
+
+Comprehensive revenue forecasting and performance analytics for recruitment operations. The Reports Module provides actionable insights for business decisions through two main dashboards.
+
+#### Report Types
+
+| Report | Purpose | Permission | Tab Key |
+|--------|---------|------------|---------|
+| Revenue Forecast | Track placements, fees, invoicing | `reports.view` | `revenue` |
+| Performance | Recruiter metrics, pipeline health | `reports.view` | `performance` |
+
+#### Database Dependencies
+
+| Table | Usage |
+|-------|-------|
+| `placements` | Revenue tracking, fee calculations |
+| `candidate_pipeline` | Conversion metrics, stage tracking |
+| `admin_profiles` | Recruiter attribution |
+| `admin_audit_log` | Activity metrics |
+| `jobs` | Pipeline metrics, time-to-fill |
+| `clients` | Revenue by client |
+
+#### Hooks Reference
+
+| Hook | Purpose | Filters |
+|------|---------|---------|
+| `useRevenueForecast(period, filters)` | Revenue by period with trends | Period, recruiter, client |
+| `useRevenueMetrics(filters)` | Summary statistics (won, pending, forecast) | Date range |
+| `usePlacementsByClient()` | Revenue breakdown by client | None |
+| `usePlacementsByRecruiter()` | Revenue breakdown by recruiter | None |
+| `useInvoices(filters)` | Invoice status list | Status, date range |
+| `useRecruiterPerformance(filters)` | Per-recruiter metrics | Date range |
+| `usePipelineMetrics()` | Stage-by-stage counts | None |
+| `useConversionFunnel(filters)` | Funnel visualization data | Date range |
+| `useTimeToFillMetrics(filters)` | Hiring speed by sector | Date range |
+| `useActivityMetrics(filters)` | Activity volume over time | Date range |
+
+#### Query Keys
+
+```typescript
+// src/lib/queryKeys.ts
+reports: {
+  all: ['reports'],
+  forecast: (period: string, filters?: RevenueReportFilters) => [...],
+  metrics: (filters?: RevenueReportFilters) => [...],
+  placementsByClient: () => [...],
+  placementsByRecruiter: () => [...],
+  invoices: (filters?: RevenueReportFilters) => [...],
+  recruiterPerformance: (filters?: PerformanceReportFilters) => [...],
+  pipelineMetrics: () => [...],
+  conversionFunnel: (filters?: PerformanceReportFilters) => [...],
+  timeToFill: (filters?: PerformanceReportFilters) => [...],
+  activityMetrics: (filters?: PerformanceReportFilters) => [...],
+}
+```
+
+#### Components
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `RevenueForecastDashboard` | `reports/RevenueForecastDashboard.tsx` | Main revenue dashboard |
+| `PerformanceDashboard` | `reports/PerformanceDashboard.tsx` | Team performance view |
+| `RevenueCard` | `reports/RevenueCard.tsx` | Metric summary cards |
+| `RevenueTrendChart` | `reports/RevenueTrendChart.tsx` | Line/area chart |
+| `PlacementsByClientChart` | `reports/PlacementsByClientChart.tsx` | Bar chart by client |
+| `InvoiceStatusTable` | `reports/InvoiceStatusTable.tsx` | Invoice list |
+| `ReportFilters` | `reports/ReportFilters.tsx` | Period/date filters |
+
+#### Admin Routes
+
+| Route | Component | Permission |
+|-------|-----------|------------|
+| `/admin?tab=revenue` | `RevenueForecastDashboard` | `reports.view` |
+| `/admin?tab=performance` | `PerformanceDashboard` | `reports.view` |
+
+#### Type Definitions
+
+```typescript
+// src/types/report.ts
+interface RevenueForecastData {
+  period: string;
+  confirmed: number;
+  pending: number;
+  forecast: number;
+  placementCount: number;
+}
+
+interface RevenueMetrics {
+  totalRevenue: number;
+  pendingRevenue: number;
+  forecastRevenue: number;
+  placementCount: number;
+  avgFee: number;
+  invoicesPending: number;
+  invoicesOverdue: number;
+}
+
+interface RecruiterPerformance {
+  recruiterId: string;
+  recruiterName: string;
+  placements: number;
+  revenue: number;
+  cvSubmissions: number;
+  interviewsScheduled: number;
+  conversionRate: number;
+}
+```
+
+#### Permission Guard
+
+```tsx
+const { can } = usePermissions();
+
+if (!can('reports.view')) {
+  return <AccessDenied title="Reports" />;
+}
+```
+
+---
+
 ## 16. PWA & Progressive Features
 
 ### Progressier Integration
@@ -2842,31 +2965,42 @@ supabase/
 
 ## 24. Future Roadmap
 
-### Phase 2: Client/Company CRM
-- [ ] `companies` table
-- [ ] Contact management
-- [ ] Activity timeline
-- [ ] Client portal
+### ✅ Completed Phases
 
-### Phase 3: AI Job Description Generator
-- [ ] Template library
-- [ ] AI-powered generation
-- [ ] SEO optimization
+| Phase | Description | Version | Completed |
+|-------|-------------|---------|-----------|
+| Phase 1 | Core Platform & CV Management | v1.0 | ✅ |
+| Phase 2 | Client/Company CRM | v2.0 | ✅ |
+| Phase 3 | Enhanced Job Management | v2.2 | ✅ |
+| Phase 4 | Automation System | v2.3 | ✅ |
+| Phase 5 | Reports & Analytics | v2.4 | ✅ |
 
-### Phase 4: Interview Scheduling
-- [ ] Calendar integration
-- [ ] Automated scheduling
-- [ ] Interview reminders
+### Upcoming Phases
 
-### Phase 5: Revenue Dashboard
-- [ ] Placement fee tracking
-- [ ] Commission calculation
-- [ ] Forecasting
+#### Phase 6: Calendar & Scheduling
+- [ ] Google Calendar integration
+- [ ] Interview scheduling automation
+- [ ] Availability management
+- [ ] Meeting reminders
+- [ ] Permission: `calendar.view`, `calendar.sync`
 
-### Phase 6: Candidate Portal
-- [ ] Self-service profiles
-- [ ] Application tracking
-- [ ] Job alerts
+#### Phase 7: Automation Execution Engine
+- [ ] Edge function for rule evaluation
+- [ ] Trigger event processing
+- [ ] Scheduled task execution
+- [ ] Action workflow engine
+
+#### Phase 8: Candidate Portal
+- [ ] Self-service profile management
+- [ ] Application status tracking
+- [ ] Document upload
+- [ ] Job alerts subscription
+
+#### Phase 9: AI Enhancements
+- [ ] AI job description generator
+- [ ] Automated candidate outreach
+- [ ] Predictive hiring analytics
+- [ ] Salary benchmarking
 
 ---
 
