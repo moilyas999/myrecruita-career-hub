@@ -2027,44 +2027,145 @@ All pipeline actions are automatically logged:
 
 ## 13. Job Management System
 
+### Enhanced Job Module (Phase 3)
+
+The Job Management System provides comprehensive job lifecycle tracking with client integration, metrics, and analytics dashboards.
+
+### Key Features
+
+- **Client Linking**: Jobs linked to clients with hiring manager assignment
+- **Priority & Type**: Urgent/High/Medium/Low priorities; Permanent/Contract/Temp/FTC types
+- **Revenue Tracking**: Fee percentage and revenue forecast per job
+- **Role Ageing**: Visual indicators for job freshness (new/normal/ageing/stale)
+- **Metrics Dashboard**: Analytics with charts and KPIs
+- **Pipeline Integration**: View pipeline candidates per job
+
 ### Job Data Model
 
 ```typescript
 interface Job {
   id: string;
-  reference_id: string;      // Auto: MR-2025-001
+  reference_id: string;           // Auto: JOB-ABC123
   title: string;
   location: string;
-  sector: string;            // Finance, IT, Legal, HR, Executive
-  description: string;       // Full job description (rich text)
-  requirements: string;      // Requirements list
-  benefits: string | null;   // Benefits and perks
-  salary: string | null;     // Salary range text
-  status: JobStatus;
+  sector: string;                 // Finance, IT, Legal, HR, Executive
+  description: string;            // Full job description (rich text)
+  requirements: string;           // Requirements list
+  benefits: string | null;        // Benefits and perks
+  salary: string | null;          // Salary range text
+  status: JobStatus;              // active, on_hold, filled, closed, draft
+  priority: JobPriority;          // low, medium, high, urgent
+  job_type_category: JobType;     // permanent, contract, temp, ftc
+  
+  // Client Integration
+  client_id: string | null;       // FK to clients table
+  hiring_manager_id: string | null; // FK to client_contacts
+  
+  // Financial Tracking
+  fee_percentage: number | null;  // Recruitment fee (%)
+  revenue_forecast: number | null; // Projected placement fee
+  
+  // Pipeline Metrics
+  cvs_submitted_count: number;    // Auto-updated
+  interviews_scheduled_count: number;
+  offers_made_count: number;
+  
+  // Dates
+  target_fill_date: string | null;
+  target_start_date: string | null;
+  time_to_fill_actual_days: number | null;
+  placed_at: string | null;
+  closed_at: string | null;
+  
   created_at: string;
   updated_at: string;
 }
 
-type JobStatus = "active" | "paused" | "filled" | "expired";
+type JobStatus = 'active' | 'on_hold' | 'filled' | 'closed' | 'draft';
+type JobPriority = 'low' | 'medium' | 'high' | 'urgent';
+type JobType = 'permanent' | 'contract' | 'temp' | 'ftc';
 ```
 
-### Job Reference Generation
+### Routes
 
-```sql
--- Automatic reference generation
--- Format: MR-2025-001, MR-2025-002, etc.
+| Route | Component | Description |
+|-------|-----------|-------------|
+| `/admin?tab=jobs` | JobsManagement | Job listing with filters |
+| `/admin?tab=job-dashboard` | JobMetricsDashboard | Analytics and metrics overview |
+| `/admin/job/:jobId` | JobDetailPage | Full job detail view with tabs |
 
-CREATE FUNCTION generate_job_reference()
-RETURNS text AS $$
-  SELECT 'MR-' || 
-         to_char(now(), 'YYYY') || '-' ||
-         lpad(
-           (COALESCE(MAX(CAST(SUBSTRING(reference_id FROM 'MR-2025-(\d+)') AS INTEGER)), 0) + 1)::text,
-           3, '0'
-         )
-  FROM jobs WHERE reference_id ~ '^MR-2025-\d+$';
-$$ LANGUAGE sql;
+### Components
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `JobCard` | `jobs/JobCard.tsx` | Job display card with metrics |
+| `JobFilters` | `jobs/JobFilters.tsx` | Filter controls (status, priority, search) |
+| `JobFormDialog` | `jobs/JobFormDialog.tsx` | Create/edit job form |
+| `JobHeader` | `jobs/JobHeader.tsx` | Job page header with actions |
+| `JobMetricsCard` | `jobs/JobMetricsCard.tsx` | Metric display card |
+| `JobMetricsDashboard` | `jobs/JobMetricsDashboard.tsx` | Full analytics dashboard |
+| `RoleAgeingTable` | `jobs/RoleAgeingTable.tsx` | Active jobs sorted by days open |
+
+### Hooks (`src/hooks/useJobs.ts`)
+
+| Hook | Purpose |
+|------|---------|
+| `useJobs(filters)` | Fetch jobs with filtering (status, client, priority, search) |
+| `useJob(jobId)` | Single job with client & hiring manager details |
+| `useJobMetrics()` | Aggregate dashboard metrics |
+| `useRoleAgeing()` | Active jobs with ageing status calculation |
+| `useJobPipeline(jobId)` | Pipeline candidates for a job |
+| `useClientJobs(clientId)` | Jobs for a specific client |
+| `useCreateJob()` | Create with activity logging |
+| `useUpdateJob()` | Update with optimistic updates |
+| `useDeleteJob()` | Delete with confirmation |
+| `useUpdateJobStatus()` | Status change with timestamp handling |
+
+### Query Key Factory
+
+```typescript
+export const jobKeys = {
+  all: ['jobs'] as const,
+  lists: () => [...jobKeys.all, 'list'] as const,
+  list: (filters: JobFilters) => [...jobKeys.lists(), filters] as const,
+  details: () => [...jobKeys.all, 'detail'] as const,
+  detail: (id: string) => [...jobKeys.details(), id] as const,
+  metrics: () => [...jobKeys.all, 'metrics'] as const,
+  roleAgeing: () => [...jobKeys.all, 'role-ageing'] as const,
+  pipeline: (jobId: string) => [...jobKeys.all, 'pipeline', jobId] as const,
+  byClient: (clientId: string) => [...jobKeys.all, 'by-client', clientId] as const,
+};
 ```
+
+### Permission Matrix
+
+| Action | Permission | Who Can |
+|--------|------------|---------|
+| View jobs | `jobs.view` | Admin, Recruiter, Account Manager, Viewer |
+| Create job | `jobs.create` | Admin, Recruiter |
+| Edit job | `jobs.update` | Admin, Recruiter |
+| Delete job | `jobs.delete` | Admin only |
+| View job dashboard | `jobs.view` | Admin, Recruiter, Account Manager |
+
+### Role Ageing Status
+
+| Status | Days Open | Visual Indicator |
+|--------|-----------|------------------|
+| `new` | 0-7 days | Green badge |
+| `normal` | 8-14 days | Blue badge |
+| `ageing` | 15-30 days | Orange/amber badge |
+| `stale` | 31+ days | Red badge |
+
+### Job Metrics Dashboard
+
+The Job Dashboard (`/admin?tab=job-dashboard`) displays:
+
+1. **Summary Cards**: Active jobs, filled jobs, avg time to fill, projected revenue
+2. **Secondary Metrics**: CVs submitted, interviews scheduled, conversion rate
+3. **Status Distribution Chart**: Bar chart of jobs by status
+4. **Pipeline Funnel Chart**: Pie chart of conversion through stages
+5. **Role Ageing Table**: Active jobs sorted by days open
+6. **Revenue Overview**: Projected vs confirmed revenue
 
 ### Job Status Tracker (Email Ingestion)
 
@@ -2692,6 +2793,21 @@ All emails sent from: `MyRecruita <no-reply@myrecruita.com>`
 ---
 
 ## 26. Changelog
+
+### Version 2.2 (January 2025)
+
+**Enhanced Job Management (Phase 3)**:
+- ✅ Enhanced JobsManagement with client linking, priorities, and filters
+- ✅ JobDetailPage with Overview, Candidates, Pipeline tabs (`/admin/job/:jobId`)
+- ✅ JobMetricsDashboard with status charts and role ageing (`/admin?tab=job-dashboard`)
+- ✅ Job components: JobCard, JobFilters, JobFormDialog, JobHeader
+- ✅ RoleAgeingTable for monitoring stale roles
+- ✅ JobMetricsCard for dashboard widgets
+- ✅ Comprehensive useJobs hooks with query key factory
+- ✅ Unit tests for all job hooks (`src/hooks/__tests__/useJobs.test.tsx`)
+- ✅ Permission guards on all job actions
+- ✅ Real-time subscriptions for job updates
+- ✅ Sidebar Job Dashboard link
 
 ### Version 2.1 (January 2025)
 
