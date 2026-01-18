@@ -33,7 +33,7 @@ import { useClients, useClientContacts } from '@/hooks/useClients';
 import { useCreateJob, useUpdateJob } from '@/hooks/useJobs';
 import type { Job, JobPriority, JobTypeCategory, CreateJobInput, UpdateJobInput } from '@/types/job';
 
-// Form validation schema
+// Form validation schema - matches database enums exactly
 const jobFormSchema = z.object({
   title: z.string().min(2, 'Title must be at least 2 characters'),
   location: z.string().min(2, 'Location is required'),
@@ -42,9 +42,9 @@ const jobFormSchema = z.object({
   requirements: z.string().min(10, 'Requirements must be at least 10 characters'),
   benefits: z.string().optional(),
   salary: z.string().optional(),
-  status: z.string().default('active'),
+  status: z.enum(['draft', 'active', 'on_hold', 'filled', 'closed']).default('active'),
   priority: z.enum(['urgent', 'high', 'medium', 'low']).optional(),
-  job_type_category: z.enum(['permanent', 'contract', 'temporary', 'ftc']).optional(),
+  job_type_category: z.enum(['permanent', 'contract', 'temp', 'ftc']).optional(),
   client_id: z.string().optional(),
   hiring_manager_id: z.string().optional(),
   fee_percentage: z.number().min(0).max(100).optional(),
@@ -125,6 +125,17 @@ export default function JobFormDialog({
   // Reset form when job changes or dialog opens
   useEffect(() => {
     if (open && job) {
+      // Type assertion for status - job.status from DB might have extra values
+      const validStatus = ['draft', 'active', 'on_hold', 'filled', 'closed'].includes(job.status) 
+        ? job.status as 'draft' | 'active' | 'on_hold' | 'filled' | 'closed'
+        : 'active';
+      const validPriority = job.priority && ['urgent', 'high', 'medium', 'low'].includes(job.priority)
+        ? job.priority as 'urgent' | 'high' | 'medium' | 'low'
+        : 'medium';
+      const validJobType = job.job_type_category && ['permanent', 'contract', 'temp', 'ftc'].includes(job.job_type_category)
+        ? job.job_type_category as 'permanent' | 'contract' | 'temp' | 'ftc'
+        : 'permanent';
+      
       form.reset({
         title: job.title,
         location: job.location,
@@ -133,9 +144,9 @@ export default function JobFormDialog({
         requirements: job.requirements,
         benefits: job.benefits || '',
         salary: job.salary || '',
-        status: job.status,
-        priority: job.priority || 'medium',
-        job_type_category: job.job_type_category || 'permanent',
+        status: validStatus,
+        priority: validPriority,
+        job_type_category: validJobType,
         client_id: job.client_id || undefined,
         hiring_manager_id: job.hiring_manager_id || undefined,
         fee_percentage: job.fee_percentage || undefined,
