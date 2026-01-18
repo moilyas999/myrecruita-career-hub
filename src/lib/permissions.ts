@@ -31,7 +31,7 @@ export type PermissionType =
   // Automation
   | 'automation.view' | 'automation.manage'
   // Calendar
-  | 'calendar.view' | 'calendar.sync';
+  | 'calendar.view' | 'calendar.create' | 'calendar.update' | 'calendar.delete' | 'calendar.sync';
 
 // Staff role types
 export type StaffRole = 
@@ -103,7 +103,7 @@ export const PERMISSION_CATEGORIES = {
   },
   calendar: {
     label: 'Calendar',
-    permissions: ['calendar.view', 'calendar.sync'] as PermissionType[],
+    permissions: ['calendar.view', 'calendar.create', 'calendar.update', 'calendar.delete', 'calendar.sync'] as PermissionType[],
   },
   staff: {
     label: 'Staff Management',
@@ -159,6 +159,9 @@ export const PERMISSION_LABELS: Record<PermissionType, string> = {
   'automation.view': 'View Automation',
   'automation.manage': 'Manage Automation',
   'calendar.view': 'View Calendar',
+  'calendar.create': 'Create Calendar Events',
+  'calendar.update': 'Update Calendar Events',
+  'calendar.delete': 'Delete Calendar Events',
   'calendar.sync': 'Sync Calendar',
   'staff.view': 'View Staff',
   'staff.create': 'Create Staff',
