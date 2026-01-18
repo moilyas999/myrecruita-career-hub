@@ -72,10 +72,18 @@ export const queryKeys = {
   automationRuleStats: ['automation-rules', 'stats'] as const,
   myTasks: ['automation-tasks', 'mine'] as const,
   
-  // Reports (Phase 6)
+  // Reports (Phase 5)
   revenueReport: ['revenue-report'] as const,
   recruiterPerformance: ['recruiter-performance'] as const,
   conversionFunnel: ['conversion-funnel'] as const,
+  revenueForecast: ['revenue-forecast'] as const,
+  revenueMetrics: ['revenue-metrics'] as const,
+  placementsByClient: ['placements-by-client'] as const,
+  placementsByRecruiter: ['placements-by-recruiter'] as const,
+  invoices: ['invoices'] as const,
+  pipelineMetrics: ['pipeline-metrics'] as const,
+  timeToFill: ['time-to-fill'] as const,
+  activityMetrics: ['activity-metrics'] as const,
 } as const;
 
 // Helper to get all submission-related keys for bulk invalidation

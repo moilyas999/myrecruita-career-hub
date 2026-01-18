@@ -2,7 +2,7 @@
 
 > **Knowledge Base Reference Document**  
 > **Last Updated**: January 2025  
-> **Version**: 2.3  
+> **Version**: 2.4  
 > **Status**: Production
 
 ---
@@ -2988,6 +2988,21 @@ All emails sent from: `MyRecruita <no-reply@myrecruita.com>`
 ---
 
 ## 26. Changelog
+
+### Version 2.4 (January 2025)
+
+**Reports Module (Phase 5)**:
+- ✅ Revenue Forecast Dashboard with period filtering
+- ✅ Performance Dashboard with recruiter leaderboard
+- ✅ Type definitions in `src/types/report.ts`
+- ✅ 11 report hooks in `src/hooks/useReports.ts`
+- ✅ Query key factory: `reportKeys` with all report-related keys
+- ✅ Revenue components: RevenueCard, RevenueTrendChart, PlacementsByClientChart, InvoiceStatusTable
+- ✅ Performance components: RecruiterLeaderboard, ConversionFunnel, PipelineMetrics
+- ✅ ReportFilters with date range and period selection
+- ✅ Admin tabs: `revenue`, `performance`
+- ✅ Sidebar navigation: Revenue Forecast and Performance in Reports group
+- ✅ Permission guards: `reports.view`, `reports.export`
 
 ### Version 2.3 (January 2025)
 
