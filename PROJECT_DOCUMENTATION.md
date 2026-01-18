@@ -2,7 +2,7 @@
 
 > **Knowledge Base Reference Document**  
 > **Last Updated**: January 2025  
-> **Version**: 2.4  
+> **Version**: 2.5  
 > **Status**: Production
 
 ---
@@ -37,6 +37,7 @@
 20.5. [Staff Accountability System](#155-staff-accountability-system-new)
 20.6. [Automation System](#156-automation-system)
 20.7. [Reports Module](#157-reports-module)
+20.8. [Calendar & Scheduling Module](#158-calendar--scheduling-module)
 21. [PWA & Progressive Features](#21-pwa--progressive-features)
 22. [SEO & Structured Data](#22-seo--structured-data)
 23. [Public-Facing Features](#23-public-facing-features)
@@ -2685,6 +2686,239 @@ if (!can('reports.view')) {
 
 ---
 
+### 15.8. Calendar & Scheduling Module
+
+#### Overview
+
+Comprehensive calendar system for scheduling interviews, meetings, client calls, and follow-up reminders. Supports future Google Calendar sync capability with OAuth connection infrastructure already in place.
+
+#### Core Features
+
+| Feature | Description |
+|---------|-------------|
+| Event Management | Create, edit, cancel, and delete calendar events |
+| Week/Month Views | Toggle between calendar view modes |
+| Interview Scheduling | Schedule interviews linked to candidates and jobs |
+| Meeting Reminders | Event-based reminder infrastructure |
+| Availability Management | User availability slot configuration |
+| Calendar Sync | Infrastructure for Google/Outlook calendar sync |
+
+#### Database Tables
+
+**calendar_events**
+```sql
+CREATE TABLE public.calendar_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  event_type TEXT NOT NULL, -- interview, meeting, follow_up, reminder, client_call
+  start_time TIMESTAMPTZ NOT NULL,
+  end_time TIMESTAMPTZ NOT NULL,
+  description TEXT,
+  location TEXT,
+  meeting_link TEXT,
+  is_cancelled BOOLEAN DEFAULT false,
+  cancellation_reason TEXT,
+  candidate_id UUID REFERENCES cv_submissions(id),
+  job_id UUID REFERENCES jobs(id),
+  client_id UUID REFERENCES clients(id),
+  pipeline_id UUID REFERENCES candidate_pipeline(id),
+  assigned_to UUID,
+  created_by UUID NOT NULL,
+  google_event_id TEXT,
+  google_calendar_id TEXT,
+  sync_status TEXT DEFAULT 'local', -- local, synced, failed
+  reminder_sent BOOLEAN DEFAULT false,
+  reminder_24h_sent BOOLEAN DEFAULT false,
+  reminder_1h_sent BOOLEAN DEFAULT false,
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+**calendar_connections**
+```sql
+CREATE TABLE public.calendar_connections (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL,
+  provider TEXT DEFAULT 'google', -- google, outlook
+  access_token_encrypted TEXT,
+  refresh_token_encrypted TEXT,
+  token_expires_at TIMESTAMPTZ,
+  calendar_id TEXT,
+  calendar_name TEXT,
+  is_active BOOLEAN DEFAULT true,
+  last_sync_at TIMESTAMPTZ,
+  sync_error TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+**availability_slots**
+```sql
+CREATE TABLE public.availability_slots (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL,
+  day_of_week INTEGER, -- 0-6 for recurring
+  specific_date DATE,  -- for one-off slots
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  is_recurring BOOLEAN DEFAULT true,
+  is_available BOOLEAN DEFAULT true,
+  timezone TEXT DEFAULT 'Europe/London',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+#### Event Types
+
+| Type | Icon | Color | Use Case |
+|------|------|-------|----------|
+| `interview` | Video | Blue | Candidate interviews |
+| `meeting` | Users | Green | Internal team meetings |
+| `client_call` | Building | Purple | Client communications |
+| `follow_up` | UserCheck | Amber | Follow-up actions |
+| `reminder` | Bell | Gray | General reminders |
+
+#### Permission Matrix
+
+| Permission | Admin | Recruiter | Account Manager | Marketing | CV Uploader | Viewer |
+|------------|-------|-----------|-----------------|-----------|-------------|--------|
+| `calendar.view` | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| `calendar.create` | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| `calendar.update` | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| `calendar.delete` | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| `calendar.sync` | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+
+#### Hooks Reference
+
+**Query Hooks**
+
+| Hook | Purpose | Query Key |
+|------|---------|-----------|
+| `useCalendarEvents(filters)` | Fetch events with filtering | `calendarEvents` |
+| `useCalendarEvent(id)` | Single event details | `calendarEventDetail(id)` |
+| `useMyCalendarEvents()` | Current user's events | `myCalendarEvents` |
+| `useUpcomingInterviews(days)` | Upcoming interview events | `upcomingInterviews` |
+| `useMyAvailability()` | Current user's availability | `myAvailability` |
+| `useUserAvailability(userId)` | Other user's availability | `userAvailability(userId)` |
+| `useMyCalendarConnection()` | Calendar sync status | `myCalendarConnection` |
+
+**Mutation Hooks**
+
+| Hook | Purpose | Activity Log Action |
+|------|---------|-------------------|
+| `useCreateCalendarEvent()` | Create event | `calendar_event_created` |
+| `useUpdateCalendarEvent()` | Modify event | `calendar_event_updated` |
+| `useCancelCalendarEvent()` | Cancel event | `calendar_event_cancelled` |
+| `useDeleteCalendarEvent()` | Remove event | `calendar_event_deleted` |
+| `useCreateAvailabilitySlot()` | Add availability | `availability_created` |
+| `useUpdateAvailabilitySlot()` | Modify availability | `availability_updated` |
+| `useDeleteAvailabilitySlot()` | Remove availability | `availability_deleted` |
+
+#### Query Keys
+
+```typescript
+// src/lib/queryKeys.ts
+calendarEvents: ['calendar-events'],
+calendarEventDetail: (id: string) => ['calendar-events', id],
+myCalendarEvents: ['calendar-events', 'mine'],
+upcomingInterviews: ['calendar-events', 'upcoming-interviews'],
+upcomingEvents: (days: number) => ['calendar-events', 'upcoming', days],
+eventsByDate: (date: string) => ['calendar-events', 'date', date],
+eventsByJob: (jobId: string) => ['calendar-events', 'job', jobId],
+eventsByCandidate: (candidateId: string) => ['calendar-events', 'candidate', candidateId],
+availability: ['availability'],
+myAvailability: ['availability', 'mine'],
+userAvailability: (userId: string) => ['availability', userId],
+calendarConnections: ['calendar-connections'],
+myCalendarConnection: ['calendar-connections', 'mine'],
+```
+
+#### Components Reference
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `CalendarDashboard` | `src/components/admin/calendar/` | Main calendar view with week/month modes |
+| `EventFormDialog` | `src/components/admin/calendar/` | Create/edit event modal with validation |
+| `EventCard` | `src/components/admin/calendar/` | Event display with actions dropdown |
+| `UpcomingEventsWidget` | `src/components/admin/calendar/` | Sidebar widget for upcoming events |
+
+#### Admin Routes
+
+| Route | Component | Permission |
+|-------|-----------|------------|
+| `/admin?tab=calendar` | `CalendarDashboard` | `calendar.view` |
+
+#### Type Definitions
+
+```typescript
+// src/types/calendar.ts
+type EventType = 'interview' | 'meeting' | 'client_call' | 'follow_up' | 'reminder';
+type SyncStatus = 'local' | 'synced' | 'failed' | 'pending';
+type CalendarProvider = 'google' | 'outlook';
+
+interface CalendarEvent {
+  id: string;
+  title: string;
+  eventType: EventType;
+  startTime: Date;
+  endTime: Date;
+  description?: string;
+  location?: string;
+  meetingLink?: string;
+  isCancelled: boolean;
+  cancellationReason?: string;
+  candidateId?: string;
+  jobId?: string;
+  clientId?: string;
+  pipelineId?: string;
+  assignedTo?: string;
+  createdBy: string;
+  syncStatus: SyncStatus;
+  reminderSent: boolean;
+  metadata?: Record<string, unknown>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface CalendarEventWithRelations extends CalendarEvent {
+  candidate?: { id: string; name: string; email: string };
+  job?: { id: string; title: string; reference_id: string };
+  client?: { id: string; company_name: string };
+  assignedUser?: { id: string; display_name: string; email: string };
+}
+
+interface AvailabilitySlot {
+  id: string;
+  userId: string;
+  dayOfWeek?: number;
+  specificDate?: string;
+  startTime: string;
+  endTime: string;
+  isRecurring: boolean;
+  isAvailable: boolean;
+  timezone: string;
+}
+```
+
+#### Activity Logging
+
+```typescript
+// All calendar actions are logged via activityLogger
+logActivity({ action: 'calendar_event_created', resourceType: 'calendar_event', ... });
+logActivity({ action: 'calendar_event_updated', resourceType: 'calendar_event', ... });
+logActivity({ action: 'calendar_event_cancelled', resourceType: 'calendar_event', ... });
+logActivity({ action: 'calendar_event_deleted', resourceType: 'calendar_event', ... });
+logActivity({ action: 'availability_created', resourceType: 'availability', ... });
+logActivity({ action: 'availability_updated', resourceType: 'availability', ... });
+logActivity({ action: 'availability_deleted', resourceType: 'availability', ... });
+```
+
+---
+
 ## 16. PWA & Progressive Features
 
 ### Progressier Integration
@@ -2974,15 +3208,9 @@ supabase/
 | Phase 3 | Enhanced Job Management | v2.2 | ✅ |
 | Phase 4 | Automation System | v2.3 | ✅ |
 | Phase 5 | Reports & Analytics | v2.4 | ✅ |
+| Phase 6 | Calendar & Scheduling | v2.5 | ✅ |
 
 ### Upcoming Phases
-
-#### Phase 6: Calendar & Scheduling
-- [ ] Google Calendar integration
-- [ ] Interview scheduling automation
-- [ ] Availability management
-- [ ] Meeting reminders
-- [ ] Permission: `calendar.view`, `calendar.sync`
 
 #### Phase 7: Automation Execution Engine
 - [ ] Edge function for rule evaluation
@@ -3122,6 +3350,24 @@ All emails sent from: `MyRecruita <no-reply@myrecruita.com>`
 ---
 
 ## 26. Changelog
+
+### Version 2.5 (January 2025)
+
+**Calendar & Scheduling Module (Phase 6)**:
+- ✅ Calendar Dashboard with week/month view toggle
+- ✅ Calendar event CRUD operations (create, edit, cancel, delete)
+- ✅ Event types: interview, meeting, client_call, follow_up, reminder
+- ✅ Database tables: `calendar_events`, `calendar_connections`, `availability_slots`
+- ✅ Type definitions in `src/types/calendar.ts`
+- ✅ 15+ calendar hooks in `src/hooks/useCalendar.ts`
+- ✅ Query keys: calendarEvents, myCalendarEvents, upcomingInterviews, availability
+- ✅ Components: CalendarDashboard, EventFormDialog, EventCard, UpcomingEventsWidget
+- ✅ Admin tab: `calendar`
+- ✅ Sidebar navigation: Calendar link in Scheduling group
+- ✅ 5 new permissions: `calendar.view`, `calendar.create`, `calendar.update`, `calendar.delete`, `calendar.sync`
+- ✅ Activity logging for all calendar actions
+- ✅ Unit tests for calendar query keys
+- ✅ Google Calendar sync infrastructure (OAuth connection table ready)
 
 ### Version 2.4 (January 2025)
 
