@@ -25,6 +25,9 @@ const MyWorkDashboard = lazy(() => import('@/components/admin/MyWorkDashboard'))
 const MyActivityLog = lazy(() => import('@/components/admin/MyActivityLog'));
 const TeamActivityLog = lazy(() => import('@/components/admin/TeamActivityLog'));
 const ClientsManagement = lazy(() => import('@/components/admin/clients/ClientsManagement'));
+const AutomationDashboard = lazy(() => import('@/components/admin/automation/AutomationDashboard'));
+const TasksList = lazy(() => import('@/components/admin/automation/TasksList'));
+const RulesList = lazy(() => import('@/components/admin/automation/RulesList'));
 
 // Loading fallback component
 function TabSkeleton() {
@@ -78,6 +81,9 @@ const TAB_CONFIG: Record<string, TabConfig> = {
   'settings': { component: SettingsManagement, title: 'System Settings', description: 'Configure application settings', fullAdminOnly: true },
   'blog': { component: BlogManagement, title: 'Blog Management', description: 'Manage blog posts and content', fullAdminOnly: true },
   'pipeline': { component: CandidatePipeline, title: 'Candidate Pipeline', description: 'Track candidates through the recruitment process' },
+  'automation': { component: AutomationDashboard, title: 'Automation', description: 'Manage automation rules and tasks' },
+  'tasks': { component: TasksList, title: 'Tasks', description: 'View and manage automated tasks' },
+  'automation-rules': { component: RulesList, title: 'Automation Rules', description: 'Configure workflow automation rules', fullAdminOnly: true },
 };
 
 export default function AdminDashboard() {
