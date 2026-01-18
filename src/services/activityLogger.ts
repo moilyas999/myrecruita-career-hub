@@ -20,6 +20,9 @@ export type ActivityAction =
   | 'candidate_profile_updated'
   | 'candidate_anonymised'
   | 'candidates_merged'
+  // GDPR Bulk Actions
+  | 'bulk_gdpr_anonymise'
+  | 'bulk_gdpr_delete'
   // Job Actions
   | 'job_created' 
   | 'job_updated' 
@@ -251,6 +254,8 @@ export const ACTION_LABELS: Record<ActivityAction, string> = {
   candidate_profile_updated: 'Updated candidate profile',
   candidate_anonymised: 'Anonymised candidate',
   candidates_merged: 'Merged duplicate candidates',
+  bulk_gdpr_anonymise: 'Bulk anonymised candidates (GDPR)',
+  bulk_gdpr_delete: 'Bulk deleted candidates (GDPR)',
   job_created: 'Created job',
   job_updated: 'Updated job',
   job_deleted: 'Deleted job',
@@ -301,6 +306,11 @@ export function getActionIcon(action: ActivityAction): string {
     cv_bulk_imported: 'upload',
     cv_matched: 'git-merge',
     cv_scored: 'star',
+    candidate_profile_updated: 'user-cog',
+    candidate_anonymised: 'user-x',
+    candidates_merged: 'git-merge',
+    bulk_gdpr_anonymise: 'shield',
+    bulk_gdpr_delete: 'shield-alert',
     job_created: 'briefcase',
     job_updated: 'edit',
     job_deleted: 'trash-2',
@@ -323,6 +333,16 @@ export function getActionIcon(action: ActivityAction): string {
     pipeline_stage_changed: 'arrow-right',
     pipeline_note_added: 'message-square',
     pipeline_candidate_removed: 'x-circle',
+    pipeline_assigned: 'user-check',
+    pipeline_priority_changed: 'arrow-up',
+    placement_created: 'check-circle',
+    placement_updated: 'edit',
+    placement_invoice_raised: 'file-text',
+    placement_invoice_paid: 'check-square',
+    placement_rebate_triggered: 'alert-triangle',
+    scorecard_created: 'clipboard-list',
+    scorecard_updated: 'edit-3',
+    scorecard_deleted: 'trash-2',
     submission_deleted: 'trash-2',
     submission_exported: 'download',
     login: 'log-in',

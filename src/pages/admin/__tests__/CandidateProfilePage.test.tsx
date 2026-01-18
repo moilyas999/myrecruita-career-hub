@@ -50,9 +50,9 @@ const mockCandidate: CandidateProfile = {
   requires_sponsorship: false,
   visa_type: null,
   visa_expiry_date: null,
-  qualifications: null,
+  qualifications: [],
   professional_memberships: ['ACCA'],
-  employment_history: null,
+  employment_history: [],
   role_changes_5yr: 2,
   sector_exposure: ['Practice', 'Industry'],
   source: 'website',
@@ -63,8 +63,6 @@ const mockCandidate: CandidateProfile = {
   last_contact_date: '2024-01-15T00:00:00Z',
   gdpr_notes: null,
   anonymised_at: null,
-  extraction_method: 'ai',
-  extraction_confidence: 0.95,
   created_at: '2024-01-01T00:00:00Z',
 };
 
