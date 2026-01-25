@@ -10,6 +10,7 @@ import { SubmissionCard } from '../shared/SubmissionCard';
 import { SubmissionsSkeleton } from '../shared/SubmissionsSkeleton';
 import { EmptyState } from '../shared/EmptyState';
 import { AIProfilePreview } from './AIProfilePreview';
+import { SponsorshipToggle } from './SponsorshipToggle';
 import CVScoreBadge from '../CVScoreBadge';
 import CVManualEntry from '../CVManualEntry';
 import CVBulkImport from '../CVBulkImport';
@@ -77,6 +78,11 @@ export function CVSubmissionsList({
       {submission.sector && (
         <Badge variant="outline">{submission.sector}</Badge>
       )}
+      <SponsorshipToggle
+        candidateId={submission.id}
+        candidateName={submission.name}
+        currentValue={submission.requires_sponsorship}
+      />
       {hasPermission('cv.view') && (
         <Tooltip>
           <TooltipTrigger asChild>

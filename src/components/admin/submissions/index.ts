@@ -8,3 +8,4 @@ export { CareerRequestsList } from './CareerRequestsList';
 export { TalentRequestsList } from './TalentRequestsList';
 export { EmployerJobsList } from './EmployerJobsList';
 export { ContactSubmissionsList } from './ContactSubmissionsList';
+export { SponsorshipToggle } from './SponsorshipToggle';
