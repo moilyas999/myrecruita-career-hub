@@ -45,6 +45,7 @@ export interface CVSubmission {
   cv_score?: number | null;
   cv_score_breakdown?: unknown;
   ai_profile?: AIProfile | null;
+  requires_sponsorship?: boolean | null;
 }
 
 export interface CareerPartnerRequest {
